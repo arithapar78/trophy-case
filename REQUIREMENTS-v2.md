@@ -350,27 +350,43 @@ These apply to **every** AI feature. The project targets an energy-efficient hos
 
 ---
 
-## Open questions
+## Decisions (settled 2026-09-16)
 
-Answers needed before building. My suggestions are marked.
+These were open questions; all are now answered and built to.
 
-1. **Do Free users keep the v1 "3 college essay ideas" button?**
-   *Suggested: yes, and it costs one prompt from the same allowance.* It's the feature that makes the app worth using, and moving it behind Pro after shipping it free would feel like a takeaway. Alternative: keep it free and uncounted, but then it's an unmetered API cost.
+1. **Free users keep the v1 "3 college essay ideas" button.** It costs one prompt
+   from the same allowance. Removing a feature that already shipped free would
+   feel like a takeaway.
 
-2. **What's the Pro prompt limit?**
-   *Suggested: 100 per 5-hour window.* High enough to feel unlimited in normal use, low enough to cap a runaway loop. Alternatives: 50 (tighter) or unlimited (no protection against a bug costing real money).
+2. **Pro prompt limit is 100 per 5-hour window.** High enough to feel unlimited
+   in normal use, low enough that a runaway loop can't quietly cost real money.
 
-3. **How should the life plan be shaped?**
-   *Suggested: free-text goals plus a time range of 3 months / 1 year / 3 years, producing 3–5 steps per plan.* Short enough to act on. Open to a different set.
+3. **Life plan:** free-text goals, plus a time range of 3 months / 1 year /
+   3 years. Each plan produces 3-5 concrete steps.
 
-4. **Should tags be free-text or a fixed list?**
-   *Suggested: free-text, up to 5 per achievement.* A fixed list would be tidier but can't describe a kid's actual life. Free-text risks near-duplicates ("soccer" vs "football").
+4. **Tags are free-text, up to 5 per achievement.** A fixed list would be tidier
+   but can't describe a real kid's life. Near-duplicates ("soccer" vs "football")
+   are an accepted cost.
 
-5. **What happens to the v1 essay-ideas button when the helper exists?**
-   *Suggested: keep it where it is and have it work as it does now.* Two doors to a similar thing, but it already works and removing it breaks a tested v1 feature.
+5. **The v1 essay-ideas button stays where it is** and keeps working as it does
+   now. Two doors to a similar thing, but it's already built and tested.
 
-6. **How should the fake clock work?**
-   Needs to be testable by hand, not just in tests. *Suggested: a dev-only control in Settings that shifts the app's idea of "now" forward, visible only when not in production.*
+6. **The fake clock is a dev-only control in Settings** that shifts the app's
+   idea of "now" forward. Hidden in production. Used for both the 5-hour prompt
+   window and the 60-day file expiry.
 
-7. **Should the helper conversation persist across app restarts?**
-   *Suggested: yes, saved to the database, with a clear button.* Criterion 2.6 only requires it to survive navigation.
+7. **The helper conversation persists across app restarts**, saved to the
+   database, with a clear button.
+
+## Build order
+
+Features are built in this order, which is the list order with **one change**:
+Feature 8 moves ahead of Feature 4.
+
+    1 -> 2 -> 3 -> 8 -> 4 -> 5 -> 6 -> 7 -> 9 -> 10
+
+**Why the change:** criterion 4.11 requires the "read this file" action to be
+unavailable when a file's AI switch is off. That switch is Feature 8. Building
+8 first means the switch and its server-side enforcement ship as one complete,
+tested feature before anything is able to read a file — rather than a partial
+switch being bolted onto Feature 4 and finished later.
