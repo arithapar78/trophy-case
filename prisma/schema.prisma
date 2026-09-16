@@ -1,0 +1,34 @@
+// The shape of the database. After changing this file, run:
+//   npm run db:push
+//
+// The database location lives in prisma.config.ts (Prisma 7 moved it out
+// of this file).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// One saved win. See REQUIREMENTS.md for the field rules.
+model Achievement {
+  id       String   @id @default(cuid())
+  title    String
+  date     DateTime
+  category String
+  note     String?
+
+  // Attachment. All three are set together, or all three are null.
+  filePath String? // path relative to the uploads folder, e.g. "abc123.jpg"
+  fileName String? // the original name, shown to the user
+  fileType String? // MIME type, e.g. "image/jpeg" or "application/pdf"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Newest-first timeline ordering. createdAt breaks ties on the same date.
+  @@index([date, createdAt])
+  @@index([category])
+}

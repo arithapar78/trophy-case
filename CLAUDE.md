@@ -86,3 +86,13 @@ Build features in the order listed in REQUIREMENTS.md. After each feature: run t
 ## Privacy
 
 This app holds a child's personal data. Read [PRIVACY.md](PRIVACY.md) before changing anything about how data is stored, sent, or logged. Don't add analytics, tracking, crash reporting, or any third-party service that sees user data. The only outbound network call in v1 is the Claude API for essay ideas.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
