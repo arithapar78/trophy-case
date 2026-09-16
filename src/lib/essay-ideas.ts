@@ -135,8 +135,10 @@ export async function generateEssayIdeas(
   let response;
   try {
     response = await client.messages.parse({
-      model: "claude-opus-5",
-      max_tokens: 4000,
+      // Haiku is the smallest, lowest-energy Claude model. Three short ideas
+      // fit easily in 1000 tokens, so we cap it there to avoid waste.
+      model: "claude-haiku-4-5",
+      max_tokens: 1000,
       system: SYSTEM_PROMPT,
       messages: [
         {
