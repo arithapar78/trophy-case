@@ -154,17 +154,54 @@ achievement-tracker/
 │   ├── schema.prisma      The shape of the database
 │   ├── seed.ts            Script that adds 8 sample achievements
 │   └── dev.db             The database file itself (NEVER committed)
+├── prisma.config.ts       Tells the Prisma tools where the database is
 ├── src/
-│   ├── app/               Pages and API routes (Next.js App Router)
+│   ├── app/
 │   │   ├── page.tsx       The timeline page
+│   │   ├── layout.tsx     The page shell
 │   │   └── api/           Server endpoints the page talks to
-│   ├── components/        Reusable pieces of UI
-│   └── lib/               Shared logic (database client, AI, validation)
+│   │       ├── achievements/       List and create
+│   │       ├── achievements/[id]/  Edit and delete one
+│   │       ├── essay-ideas/        The AI feature
+│   │       └── uploads/[filename]/ Serves your photos and PDFs
+│   ├── components/
+│   │   ├── AchievementForm.tsx   Add and edit form
+│   │   ├── AchievementCard.tsx   One row on the timeline
+│   │   ├── TimelineFilters.tsx   Search box and category chips
+│   │   └── EssayIdeas.tsx        The essay ideas button and results
+│   └── lib/
+│       ├── db.ts          The one database connection
+│       ├── achievements.ts Create, edit, delete, list logic
+│       ├── validation.ts  The rules for a valid achievement
+│       ├── uploads.ts     Saving and deleting attached files
+│       ├── essay-ideas.ts The Claude API call, with MOCK fallback
+│       └── dates.ts       Timezone-safe date handling
 ├── tests/
-│   ├── unit/              Vitest tests
-│   └── e2e/               Playwright test
+│   ├── unit/              Vitest tests (run with npm test)
+│   └── e2e/               Playwright tests (run with npm run test:e2e)
 └── uploads/               Photos and PDFs you upload (NEVER committed)
 ```
+
+## The AI essay ideas feature
+
+Click **"Give me 3 college essay ideas"** and Claude reads your achievements,
+then suggests three angles for a college essay. Each idea has a title, a
+one-line hook, and the list of achievements it draws on.
+
+**Without an API key** the app runs in MOCK mode: it returns clearly labelled
+sample ideas so you can see how the feature works. A yellow banner says so, and
+no network call is made.
+
+**With an API key** you get real suggestions. To set one up:
+
+1. Go to https://console.anthropic.com and create an API key.
+2. Open `.env.local` and paste it after `ANTHROPIC_API_KEY=`.
+3. Restart the app (`Ctrl + C`, then `npm run dev` again) — the key is only
+   read at startup.
+
+Only the **text** of your achievements (titles, dates, categories, notes) is
+sent. Your photos and PDFs never leave your computer. The key is used on the
+server only and is never sent to your browser.
 
 ## Privacy
 

@@ -6,6 +6,7 @@ import AchievementCard from "@/components/AchievementCard";
 import TimelineFilters, {
   type CategoryFilter,
 } from "@/components/TimelineFilters";
+import EssayIdeas from "@/components/EssayIdeas";
 import type { AchievementJson } from "@/lib/types";
 
 // The timeline. REQUIREMENTS.md Feature 2.
@@ -96,6 +97,10 @@ export default function HomePage() {
           />
         </div>
       )}
+
+      <div className="mt-8">
+        <EssayIdeas />
+      </div>
 
       <div className="mt-8">
         <TimelineFilters
