@@ -9,6 +9,9 @@
 # be named "uploads" (like src/app/api/uploads/).
 /uploads/
 
+# --- Database backups: full copies of everyone's data, never commit ---
+/backups/
+
 # --- Database: contains personal data, never commit ---
 *.db
 *.db-journal
