@@ -4,8 +4,10 @@
 .env
 
 # --- Uploaded files: photos and PDFs of a child, never commit ---
-/uploads
-uploads/
+# The leading slash matters: it pins this to the uploads folder at the
+# project root, so it doesn't also swallow source folders that happen to
+# be named "uploads" (like src/app/api/uploads/).
+/uploads/
 
 # --- Database: contains personal data, never commit ---
 *.db

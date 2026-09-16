@@ -9,6 +9,8 @@ export default defineConfig({
     // Only unit tests. Playwright runs the e2e folder itself.
     include: ["tests/unit/**/*.test.ts", "tests/unit/**/*.test.tsx"],
     globals: true,
+    // Point the tests at a throwaway database before any test file loads.
+    setupFiles: ["./tests/unit/setup-db.ts"],
   },
   resolve: {
     alias: {
