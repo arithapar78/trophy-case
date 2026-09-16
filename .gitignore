@@ -1,0 +1,55 @@
+# --- Secrets: never commit these ---
+.env.local
+.env*.local
+.env
+
+# --- Uploaded files: photos and PDFs of a child, never commit ---
+/uploads
+uploads/
+
+# --- Database: contains personal data, never commit ---
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+prisma/dev.db
+prisma/*.db
+
+# --- Dependencies ---
+node_modules/
+.pnp
+.pnp.js
+
+# --- Next.js build output ---
+.next/
+out/
+build/
+dist/
+next-env.d.ts
+
+# --- Test output ---
+coverage/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# --- Editor and OS noise ---
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# --- Logs ---
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- TypeScript ---
+*.tsbuildinfo
+
+# --- Vercel ---
+.vercel
