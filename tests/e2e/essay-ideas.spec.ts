@@ -48,16 +48,29 @@ test("returns 3 ideas, each with a hook and its achievements (4.3 to 4.6)", asyn
   }
 });
 
-test("says plainly when the ideas are samples (4.9, 4.10)", async ({ page }) => {
-  await page.getByRole("button", { name: "Give me 3 college essay ideas" }).click();
+test("labels mock results, and doesn't label real ones (4.9, 4.10)", async ({
+  page,
+}) => {
+  // Whether this machine has an API key decides which path runs, so assert
+  // the rule rather than one outcome: a mock result must say so, and a real
+  // result must not claim to be a sample.
+  const isMock = await page.evaluate(async () => {
+    const response = await fetch("/api/essay-ideas", { method: "POST" });
+    return (await response.json()).isMock as boolean;
+  });
 
+  await page.getByRole("button", { name: "Give me 3 college essay ideas" }).click();
   await expect(page.getByTestId("essay-idea").first()).toBeVisible();
 
-  // With no API key set, the mock notice must be unmistakable.
   const notice = page.getByTestId("mock-notice");
-  await expect(notice).toBeVisible();
-  await expect(notice).toContainText("Sample ideas");
-  await expect(notice).toContainText("ANTHROPIC_API_KEY");
+
+  if (isMock) {
+    await expect(notice).toBeVisible();
+    await expect(notice).toContainText("Sample ideas");
+    await expect(notice).toContainText("ANTHROPIC_API_KEY");
+  } else {
+    await expect(notice).toBeHidden();
+  }
 });
 
 test("shows a loading state while it works (4.2)", async ({ page }) => {

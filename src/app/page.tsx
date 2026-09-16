@@ -6,6 +6,7 @@ import AchievementCard from "@/components/AchievementCard";
 import TimelineFilters, {
   type CategoryFilter,
 } from "@/components/TimelineFilters";
+import Link from "next/link";
 import EssayIdeas from "@/components/EssayIdeas";
 import type { AchievementJson } from "@/lib/types";
 
@@ -67,15 +68,23 @@ export default function HomePage() {
             Your personal achievement timeline.
           </p>
         </div>
-        {!showForm && !editing && (
-          <button
-            type="button"
-            onClick={() => setShowForm(true)}
-            className="shrink-0 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+        <div className="flex shrink-0 items-center gap-2">
+          <Link
+            href="/settings"
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50"
           >
-            Add achievement
-          </button>
-        )}
+            Settings
+          </Link>
+          {!showForm && !editing && (
+            <button
+              type="button"
+              onClick={() => setShowForm(true)}
+              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+            >
+              Add achievement
+            </button>
+          )}
+        </div>
       </header>
 
       {(showForm || editing) && (
