@@ -32,3 +32,19 @@ model Achievement {
   @@index([date, createdAt])
   @@index([category])
 }
+
+// App settings. There are no accounts in v2, so there is exactly one row,
+// always with id "singleton".
+model Settings {
+  id String @id @default("singleton")
+
+  // "Free" or "Pro". A test switch in v2 — no real subscription behind it.
+  plan String @default("Free")
+
+  // Dev-only clock offset in milliseconds, used to test the 5-hour prompt
+  // window and 60-day file expiry without waiting. Always 0 in production.
+  clockOffsetMs Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
