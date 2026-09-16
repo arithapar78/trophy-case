@@ -173,8 +173,11 @@ export async function listAchievements(
 
   const trimmedSearch = search?.trim();
   if (trimmedSearch) {
-    // SQLite's `contains` is already case-insensitive for ASCII text, which
-    // is what `mode: "insensitive"` would do on other databases.
+    // SQLite's LIKE ignores case for plain A-Z text, which covers
+    // REQUIREMENTS.md 2.12. Verified limitation: it does NOT fold accented
+    // letters, so searching "CAFÉ" won't match "Café" (lowercase "café"
+    // does). Fixing that needs a stored lowercased copy of each field,
+    // which isn't worth the complexity for v1.
     where.OR = [
       { title: { contains: trimmedSearch } },
       { note: { contains: trimmedSearch } },

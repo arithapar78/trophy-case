@@ -6,6 +6,7 @@ import {
 } from "@/lib/achievements";
 import { saveUploadedFile, FileValidationError } from "@/lib/uploads";
 import type { Category } from "@/lib/validation";
+import { inputValueToDate } from "@/lib/dates";
 
 // Thin route: read the request, call into src/lib, return the result.
 // The logic lives in src/lib/achievements.ts so it can be unit-tested.
@@ -39,9 +40,9 @@ export async function POST(request: Request) {
     const achievement = await createAchievement(
       {
         title: String(formData.get("title") ?? ""),
-        // A date input gives "2025-03-14". Adding the time makes it parse in
-        // local time rather than UTC, which otherwise shifts the day back.
-        date: rawDate ? new Date(`${rawDate}T12:00:00`) : new Date(Number.NaN),
+        // A date input gives "2025-03-14"; inputValueToDate pins it to
+        // midday UTC so no timezone can shift which day it lands on.
+        date: rawDate ? inputValueToDate(rawDate) : new Date(Number.NaN),
         category: String(formData.get("category") ?? ""),
         note: String(formData.get("note") ?? ""),
       },

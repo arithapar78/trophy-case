@@ -15,52 +15,57 @@ const db = new PrismaClient({
   adapter: new PrismaBetterSqlite3({ url: databaseUrl }),
 });
 
+/** A calendar day, pinned to midday UTC so it displays correctly everywhere. */
+function day(value: string): Date {
+  return new Date(`${value}T12:00:00.000Z`);
+}
+
 const SAMPLE_ACHIEVEMENTS = [
   {
     title: "First place, regional science fair",
-    date: new Date("2025-03-14"),
+    date: day("2025-03-14"),
     category: "School",
     note: "Built a low-cost air quality sensor and tested it in three classrooms. Judges liked that I collected two months of real data.",
   },
   {
     title: "Varsity soccer team captain",
-    date: new Date("2024-09-02"),
+    date: day("2024-09-02"),
     category: "Sports",
     note: "Voted in by teammates. Ran warmups and organised the carpool schedule for away games.",
   },
   {
     title: "Semifinalist, state debate championship",
-    date: new Date("2025-02-08"),
+    date: day("2025-02-08"),
     category: "Debate",
     note: "Topic was municipal water policy. Lost the semi on a 2-1 split.",
   },
   {
     title: "Cooked Thanksgiving dinner for 12 people",
-    date: new Date("2024-11-28"),
+    date: day("2024-11-28"),
     category: "Cooking",
     note: "Planned the menu, did the shopping, and managed the oven schedule myself. Only one thing burned.",
   },
   {
     title: "Mural for the public library children's wing",
-    date: new Date("2024-06-21"),
+    date: day("2024-06-21"),
     category: "Arts",
     note: "Four weekends of painting. The librarian asked me to sign the corner.",
   },
   {
     title: "Scored 1480 on the SAT",
-    date: new Date("2025-05-03"),
+    date: day("2025-05-03"),
     category: "School",
     note: "Second attempt, up 90 points from the first.",
   },
   {
     title: "Taught my little brother to ride a bike",
-    date: new Date("2024-07-15"),
+    date: day("2024-07-15"),
     category: "Other",
     note: "Took four afternoons. He fell a lot and kept going.",
   },
   {
     title: "Volunteered 50 hours at the animal shelter",
-    date: new Date("2025-01-20"),
+    date: day("2025-01-20"),
     category: "Other",
     note: "Mostly dog walking and cleaning kennels. Helped three dogs get adopted by writing their profile cards.",
   },
