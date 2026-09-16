@@ -67,3 +67,14 @@ test("saving without a title shows an error and saves nothing", async ({
   await expect(page.getByText("Please add a title.")).toBeVisible();
   expect(await page.getByTestId("achievement-item").count()).toBe(countBefore);
 });
+
+test.afterAll(async ({ request }) => {
+  // Remove anything these tests created, so the real timeline stays clean.
+  const response = await request.get("/api/achievements");
+  const { achievements } = await response.json();
+  for (const achievement of achievements) {
+    if (/^(E2E subject|Playwright test achievement)/.test(achievement.title)) {
+      await request.delete(`/api/achievements/${achievement.id}`);
+    }
+  }
+});

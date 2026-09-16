@@ -14,6 +14,8 @@ export default function HomePage() {
   const [achievements, setAchievements] = useState<AchievementJson[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  // The achievement currently being edited, or null when adding.
+  const [editing, setEditing] = useState<AchievementJson | null>(null);
 
   const [category, setCategory] = useState<CategoryFilter>("All");
   const [search, setSearch] = useState("");
@@ -64,7 +66,7 @@ export default function HomePage() {
             Your personal achievement timeline.
           </p>
         </div>
-        {!showForm && (
+        {!showForm && !editing && (
           <button
             type="button"
             onClick={() => setShowForm(true)}
@@ -75,14 +77,22 @@ export default function HomePage() {
         )}
       </header>
 
-      {showForm && (
+      {(showForm || editing) && (
         <div className="mt-6">
           <AchievementForm
+            // Remounts when switching between achievements, so the fields
+            // reset to the one being edited rather than keeping stale values.
+            key={editing?.id ?? "new"}
+            achievement={editing ?? undefined}
             onSaved={() => {
               setShowForm(false);
+              setEditing(null);
               void loadAchievements();
             }}
-            onCancel={() => setShowForm(false)}
+            onCancel={() => {
+              setShowForm(false);
+              setEditing(null);
+            }}
           />
         </div>
       )}
@@ -128,6 +138,11 @@ export default function HomePage() {
                 <AchievementCard
                   key={achievement.id}
                   achievement={achievement}
+                  onEdit={() => {
+                    setShowForm(false);
+                    setEditing(achievement);
+                  }}
+                  onDeleted={() => void loadAchievements()}
                 />
               ))}
             </ul>

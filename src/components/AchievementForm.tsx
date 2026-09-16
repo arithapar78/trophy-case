@@ -6,26 +6,37 @@ import {
   TITLE_MAX_LENGTH,
   NOTE_MAX_LENGTH,
 } from "@/lib/validation";
-import { todayAsInputValue } from "@/lib/dates";
+import { todayAsInputValue, dateToInputValue } from "@/lib/dates";
+import type { AchievementJson } from "@/lib/types";
 
-// The add-an-achievement form.
+// One form for both adding and editing.
 //
-// Built around the 10-second goal in REQUIREMENTS.md 1.16: the date starts
-// at today, the title is focused as soon as the form opens, and only the
-// title and category actually need a decision.
+// Adding is built around the 10-second goal in REQUIREMENTS.md 1.16: the date
+// starts at today, the title is focused as soon as the form opens, and only
+// the title and category need a decision.
+//
+// Passing an `achievement` switches it to edit mode, pre-filled with that
+// achievement's values (3.2). Keeping one component means the validation and
+// layout can't drift apart between the two.
 
 type FieldErrors = Record<string, string>;
 
 export default function AchievementForm({
+  achievement,
   onSaved,
   onCancel,
 }: {
+  achievement?: AchievementJson;
   onSaved: () => void;
   onCancel: () => void;
 }) {
+  const isEditing = Boolean(achievement);
+
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
-  const [noteLength, setNoteLength] = useState(0);
+  const [noteLength, setNoteLength] = useState(achievement?.note?.length ?? 0);
+  // Tracks the "Remove" button on an existing attachment (3.7).
+  const [removeFile, setRemoveFile] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
 
   // Put the cursor in the title box so you can just start typing (1.16).
@@ -39,12 +50,13 @@ export default function AchievementForm({
     setErrors({});
 
     const formData = new FormData(event.currentTarget);
+    if (removeFile) formData.set("removeFile", "true");
 
     try {
-      const response = await fetch("/api/achievements", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        isEditing ? `/api/achievements/${achievement!.id}` : "/api/achievements",
+        { method: isEditing ? "PUT" : "POST", body: formData },
+      );
 
       if (!response.ok) {
         const data = await response.json();
@@ -66,14 +78,17 @@ export default function AchievementForm({
     }
   }
 
+  const formLabel = isEditing ? "Edit achievement" : "Add an achievement";
+  const hasExistingFile = Boolean(achievement?.filePath) && !removeFile;
+
   return (
     <form
       onSubmit={handleSubmit}
       noValidate
       className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
-      aria-label="Add an achievement"
+      aria-label={formLabel}
     >
-      <h2 className="text-lg font-semibold">Add an achievement</h2>
+      <h2 className="text-lg font-semibold">{formLabel}</h2>
 
       {errors.form && (
         <p
@@ -94,6 +109,7 @@ export default function AchievementForm({
             id="title"
             name="title"
             type="text"
+            defaultValue={achievement?.title ?? ""}
             maxLength={TITLE_MAX_LENGTH}
             aria-invalid={Boolean(errors.title)}
             aria-describedby={errors.title ? "title-error" : undefined}
@@ -116,7 +132,11 @@ export default function AchievementForm({
               id="date"
               name="date"
               type="date"
-              defaultValue={todayAsInputValue()}
+              defaultValue={
+                achievement
+                  ? dateToInputValue(achievement.date)
+                  : todayAsInputValue()
+              }
               max={todayAsInputValue()}
               aria-invalid={Boolean(errors.date)}
               aria-describedby={errors.date ? "date-error" : undefined}
@@ -136,7 +156,7 @@ export default function AchievementForm({
             <select
               id="category"
               name="category"
-              defaultValue="School"
+              defaultValue={achievement?.category ?? "School"}
               aria-invalid={Boolean(errors.category)}
               className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-slate-900 focus:outline-none"
             >
@@ -162,6 +182,7 @@ export default function AchievementForm({
             id="note"
             name="note"
             rows={3}
+            defaultValue={achievement?.note ?? ""}
             maxLength={NOTE_MAX_LENGTH}
             onChange={(event) => setNoteLength(event.target.value.length)}
             aria-invalid={Boolean(errors.note)}
@@ -187,6 +208,40 @@ export default function AchievementForm({
             Photo or PDF{" "}
             <span className="font-normal text-slate-500">(optional)</span>
           </label>
+
+          {hasExistingFile && (
+            <div className="mt-1 flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+              <a
+                href={`/api/uploads/${achievement!.filePath}`}
+                target="_blank"
+                rel="noreferrer"
+                className="truncate text-sm text-slate-700 underline"
+              >
+                {achievement!.fileName ?? "Attached file"}
+              </a>
+              <button
+                type="button"
+                onClick={() => setRemoveFile(true)}
+                className="shrink-0 text-sm text-red-600 hover:underline"
+              >
+                Remove
+              </button>
+            </div>
+          )}
+
+          {removeFile && (
+            <p className="mt-1 text-sm text-slate-500">
+              The attachment will be removed when you save.{" "}
+              <button
+                type="button"
+                onClick={() => setRemoveFile(false)}
+                className="text-slate-700 underline"
+              >
+                Undo
+              </button>
+            </p>
+          )}
+
           <input
             id="file"
             name="file"
@@ -201,7 +256,9 @@ export default function AchievementForm({
             </p>
           )}
           <p className="mt-1 text-xs text-slate-400">
-            Images or PDF, up to 10 MB. Stays on your computer.
+            {hasExistingFile
+              ? "Choosing a file replaces the current one. Up to 10 MB."
+              : "Images or PDF, up to 10 MB. Stays on your computer."}
           </p>
         </div>
       </div>
@@ -212,7 +269,7 @@ export default function AchievementForm({
           disabled={saving}
           className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
         >
-          {saving ? "Saving..." : "Save achievement"}
+          {saving ? "Saving..." : isEditing ? "Save changes" : "Save achievement"}
         </button>
         <button
           type="button"
