@@ -34,6 +34,44 @@ These are deliberately out of scope for v1. They're written down so we don't for
 - A mobile app
 - Payments and subscriptions
 
+### Future plan: free vs. Pro, and one shared AI assistant
+
+Parked here, not being built yet. This all needs a hosted version with accounts, which v1 is not.
+
+**One AI assistant ("the helper")** that does all the smart jobs:
+- sorts and tags achievements
+- edits an achievement based on what you upload (e.g. reads a certificate and fills in the title and date)
+- writes LinkedIn post templates
+- suggests colleges
+- builds life plans
+- can read your files, but only the ones you pick
+
+**Who can use it:** anyone on the internet, with an account.
+- Free: 10 prompts, then it resets 5 hours later.
+- Pro: higher limit, plus college recommendations.
+
+**Free vs. Pro:**
+
+| Feature | Free | Pro |
+|---|---|---|
+| Timeline, add/edit/delete | Yes | Yes |
+| The AI helper | 10 prompts every 5 hours | Higher limit |
+| College recommendations | No | Yes |
+| Uploaded photos | Deleted after 60 days | Kept forever |
+| Avatar customization | Basic | Separate paid add-on |
+
+**Low-energy AI:** this project will live on learntav.com, which is built to be energy efficient, so the helper should be too:
+- use the smallest model that does the job well (a "Haiku"-size model for most tasks)
+- keep prompts short and send only the achievements needed, not the whole history
+- save (cache) answers so the same question isn't asked twice
+- don't send photos to the AI unless the job needs them
+
+**Open questions to settle before building:**
+1. Anonymous users can't be rate-limited fairly (they just clear cookies), so free use needs a login.
+2. Before a free user's photo is deleted at day 60, warn them and let them download it. The achievement itself stays; only the file goes.
+3. Hosting kids' data online means COPPA applies (see PRIVACY.md): parental consent for under-13s, and strip location data from photos.
+4. Every free prompt costs real money. Set a monthly spending cap on the API key.
+
 ## Tech stack
 
 | Piece | What we use | Why |
@@ -102,13 +140,36 @@ This adds 8 example achievements for a made-up student so you can see the app wo
 
 ### Step 6 — Start the app
 
+**The easy way:** double-click **Trophy Case** on your Desktop. A Terminal
+window opens, the app starts, and your browser opens automatically.
+
+**The manual way:**
+
 ```bash
 npm run dev
 ```
 
 Then open your browser to **http://localhost:3000**.
 
-To stop the app, click on the Terminal window and press `Ctrl + C`.
+To stop the app either way: close that Terminal window, or click it and press
+`Ctrl + C`.
+
+### About the desktop launcher
+
+The Desktop icon runs `scripts/start-trophy-case.sh`, which:
+
+- Starts the app and opens your browser once it's actually ready
+- Notices if it's already running and just opens the browser instead of
+  starting a second copy
+- Sets up the database and sample data on a first run
+- Tells you what to do if Node.js isn't installed
+
+**The app only runs while that Terminal window is open.** This is normal:
+Trophy Case needs a running program to hold your database and save your
+photos, so there's no single file you can open on its own.
+
+If you ever move or rename the project folder, the launcher will say so —
+ask Claude to point it at the new location.
 
 ## How to run the tests
 
