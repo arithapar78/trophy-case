@@ -132,7 +132,18 @@ The camera button only really does its job on a phone. To get it there:
 4. On your phone, open Safari and go to `http://192.168.1.42:3000` (using the number from step 2).
 5. Tap Share → **Add to Home Screen** to install it.
 
-If the page doesn't load, the usual cause is a firewall: check System Settings → Network → Firewall on this Mac.
+**If the page doesn't load at all,** the usual cause is your router blocking
+devices from talking to each other (often called "AP isolation" or "client
+isolation"). It's on by default on a lot of home routers. The quickest way
+around it is to skip the router entirely: turn on **Personal Hotspot** on your
+iPhone, connect this Mac to it, then run `ipconfig getifaddr en0` again for the
+new address. A hotspot has no isolation, so it just works.
+
+**If the page loads but nothing you tap does anything,** the phone isn't
+receiving the app's JavaScript. That's what `allowedDevOrigins` in
+`next.config.ts` is for — it lists the network address ranges the development
+server trusts. It already covers home Wi-Fi, iPhone hotspots, and `10.x`
+networks. If your network uses something else, add it there and restart.
 
 > **A note on the camera:** browsers only allow camera access on a secure (`https://`) address, with one exception — `localhost`. Over plain `http://` to an IP address, tapping the camera button opens your **photo library** rather than the live camera. Everything else works exactly the same, and the photo still saves. Getting the true camera on your phone needs an `https` address, which is part of the hosted version listed under "What comes next".
 
