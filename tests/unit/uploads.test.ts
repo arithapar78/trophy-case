@@ -6,7 +6,7 @@ import {
   saveUploadedFile,
   deleteStoredFile,
   FileValidationError,
-  UPLOADS_DIR,
+  getUploadsDir,
 } from "@/lib/uploads";
 
 // Covers saving and cleaning up attachments (REQUIREMENTS.md 1.11 to 1.14,
@@ -17,7 +17,7 @@ const written: string[] = [];
 
 afterEach(async () => {
   for (const name of written.splice(0)) {
-    await rm(path.join(UPLOADS_DIR, name), { force: true });
+    await rm(path.join(getUploadsDir(), name), { force: true });
   }
 });
 
@@ -33,7 +33,7 @@ describe("saveUploadedFile", () => {
     expect(saved.fileName).toBe("certificate.png");
     expect(saved.fileType).toBe("image/png");
     expect(saved.filePath).toMatch(/\.png$/);
-    expect(existsSync(path.join(UPLOADS_DIR, saved.filePath))).toBe(true);
+    expect(existsSync(path.join(getUploadsDir(), saved.filePath))).toBe(true);
   });
 
   it("saves a PDF", async () => {
@@ -41,7 +41,7 @@ describe("saveUploadedFile", () => {
     written.push(saved.filePath);
 
     expect(saved.filePath).toMatch(/\.pdf$/);
-    expect(existsSync(path.join(UPLOADS_DIR, saved.filePath))).toBe(true);
+    expect(existsSync(path.join(getUploadsDir(), saved.filePath))).toBe(true);
   });
 
   it("gives two files with the same name different stored names", async () => {
@@ -66,7 +66,7 @@ describe("saveUploadedFile", () => {
     expect(saved.filePath).not.toContain("..");
     expect(saved.fileName).toBe("passwd.png");
 
-    const entries = await readdir(UPLOADS_DIR);
+    const entries = await readdir(getUploadsDir());
     expect(entries).toContain(saved.filePath);
   });
 
@@ -82,11 +82,11 @@ describe("saveUploadedFile", () => {
   });
 
   it("writes nothing when the file is rejected", async () => {
-    const before = await readdir(UPLOADS_DIR).catch(() => []);
+    const before = await readdir(getUploadsDir()).catch(() => []);
     await expect(
       saveUploadedFile(fakeFile("bad.zip", "application/zip")),
     ).rejects.toThrow();
-    const after = await readdir(UPLOADS_DIR).catch(() => []);
+    const after = await readdir(getUploadsDir()).catch(() => []);
 
     expect(after.length).toBe(before.length);
   });
@@ -95,7 +95,7 @@ describe("saveUploadedFile", () => {
 describe("deleteStoredFile", () => {
   it("removes the file from disk", async () => {
     const saved = await saveUploadedFile(fakeFile("gone.png", "image/png"));
-    const fullPath = path.join(UPLOADS_DIR, saved.filePath);
+    const fullPath = path.join(getUploadsDir(), saved.filePath);
     expect(existsSync(fullPath)).toBe(true);
 
     await deleteStoredFile(saved.filePath);
@@ -115,8 +115,8 @@ describe("deleteStoredFile", () => {
 
   it("refuses to delete anything outside the uploads folder", async () => {
     // A canary file one level up that must survive a traversal attempt.
-    await mkdir(UPLOADS_DIR, { recursive: true });
-    const canary = path.join(UPLOADS_DIR, "..", "delete-canary.tmp");
+    await mkdir(getUploadsDir(), { recursive: true });
+    const canary = path.join(getUploadsDir(), "..", "delete-canary.tmp");
     await writeFile(canary, "do not delete");
 
     await deleteStoredFile("../delete-canary.tmp");

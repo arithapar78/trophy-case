@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
-import { UPLOADS_DIR } from "@/lib/uploads";
+import { getUploadsDir } from "@/lib/uploads";
 import { ALLOWED_FILE_TYPES } from "@/lib/validation";
 
 // Serves an uploaded photo or PDF back to the browser.
@@ -37,7 +37,7 @@ export async function GET(
   }
 
   try {
-    const bytes = await readFile(path.join(UPLOADS_DIR, safeName));
+    const bytes = await readFile(path.join(getUploadsDir(), safeName));
     return new NextResponse(new Uint8Array(bytes), {
       headers: {
         "Content-Type": contentType,

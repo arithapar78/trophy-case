@@ -199,6 +199,8 @@ npm run test:e2e
 | `npm run seed` | Adds 8 sample achievements |
 | `npm run db:push` | Creates or updates the database to match the schema |
 | `npm run db:studio` | Opens a visual database browser |
+| `npm run start:live` | Starts the live site on port 3100 (see below) |
+| `npm run stop:live` | Stops the live site |
 
 ## Folder structure
 
@@ -263,6 +265,90 @@ no network call is made.
 Only the **text** of your achievements (titles, dates, categories, notes) is
 sent. Your photos and PDFs never leave your computer. The key is used on the
 server only and is never sent to your browser.
+
+## Running the live site
+
+The live site is the public one. It runs the production build on this Mac,
+on **port 3100**, with its own data in `~/TrophyCaseLive/` — completely
+separate from your personal copy on port 3000.
+
+**It is not on the internet yet.** Tailscale Funnel is what would make it
+public, and that stays off until the per-visitor privacy features are built.
+Right now the live site is reachable only from this Mac.
+
+### One-time setup
+
+```bash
+cp .env.production.example .env.production.local
+```
+
+Open `.env.production.local` and check the paths point somewhere under
+`~/TrophyCaseLive`. Add an API key if you want the AI to work — use a
+**separate key** from your personal one, with a monthly spending limit set in
+the Anthropic Console, so the live site can be switched off on its own and a
+runaway cost is capped. Leave it blank to run with no AI costs at all.
+
+### Start it
+
+```bash
+npm run start:live
+```
+
+This checks Node, creates the data folder, sets up the live database, builds
+the production version, keeps the Mac awake, and starts the site. Then open
+**http://127.0.0.1:3100**.
+
+### Stop it
+
+```bash
+npm run stop:live
+```
+
+This turns the public address off first, then stops the app and lets the Mac
+sleep normally again.
+
+### Update it
+
+```bash
+npm run stop:live
+npm run start:live
+```
+
+The start script rebuilds every time, so your latest changes are picked up.
+
+### Emergency: take it off the internet now
+
+Once the funnel is on, this is the fastest way to make the site unreachable:
+
+```bash
+tailscale funnel --https=443 off
+```
+
+Or just `npm run stop:live`, which does that first before anything else.
+
+### What's different on the live site
+
+| | Your copy (3000) | Live site (3100) |
+|---|---|---|
+| Data | `prisma/dev.db`, `./uploads` | `~/TrophyCaseLive/` |
+| Plan switch | Works | Hidden and refused |
+| Test clock | Works | Hidden and refused |
+| Everyone's plan | Your choice | Always Free |
+
+### Restoring from a backup
+
+**From an app backup** (taken every 6 hours, newest 8 kept):
+
+```bash
+npm run stop:live
+ls -la ~/TrophyCaseLive/backups          # find the one you want
+cp ~/TrophyCaseLive/backups/<file> ~/TrophyCaseLive/trophy-case.db
+npm run start:live
+```
+
+**From Time Machine:** open Time Machine, browse to `~/TrophyCaseLive`, pick a
+date before the problem, and restore the whole folder. Stop the live site
+first.
 
 ## Privacy
 

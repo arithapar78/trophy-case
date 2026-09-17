@@ -3,11 +3,22 @@ import { mkdir, writeFile, unlink } from "node:fs/promises";
 import path from "node:path";
 import { validateFile } from "@/lib/validation";
 
-// Saves uploaded photos and PDFs into the /uploads folder at the project
-// root. Files stay on this machine and are never sent anywhere — see
-// PRIVACY.md.
+// Saves uploaded photos and PDFs. Files stay on this machine and are never
+// sent anywhere — see PRIVACY.md.
+//
+// Where they go depends on UPLOADS_DIR:
+//   unset  -> <project>/uploads, which is what `npm run dev` uses
+//   set    -> that folder, which is how the live site keeps its uploads in
+//             ~/TrophyCaseLive/uploads, away from the personal copy
+//
+// This is a FUNCTION, not a constant. A constant would freeze the path when
+// this module first loaded, which would let the live and local copies end up
+// sharing one folder depending on load order (REQUIREMENTS-v3.md T3.18).
 
-export const UPLOADS_DIR = path.join(process.cwd(), "uploads");
+export function getUploadsDir(): string {
+  const configured = process.env.UPLOADS_DIR?.trim();
+  return configured ? path.resolve(configured) : path.join(process.cwd(), "uploads");
+}
 
 /** Thrown when an uploaded file breaks the rules in validation.ts. */
 export class FileValidationError extends Error {
@@ -59,10 +70,10 @@ export async function saveUploadedFile(file: File): Promise<SavedFile> {
     throw new FileValidationError(problem);
   }
 
-  await mkdir(UPLOADS_DIR, { recursive: true });
+  await mkdir(getUploadsDir(), { recursive: true });
 
   const storedName = `${randomUUID()}${extensionFor(file.type)}`;
-  const destination = path.join(UPLOADS_DIR, storedName);
+  const destination = path.join(getUploadsDir(), storedName);
 
   const bytes = Buffer.from(await file.arrayBuffer());
   await writeFile(destination, bytes);
@@ -87,7 +98,7 @@ export async function deleteStoredFile(filePath: string | null): Promise<void> {
   if (storedName !== filePath) return;
 
   try {
-    await unlink(path.join(UPLOADS_DIR, storedName));
+    await unlink(path.join(getUploadsDir(), storedName));
   } catch {
     // Already gone, or never written. Nothing to do.
   }

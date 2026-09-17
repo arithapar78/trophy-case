@@ -100,7 +100,18 @@ export default function SettingsPage() {
           <strong data-testid="current-plan">{settings.plan}</strong> plan.
         </p>
 
-        <div className="mt-4 flex gap-2" role="group" aria-label="Choose a plan">
+        {!settings.devToolsAvailable && (
+          <p className="mt-3 rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-600">
+            Everyone on the live site is on the Free plan.
+          </p>
+        )}
+
+        <div
+          className="mt-4 flex gap-2"
+          role="group"
+          aria-label="Choose a plan"
+          hidden={!settings.devToolsAvailable}
+        >
           {(["Free", "Pro"] as const).map((plan) => {
             const isActive = settings.plan === plan;
             return (
@@ -122,7 +133,10 @@ export default function SettingsPage() {
           })}
         </div>
 
-        <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+        <p
+          hidden={!settings.devToolsAvailable}
+          className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800"
+        >
           <strong>This is a test switch, not a real subscription.</strong> There
           are no accounts or payments in this version — it exists so you can try
           both experiences. Switching plans never changes your achievements.

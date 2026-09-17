@@ -27,8 +27,17 @@ export async function PUT(request: Request) {
   try {
     const body = await request.json();
 
-    // Plan change.
+    // Plan change. The Free/Pro switch is a TEST control, so the live site
+    // refuses it entirely — everyone online is on Free (criteria 1.27, 1.28).
+    // Without this, one request would grant a stranger the higher prompt
+    // limit on the owner's API key.
     if ("plan" in body) {
+      if (process.env.NODE_ENV === "production") {
+        return NextResponse.json(
+          { error: "The plan can't be changed here." },
+          { status: 403 },
+        );
+      }
       if (!isPlan(body.plan)) {
         return NextResponse.json(
           { error: "Plan must be either Free or Pro." },

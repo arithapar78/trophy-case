@@ -43,12 +43,18 @@ export function isPlan(value: unknown): value is Plan {
  */
 export async function getSettings(): Promise<Settings> {
   const existing = await db.settings.findUnique({ where: { id: SINGLETON_ID } });
-  if (existing) {
-    return { ...existing, plan: normalisePlan(existing.plan) };
+  const row =
+    existing ?? (await db.settings.create({ data: { id: SINGLETON_ID } }));
+
+  // On the live site everyone is on Free, whatever the row says
+  // (criterion 1.28). Forcing it here rather than trusting the stored value
+  // means a row written before a fix — or by a hand-edited database — can't
+  // hand a stranger the higher prompt limit on the owner's API key.
+  if (process.env.NODE_ENV === "production") {
+    return { ...row, plan: "Free", clockOffsetMs: 0 };
   }
 
-  const created = await db.settings.create({ data: { id: SINGLETON_ID } });
-  return { ...created, plan: normalisePlan(created.plan) };
+  return { ...row, plan: normalisePlan(row.plan) };
 }
 
 /**
