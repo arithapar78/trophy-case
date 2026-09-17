@@ -154,9 +154,19 @@ Then open your browser to **http://localhost:3000**.
 To stop the app either way: close that Terminal window, or click it and press
 `Ctrl + C`.
 
-### About the desktop launcher
+### About the desktop launchers
 
-The Desktop icon runs `scripts/start-trophy-case.sh`, which:
+There are two icons on the Desktop, and they do different things:
+
+| Icon | What it opens | Port | Data |
+|---|---|---|---|
+| **Trophy Case** (navy) | Your personal copy | 3000 | `prisma/dev.db`, `./uploads` |
+| **Trophy Case LIVE** (green) | The public site | 3100 | `~/TrophyCaseLive/` |
+
+Both can run at the same time without interfering. The live one is covered in
+"Running the live site" below.
+
+The navy icon runs `scripts/start-trophy-case.sh`, which:
 
 - Starts the app and opens your browser once it's actually ready
 - Notices if it's already running and just opens the browser instead of
@@ -289,6 +299,11 @@ the Anthropic Console, so the live site can be switched off on its own and a
 runaway cost is capped. Leave it blank to run with no AI costs at all.
 
 ### Start it
+
+**The easy way:** double-click **Trophy Case LIVE** on your Desktop (the green
+icon with the broadcast waves).
+
+**Or from Terminal:**
 
 ```bash
 npm run start:live
