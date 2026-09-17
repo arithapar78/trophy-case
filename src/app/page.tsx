@@ -61,14 +61,20 @@ export default function HomePage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-10">
-      <header className="flex items-center justify-between gap-4">
+      <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Trophy Case</h1>
           <p className="mt-1 text-sm text-slate-600">
             Your personal achievement timeline.
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/helper"
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50"
+          >
+            Helper
+          </Link>
           <Link
             href="/settings"
             className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50"
