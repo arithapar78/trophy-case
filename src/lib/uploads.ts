@@ -1,30 +1,25 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile, unlink } from "node:fs/promises";
 import path from "node:path";
-import { validateFile } from "@/lib/validation";
+import { validatePhoto } from "@/lib/validation";
 
-// Saves uploaded photos and PDFs. Files stay on this machine and are never
-// sent anywhere — see PRIVACY.md.
+// Saves photos taken with the camera or picked from the camera roll.
+// Photos stay on this machine and are never sent anywhere — see PRIVACY.md.
 //
-// Where they go depends on UPLOADS_DIR:
-//   unset  -> <project>/uploads, which is what `npm run dev` uses
-//   set    -> that folder, which is how the live site keeps its uploads in
-//             ~/TrophyCaseLive/uploads, away from the personal copy
-//
-// This is a FUNCTION, not a constant. A constant would freeze the path when
-// this module first loaded, which would let the live and local copies end up
-// sharing one folder depending on load order (REQUIREMENTS-v3.md T3.18).
+// Where they go depends on UPLOADS_DIR; unset means <project>/uploads, which
+// is what `npm run dev` uses. This is a FUNCTION, not a constant, so the
+// path is read when it's used rather than frozen when the module loaded.
 
 export function getUploadsDir(): string {
   const configured = process.env.UPLOADS_DIR?.trim();
   return configured ? path.resolve(configured) : path.join(process.cwd(), "uploads");
 }
 
-/** Thrown when an uploaded file breaks the rules in validation.ts. */
-export class FileValidationError extends Error {
+/** Thrown when a photo breaks the rules in validation.ts. */
+export class PhotoValidationError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "FileValidationError";
+    this.name = "PhotoValidationError";
   }
 }
 
@@ -34,68 +29,52 @@ function extensionFor(mimeType: string): string {
     "image/jpeg": ".jpg",
     "image/png": ".png",
     "image/webp": ".webp",
-    "image/gif": ".gif",
-    "application/pdf": ".pdf",
+    "image/heic": ".heic",
+    "image/heif": ".heif",
   };
   return map[mimeType] ?? "";
 }
 
-/**
- * Strips any folder parts from a browser-supplied filename.
- *
- * We only ever show this name back to the user — the stored name is a
- * generated one — but sanitising it keeps a crafted name like
- * "../../etc/passwd" from ever being treated as a path.
- */
-function safeDisplayName(name: string): string {
-  return path.basename(name).replace(/[\r\n]/g, "").slice(0, 255) || "file";
-}
-
-export type SavedFile = {
-  filePath: string; // generated name, relative to the uploads folder
-  fileName: string; // the original name, for display
-  fileType: string;
+export type SavedPhoto = {
+  photoPath: string; // generated name, relative to the uploads folder
+  photoType: string;
 };
 
 /**
- * Saves an uploaded file and returns what to store in the database.
+ * Saves a photo and returns what to store in the database.
  *
- * The file is given a random generated name so that two uploads called
- * "certificate.jpg" can't overwrite each other, and so a user-supplied
- * name can never steer where the file lands.
+ * The photo gets a random generated name so two uploads from the same camera
+ * can't overwrite each other, and so a name supplied by the browser can never
+ * steer where the file lands.
  */
-export async function saveUploadedFile(file: File): Promise<SavedFile> {
-  const problem = validateFile({ size: file.size, type: file.type });
+export async function savePhoto(photo: File): Promise<SavedPhoto> {
+  const problem = validatePhoto({ size: photo.size, type: photo.type });
   if (problem) {
-    throw new FileValidationError(problem);
+    throw new PhotoValidationError(problem);
   }
 
   await mkdir(getUploadsDir(), { recursive: true });
 
-  const storedName = `${randomUUID()}${extensionFor(file.type)}`;
+  const storedName = `${randomUUID()}${extensionFor(photo.type)}`;
   const destination = path.join(getUploadsDir(), storedName);
 
-  const bytes = Buffer.from(await file.arrayBuffer());
+  const bytes = Buffer.from(await photo.arrayBuffer());
   await writeFile(destination, bytes);
 
-  return {
-    filePath: storedName,
-    fileName: safeDisplayName(file.name),
-    fileType: file.type,
-  };
+  return { photoPath: storedName, photoType: photo.type };
 }
 
 /**
- * Deletes a stored file. Never throws — a missing file is fine, since the
+ * Deletes a stored photo. Never throws — a missing file is fine, since the
  * database record is what matters and we don't want cleanup to break a
  * delete or an edit.
  */
-export async function deleteStoredFile(filePath: string | null): Promise<void> {
-  if (!filePath) return;
+export async function deleteStoredPhoto(photoPath: string | null): Promise<void> {
+  if (!photoPath) return;
 
   // Defence in depth: only ever delete a plain filename inside uploads/.
-  const storedName = path.basename(filePath);
-  if (storedName !== filePath) return;
+  const storedName = path.basename(photoPath);
+  if (storedName !== photoPath) return;
 
   try {
     await unlink(path.join(getUploadsDir(), storedName));

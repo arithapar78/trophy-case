@@ -1,8 +1,12 @@
-# Requirements — Trophy Case v1
+# Requirements — Trophy Case (phone MVP)
 
-This is the contract for version 1. If a feature isn't in this file, it doesn't get built.
+This is the contract for the current version. If a feature isn't in this file, it doesn't get built.
 
-Every acceptance criterion below is written so you can test it by hand in the browser and mark it pass or fail.
+**What this version is:** the smallest thing that actually works on a phone. Take a photo, add a few details, see it on your timeline. Nothing else.
+
+**What this version is deliberately not:** there is no AI in it. The essay-ideas feature, the chat helper, plans and prompt limits were all removed to get back to a working core. They come back later, on purpose, one at a time.
+
+Every acceptance criterion below is written so you can test it by hand on a phone and mark it pass or fail.
 
 ---
 
@@ -16,122 +20,108 @@ Every acceptance criterion below is written so you can test it by hand in the br
 | Date | Yes | A calendar date; cannot be in the future |
 | Category | Yes | Exactly one of: School, Sports, Debate, Cooking, Arts, Other |
 | Note | No | Up to 500 characters |
-| Attachment | No | One image (JPG, PNG, WEBP, GIF) or one PDF, max 10 MB |
+| Photo | No | One image (JPG, PNG, WEBP, HEIC), max 10 MB |
+
+**Photo, not "attachment".** PDFs are no longer supported. This is a camera app; if you want to save a certificate, take a picture of it.
 
 ---
 
-## Feature 1 — Add an achievement in under 10 seconds
+## Feature 1 — It works like a phone app
 
-> **As a student, I want to** save an achievement with just a title, date, and category **so that** recording a win never feels like homework.
-
-> **As a parent, I want to** attach the certificate photo I just took **so that** the proof lives with the record.
+> **As a student, I want** the app to feel like an app on my phone, not a website **so that** using it doesn't feel like homework.
 
 ### Acceptance criteria
 
-- [ ] 1.1 The timeline page has a visible "Add achievement" control; I don't have to hunt for it.
-- [ ] 1.2 The form shows: Title, Date, Category, Note, and a file picker.
-- [ ] 1.3 Title, Date, and Category are marked as required; Note and file are clearly optional.
-- [ ] 1.4 The Date field defaults to today, so I can leave it alone for something that just happened.
-- [ ] 1.5 Category is a dropdown with exactly these six choices: School, Sports, Debate, Cooking, Arts, Other.
-- [ ] 1.6 I can fill in only Title and Category, leave everything else at its default, click Save, and it saves.
-- [ ] 1.7 Saving with an empty Title shows an inline error and does NOT save.
-- [ ] 1.8 Saving with a Title longer than 120 characters shows an inline error and does NOT save.
-- [ ] 1.9 Saving with a future date shows an inline error and does NOT save.
-- [ ] 1.10 Saving with a Note longer than 500 characters shows an inline error and does NOT save.
-- [ ] 1.11 I can attach a JPG or PNG and it saves; the file appears in the `/uploads` folder.
-- [ ] 1.12 I can attach a PDF and it saves.
-- [ ] 1.13 Attaching a file type that is not an image or PDF (e.g. a `.zip`) shows an error and does NOT save.
-- [ ] 1.14 Attaching a file larger than 10 MB shows an error and does NOT save.
-- [ ] 1.15 After a successful save, the form closes and the new achievement appears at the correct spot in the timeline without me refreshing the page.
-- [x] 1.16 **The speed test:** with a stopwatch, I can add a title-only achievement in under 10 seconds from first click to seeing it on the timeline.
-  - This means a *repeat* use, not a first-ever attempt. Learning any form
-    takes a few goes; the bar is about whether the app gets out of the way
-    once you know it.
-  - **Measured 2026-09-16:** 7.8s title-only (passes). First-ever attempt was
-    13s, and 16s with a note added — so the note roughly doubles the task.
-    Worth re-checking if the form ever grows another field.
+- [ ] 1.1 The layout is built for a phone screen first; nothing is cut off or needs sideways scrolling on an iPhone-sized screen.
+- [ ] 1.2 It can be added to the iPhone Home Screen (Share → Add to Home Screen) and gets the trophy icon.
+- [ ] 1.3 Launched from the Home Screen it runs full-screen, with no Safari address bar.
+- [ ] 1.4 It follows the phone's light or dark mode automatically.
+- [ ] 1.5 Content is never hidden behind the notch or the home indicator.
+- [ ] 1.6 Tapping a text box does not zoom the page in.
+- [ ] 1.7 Every button is big enough to hit comfortably with a thumb.
+- [ ] 1.8 It still works correctly in a normal desktop browser window.
 
 ---
 
-## Feature 2 — Timeline view
+## Feature 2 — Take a photo and save an achievement
+
+> **As a student, I want to** photograph the thing I just did and save it in seconds **so that** the win is recorded before I forget it.
+
+### Acceptance criteria
+
+- [ ] 2.1 There is a large, obvious camera button at the bottom of the screen; I don't have to hunt for it.
+- [ ] 2.2 On a phone, tapping it opens the camera (or offers Take Photo / Photo Library).
+- [ ] 2.3 On a laptop, tapping it opens the normal file picker instead of failing.
+- [ ] 2.4 After taking the photo, a details sheet slides up from the bottom.
+- [ ] 2.5 The sheet shows the photo I just took, so I can see what I'm saving.
+- [ ] 2.6 The sheet asks for: title, category, date, and an optional note.
+- [ ] 2.7 The date defaults to today, so I can leave it alone.
+- [ ] 2.8 Category is a row of tappable chips — one tap, no dropdown.
+- [ ] 2.9 **The speed test:** with a stopwatch, I can save a photo achievement in under 10 seconds from tapping the camera to seeing it on the timeline.
+- [ ] 2.10 There is also an "Add without a photo" option, for a win that has nothing to photograph.
+- [ ] 2.11 Saving with an empty title shows an inline error and does NOT save.
+- [ ] 2.12 Saving with a title longer than 120 characters shows an inline error and does NOT save.
+- [ ] 2.13 Saving with a future date shows an inline error and does NOT save.
+- [ ] 2.14 Saving with a note longer than 500 characters shows an inline error and does NOT save.
+- [ ] 2.15 Choosing a file that isn't a photo shows a plain-English error and does NOT save.
+- [ ] 2.16 Choosing a photo larger than 10 MB shows an error and does NOT save.
+- [ ] 2.17 After a successful save the sheet closes and the achievement appears on the timeline without refreshing.
+- [ ] 2.18 Tapping Cancel, the dimmed background, or pressing Escape closes the sheet and saves nothing.
+
+---
+
+## Feature 3 — The timeline
 
 > **As a student, I want to** see all my achievements newest first **so that** my most recent wins are the first thing I see.
 
-> **As a student, I want to** filter and search **so that** I can find one specific thing among hundreds.
-
 ### Acceptance criteria
 
-- [ ] 2.1 The home page lists every saved achievement.
-- [ ] 2.2 Achievements are sorted by date, newest first.
-- [ ] 2.3 Two achievements on the same date both appear, in a stable order (the more recently created one first).
-- [ ] 2.4 Each row shows: title, formatted date, category, and the note if there is one.
-- [ ] 2.5 If an achievement has an image attached, a thumbnail shows in the row.
-- [ ] 2.6 If an achievement has a PDF attached, a labeled link shows in the row, and clicking it opens the PDF.
-- [ ] 2.7 There is a category filter with all six categories plus an "All" option.
-- [ ] 2.8 Choosing a category shows only achievements in that category.
-- [ ] 2.9 Choosing "All" brings every achievement back.
-- [ ] 2.10 There is a search box.
-- [ ] 2.11 Typing in the search box narrows the list to achievements whose title or note contains that text.
-- [ ] 2.12 Search ignores capitalization — searching `debate` finds "Debate Finals".
-- [ ] 2.13 Search and category filter work together: filtering to Sports and searching "regional" shows only Sports achievements matching "regional".
-- [ ] 2.14 When a filter or search matches nothing, a friendly empty message appears — not a blank screen.
-- [ ] 2.15 When there are no achievements at all, the page explains how to add the first one.
+- [ ] 3.1 The home screen lists every saved achievement.
+- [ ] 3.2 Achievements are sorted by date, newest first.
+- [ ] 3.3 Two achievements on the same date both appear, in a stable order (the more recently created one first).
+- [ ] 3.4 Each card shows: the photo if there is one, title, formatted date, category, and the note if there is one.
+- [ ] 3.5 Tapping a photo opens it full size.
+- [ ] 3.6 There is a category filter with all six categories plus "All".
+- [ ] 3.7 Choosing a category shows only achievements in that category.
+- [ ] 3.8 The category chips scroll sideways rather than wrapping and pushing the timeline down.
+- [ ] 3.9 There is a search box.
+- [ ] 3.10 Typing in it narrows the list to achievements whose title or note contains that text.
+- [ ] 3.11 Search ignores capitalization — searching `debate` finds "Debate Finals".
+- [ ] 3.12 Search and category filter work together.
+- [ ] 3.13 When a filter or search matches nothing, a friendly empty message appears — not a blank screen.
+- [ ] 3.14 When there are no achievements at all, the screen explains how to add the first one.
+- [ ] 3.15 The camera button never covers the last card in the list.
 
 ---
 
-## Feature 3 — Edit and delete
+## Feature 4 — Edit and delete
 
-> **As a student, I want to** fix a typo in an achievement **so that** my record stays accurate.
-
-> **As a student, I want to** delete something I added by mistake **so that** my timeline isn't cluttered.
+> **As a student, I want to** fix a typo or remove a mistake **so that** my record stays accurate.
 
 ### Acceptance criteria
 
-- [ ] 3.1 Each achievement row has an Edit control.
-- [ ] 3.2 Clicking Edit opens a form pre-filled with that achievement's current values.
-- [ ] 3.3 I can change any field and save, and the timeline shows the updated values immediately.
-- [ ] 3.4 Editing applies the same validation rules as adding (empty title, future date, and over-long note are all rejected).
-- [ ] 3.5 I can cancel an edit, and nothing changes.
-- [ ] 3.6 I can replace an existing attachment with a new file.
-- [ ] 3.7 I can remove an attachment entirely, leaving the achievement with no file.
-- [ ] 3.8 Each achievement row has a Delete control.
-- [ ] 3.9 Clicking Delete asks me to confirm before anything is removed.
-- [ ] 3.10 Confirming removes the achievement from the timeline immediately.
-- [ ] 3.11 Cancelling the confirmation leaves the achievement in place.
-- [ ] 3.12 A deleted achievement is still gone after I refresh the page.
-
----
-
-## Feature 4 — AI college essay ideas
-
-> **As a student, I want to** get essay ideas drawn from my real achievements **so that** I have a starting point instead of a blank page.
-
-> **As a student, I want to** see which achievements each idea uses **so that** I can tell whether the idea is actually about me.
-
-### Acceptance criteria
-
-- [ ] 4.1 There is a clearly labeled "Give me 3 college essay ideas" button.
-- [ ] 4.2 Clicking it shows a loading state so I know something is happening.
-- [ ] 4.3 It returns exactly 3 ideas.
-- [ ] 4.4 Each idea has a title.
-- [ ] 4.5 Each idea has a one-line hook (a single sentence).
-- [ ] 4.6 Each idea names which of my achievements it draws on.
-- [ ] 4.7 The achievements named actually exist in my timeline — no invented ones.
-- [ ] 4.8 With a valid `ANTHROPIC_API_KEY` in `.env.local`, ideas come from the real Claude API and reflect my actual achievements.
-- [ ] 4.9 With no API key set, the app returns clearly-labeled MOCK sample ideas instead of erroring.
-- [ ] 4.10 The UI states plainly when results are MOCK, so I never mistake samples for real output.
-- [ ] 4.11 If I have zero achievements, the button explains I need to add some first instead of calling the AI.
-- [ ] 4.12 If the AI call fails (bad key, no internet), I see a plain-English error message and the app keeps working.
-- [ ] 4.13 My API key is never visible in the browser — it's only used on the server.
+- [ ] 4.1 Each card has an Edit control.
+- [ ] 4.2 Tapping Edit opens the sheet pre-filled with that achievement's current values.
+- [ ] 4.3 I can change any field and save, and the timeline updates immediately.
+- [ ] 4.4 Editing applies the same validation rules as adding.
+- [ ] 4.5 I can cancel an edit, and nothing changes.
+- [ ] 4.6 I can remove the photo from an achievement, leaving the rest intact.
+- [ ] 4.7 Removing a photo can be undone before saving.
+- [ ] 4.8 Each card has a Delete control.
+- [ ] 4.9 Tapping Delete asks me to confirm before anything is removed.
+- [ ] 4.10 Confirming removes the achievement from the timeline immediately.
+- [ ] 4.11 Cancelling the confirmation leaves the achievement in place.
+- [ ] 4.12 A deleted achievement is still gone after I refresh.
+- [ ] 4.13 Deleting an achievement also deletes its photo file from disk.
 
 ---
 
 ## Non-functional requirements
 
-- [ ] N.1 All data is stored locally: a SQLite file and the `/uploads` folder. Nothing is sent anywhere except the achievement text sent to the Claude API when I press the essay-ideas button.
+- [ ] N.1 All data is stored locally: a SQLite file and the `/uploads` folder. Nothing is sent anywhere. There are no outbound network calls at all in this version.
 - [ ] N.2 `.env.local`, `/uploads`, the database file, and `node_modules` are all git-ignored.
-- [ ] N.3 The app works in a current version of Chrome, Safari, or Firefox.
-- [ ] N.4 The layout is usable on a phone-sized browser window.
+- [ ] N.3 Works in a current version of Safari, Chrome, or Firefox.
+- [ ] N.4 A photo file can never be written or read outside the uploads folder, even with a crafted filename.
 - [ ] N.5 `npm test` passes.
 - [ ] N.6 `npm run test:e2e` passes.
 - [ ] N.7 `npm run build` completes with no TypeScript errors.
@@ -144,24 +134,24 @@ Every acceptance criterion below is written so you can test it by hand in the br
 
 - [ ] T.1 Creating an achievement with valid data succeeds.
 - [ ] T.2 Creating an achievement with invalid data (empty title, over-long title, future date, over-long note, bad category) fails with a useful message.
-- [ ] T.3 Editing an achievement changes the stored values.
-- [ ] T.4 Editing with invalid data fails and leaves the original untouched.
-- [ ] T.5 Deleting an achievement removes it.
-- [ ] T.6 Deleting an achievement that doesn't exist fails cleanly.
-- [ ] T.7 Filtering by category returns only that category.
-- [ ] T.8 Searching matches title text, case-insensitively.
-- [ ] T.9 Searching matches note text.
-- [ ] T.10 Filter and search combined return the intersection.
-- [ ] T.11 The timeline returns achievements newest first.
-- [ ] T.12 The essay-ideas function in MOCK mode returns exactly 3 ideas, each with a title, a hook, and referenced achievements.
-- [ ] T.13 The essay-ideas function in MOCK mode references only achievements that were passed in.
+- [ ] T.3 Editing an achievement changes the stored values; editing with invalid data leaves the original untouched.
+- [ ] T.4 Deleting an achievement removes it; deleting one that doesn't exist fails cleanly.
+- [ ] T.5 Filtering by category, searching title and note case-insensitively, and the two combined all return the right rows, newest first.
+- [ ] T.6 Saving a photo stores it and reports where it went.
+- [ ] T.7 A HEIC photo from an iPhone is accepted.
+- [ ] T.8 A PDF, a non-photo file, and a photo over 10 MB are all rejected, and nothing is written.
+- [ ] T.9 A crafted filename cannot write or delete outside the uploads folder.
+- [ ] T.10 The uploads folder and database path are read from the environment at call time, not frozen at import.
 
-**End-to-end test (Playwright):**
+**End-to-end tests (Playwright, at phone size):**
 
-- [ ] T.14 Add an achievement through the real UI and confirm it appears on the timeline.
+- [ ] T.11 Add an achievement through the real UI and confirm it appears on the timeline and survives a reload.
+- [ ] T.12 The camera button is present and wired to the phone camera.
+- [ ] T.13 Edit an achievement, then delete it with confirmation, and it stays gone after a reload.
+- [ ] T.14 Search and the category filter narrow the timeline together.
 
 ---
 
-## Out of scope for v1
+## Out of scope for this version
 
-Anything not listed above, and specifically: reels/video, LinkedIn posts and profile, life planning and coaching, parent accounts, sharing, a mobile app, and payments. See "Future ideas" in the README.
+Anything not listed above, and specifically: **all AI features** (essay ideas, the chat helper, auto-tagging), accounts and logins, plans and payments, the live/hosted site, sharing, reels and video, LinkedIn posts, and a real native iOS app in the App Store. See "What comes next" in the README.

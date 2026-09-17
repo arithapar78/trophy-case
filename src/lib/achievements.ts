@@ -14,18 +14,16 @@ export type Achievement = {
   date: Date;
   category: string;
   note: string | null;
-  filePath: string | null;
-  fileName: string | null;
-  fileType: string | null;
+  photoPath: string | null;
+  photoType: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
 
-/** Details of an attached file, or null for no attachment. */
-export type AttachmentInput = {
-  filePath: string;
-  fileName: string;
-  fileType: string;
+/** Details of a saved photo, or null for no photo. */
+export type PhotoInput = {
+  photoPath: string;
+  photoType: string;
 } | null;
 
 /** Thrown when input fails the rules in validation.ts. */
@@ -70,7 +68,7 @@ function parseInput(input: unknown): AchievementInput {
 /** Saves a new achievement. */
 export async function createAchievement(
   input: unknown,
-  attachment: AttachmentInput = null,
+  photo: PhotoInput = null,
 ): Promise<Achievement> {
   const data = parseInput(input);
 
@@ -80,9 +78,8 @@ export async function createAchievement(
       date: data.date,
       category: data.category,
       note: data.note ? data.note : null,
-      filePath: attachment?.filePath ?? null,
-      fileName: attachment?.fileName ?? null,
-      fileType: attachment?.fileType ?? null,
+      photoPath: photo?.photoPath ?? null,
+      photoType: photo?.photoType ?? null,
     },
   });
 }
@@ -90,15 +87,15 @@ export async function createAchievement(
 /**
  * Updates an existing achievement.
  *
- * `attachment` controls the attached file:
+ * `photo` controls the attached photo:
  *   undefined  leave whatever is there alone
- *   null       remove the attachment
- *   an object  replace it with this file
+ *   null       remove the photo
+ *   an object  replace it with this one
  */
 export async function updateAchievement(
   id: string,
   input: unknown,
-  attachment?: AttachmentInput,
+  photo?: PhotoInput,
 ): Promise<Achievement> {
   const existing = await db.achievement.findUnique({ where: { id } });
   if (!existing) {
@@ -108,13 +105,12 @@ export async function updateAchievement(
   // Validate before writing, so a bad edit leaves the original untouched.
   const data = parseInput(input);
 
-  const attachmentFields =
-    attachment === undefined
+  const photoFields =
+    photo === undefined
       ? {}
       : {
-          filePath: attachment?.filePath ?? null,
-          fileName: attachment?.fileName ?? null,
-          fileType: attachment?.fileType ?? null,
+          photoPath: photo?.photoPath ?? null,
+          photoType: photo?.photoType ?? null,
         };
 
   return db.achievement.update({
@@ -124,7 +120,7 @@ export async function updateAchievement(
       date: data.date,
       category: data.category,
       note: data.note ? data.note : null,
-      ...attachmentFields,
+      ...photoFields,
     },
   });
 }
@@ -155,7 +151,7 @@ export type ListOptions = {
  * The timeline: achievements newest first, optionally filtered and searched.
  *
  * Ties on the same date are broken by which was created more recently,
- * so the order is stable (REQUIREMENTS.md 2.3).
+ * so the order is stable (REQUIREMENTS.md 3.3).
  */
 export async function listAchievements(
   options: ListOptions = {},
@@ -174,10 +170,10 @@ export async function listAchievements(
   const trimmedSearch = search?.trim();
   if (trimmedSearch) {
     // SQLite's LIKE ignores case for plain A-Z text, which covers
-    // REQUIREMENTS.md 2.12. Verified limitation: it does NOT fold accented
+    // REQUIREMENTS.md 3.11. Verified limitation: it does NOT fold accented
     // letters, so searching "CAFÉ" won't match "Café" (lowercase "café"
     // does). Fixing that needs a stored lowercased copy of each field,
-    // which isn't worth the complexity for v1.
+    // which isn't worth the complexity for the MVP.
     where.OR = [
       { title: { contains: trimmedSearch } },
       { note: { contains: trimmedSearch } },

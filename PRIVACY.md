@@ -2,15 +2,17 @@
 
 This app is designed to hold a child's personal information: their name, their school, photos of them, their test scores, and a record of where they were and when. That deserves care.
 
-## The core rule for v1: data stays local
+## The core rule: data stays local
 
 Everything lives on your own computer:
 
 - **Achievements** are in a SQLite database file at `prisma/dev.db`.
-- **Photos and PDFs** are in the `/uploads` folder.
+- **Photos** are in the `/uploads` folder.
 - **There is no server, no account, and no cloud sync.** Nothing is uploaded anywhere.
 
-The one exception: when you press "Give me 3 college essay ideas," the **text** of your achievements (titles, dates, categories, notes) is sent to the Claude API to generate ideas. **Your uploaded photos and PDFs are never sent.** If you don't want even the text to leave your machine, leave `ANTHROPIC_API_KEY` blank and the app runs in MOCK mode with no network calls at all.
+**There are no exceptions in this version.** The app makes no outbound network calls at all — there is no AI feature and no API key. Nothing you save ever leaves this computer.
+
+When the AI essay-ideas feature comes back (see "What comes next" in the README), it will send the **text** of your achievements to the Claude API. Photos will never be sent. That is the only network call that is ever planned, and this file gets updated before it is built.
 
 ## Never commit these
 
@@ -18,16 +20,16 @@ These are in `.gitignore`. Keep them there.
 
 | What | Why |
 |---|---|
-| `.env.local` | Holds your real API key. A committed key can be found and used by anyone, and you pay for it. |
+| `.env.local` | Holds your local settings, and any API key added later. A committed key can be found and used by anyone, and you pay for it. |
 | `/uploads` | Photos of a child. These must never end up in a git repo, which is often public and always permanent. |
 | `prisma/dev.db` | The whole achievement history, including names and schools. |
 | `node_modules` | Not a privacy issue — just huge and rebuildable. |
 
-**If you ever commit a secret by accident:** treat the key as compromised. Go to the Anthropic Console, delete that key, and create a new one. Removing it in a later commit is not enough — git keeps the history.
+**If you ever commit a secret by accident:** treat the key as compromised. Go to the service it belongs to, delete that key, and create a new one. Removing it in a later commit is not enough — git keeps the history.
 
 ## Photos deserve extra thought
 
-Photos of children carry more than the picture. Many phone photos include GPS coordinates and a timestamp in their EXIF data, which can reveal a home address or a school. In v1 the files never leave your machine, so this is fine. **Before this app is ever shared or hosted, EXIF data should be stripped from uploads.**
+Photos of children carry more than the picture. Many phone photos include GPS coordinates and a timestamp in their EXIF data, which can reveal a home address or a school. In this version the files never leave your machine, so this is fine. **Before this app is ever shared or hosted, EXIF data should be stripped from uploads.**
 
 ## If this ever goes public: COPPA
 

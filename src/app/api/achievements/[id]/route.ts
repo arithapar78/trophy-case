@@ -7,13 +7,13 @@ import {
   NotFoundError,
 } from "@/lib/achievements";
 import {
-  saveUploadedFile,
-  deleteStoredFile,
-  FileValidationError,
+  savePhoto,
+  deleteStoredPhoto,
+  PhotoValidationError,
 } from "@/lib/uploads";
 import { inputValueToDate } from "@/lib/dates";
 
-// Edit and delete a single achievement. REQUIREMENTS.md Feature 3.
+// Edit and delete a single achievement. REQUIREMENTS.md Feature 4.
 
 /** Shared error handling so both handlers answer the same way. */
 function errorResponse(error: unknown) {
@@ -29,9 +29,9 @@ function errorResponse(error: unknown) {
       { status: 400 },
     );
   }
-  if (error instanceof FileValidationError) {
+  if (error instanceof PhotoValidationError) {
     return NextResponse.json(
-      { error: error.message, fieldErrors: { file: error.message } },
+      { error: error.message, fieldErrors: { photo: error.message } },
       { status: 400 },
     );
   }
@@ -70,17 +70,17 @@ export async function PUT(
 
     const formData = await request.formData();
     const rawDate = String(formData.get("date") ?? "");
-    const file = formData.get("file");
-    // The form sends this when the user clicks "Remove" on an attachment.
-    const removeFile = formData.get("removeFile") === "true";
+    const photo = formData.get("photo");
+    // The form sends this when the user taps "Remove" on a photo.
+    const removePhoto = formData.get("removePhoto") === "true";
 
-    // undefined means "leave the attachment alone"; null means "remove it".
-    let attachment: Awaited<ReturnType<typeof saveUploadedFile>> | null | undefined;
+    // undefined means "leave the photo alone"; null means "remove it".
+    let photoUpdate: Awaited<ReturnType<typeof savePhoto>> | null | undefined;
 
-    if (file instanceof File && file.size > 0) {
-      attachment = await saveUploadedFile(file);
-    } else if (removeFile) {
-      attachment = null;
+    if (photo instanceof File && photo.size > 0) {
+      photoUpdate = await savePhoto(photo);
+    } else if (removePhoto) {
+      photoUpdate = null;
     }
 
     const achievement = await updateAchievement(
@@ -91,14 +91,14 @@ export async function PUT(
         category: String(formData.get("category") ?? ""),
         note: String(formData.get("note") ?? ""),
       },
-      attachment,
+      photoUpdate,
     );
 
-    // The database write succeeded, so the old file is now unreferenced.
-    // Deleting it afterwards means a failed edit never destroys a file that
+    // The database write succeeded, so the old photo is now unreferenced.
+    // Deleting it afterwards means a failed edit never destroys a photo that
     // the surviving record still points at.
-    if (attachment !== undefined && existing.filePath) {
-      await deleteStoredFile(existing.filePath);
+    if (photoUpdate !== undefined && existing.photoPath) {
+      await deleteStoredPhoto(existing.photoPath);
     }
 
     return NextResponse.json({ achievement });
@@ -117,8 +117,8 @@ export async function DELETE(
   try {
     const deleted = await deleteAchievement(id);
 
-    // Take the attachment with it, so /uploads doesn't fill with orphans.
-    await deleteStoredFile(deleted.filePath);
+    // Take the photo with it, so /uploads doesn't fill with orphans.
+    await deleteStoredPhoto(deleted.photoPath);
 
     return NextResponse.json({ deleted: { id: deleted.id } });
   } catch (error) {

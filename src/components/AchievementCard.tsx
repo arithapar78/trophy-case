@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { formatDisplayDate } from "@/lib/dates";
+import { CATEGORY_EMOJI, type Category } from "@/lib/validation";
 import type { AchievementJson } from "@/lib/types";
 
-// One row on the timeline, with its Edit and Delete controls.
-// REQUIREMENTS.md 2.4 to 2.6 and 3.1, 3.8 to 3.11.
+// One card on the timeline, with its Edit and Delete controls.
+// REQUIREMENTS.md Feature 3 and Feature 4.
 
 export default function AchievementCard({
   achievement,
@@ -17,16 +18,15 @@ export default function AchievementCard({
   onDeleted: () => void;
 }) {
   // Confirmation is shown inline rather than with window.confirm, so it can
-  // be styled and tested like the rest of the app (3.9).
+  // be styled and tested like the rest of the app (4.9).
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isImage = achievement.fileType?.startsWith("image/");
-  const isPdf = achievement.fileType === "application/pdf";
-  const fileUrl = achievement.filePath
-    ? `/api/uploads/${achievement.filePath}`
+  const photoUrl = achievement.photoPath
+    ? `/api/uploads/${achievement.photoPath}`
     : null;
+  const emoji = CATEGORY_EMOJI[achievement.category as Category] ?? "⭐";
 
   async function handleDelete() {
     setDeleting(true);
@@ -54,97 +54,90 @@ export default function AchievementCard({
   return (
     <li
       data-testid="achievement-item"
-      className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+      className="overflow-hidden rounded-2xl bg-app-surface shadow-[var(--app-shadow)]"
     >
-      <div className="flex items-start justify-between gap-3">
-        <h3 className="font-medium">{achievement.title}</h3>
-        <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
-          {achievement.category}
-        </span>
-      </div>
-
-      <p className="mt-1 text-sm text-slate-500">
-        {formatDisplayDate(achievement.date)}
-      </p>
-
-      {achievement.note && (
-        <p className="mt-2 text-sm whitespace-pre-line text-slate-700">
-          {achievement.note}
-        </p>
-      )}
-
-      {fileUrl && isImage && (
-        <a href={fileUrl} target="_blank" rel="noreferrer" className="mt-3 block">
+      {photoUrl && (
+        <a href={photoUrl} target="_blank" rel="noreferrer" className="block">
           {/* A plain <img>: these are local files of unknown size, and
               next/image would want width and height we don't store. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={fileUrl}
-            alt={achievement.fileName ?? "Attached photo"}
-            className="max-h-48 rounded-lg border border-slate-200 object-cover"
+            src={photoUrl}
+            alt={`Photo for ${achievement.title}`}
+            loading="lazy"
+            className="h-48 w-full bg-app-surface-2 object-cover"
           />
         </a>
       )}
 
-      {fileUrl && isPdf && (
-        <a
-          href={fileUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
-        >
-          <span aria-hidden="true">📄</span>
-          {achievement.fileName ?? "View PDF"}
-        </a>
-      )}
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="text-base leading-snug font-semibold">
+            {achievement.title}
+          </h3>
+          <span className="shrink-0 rounded-full bg-app-surface-2 px-2.5 py-1 text-xs font-medium text-app-muted">
+            <span aria-hidden="true">{emoji}</span> {achievement.category}
+          </span>
+        </div>
 
-      {error && (
-        <p role="alert" className="mt-3 text-sm text-red-600">
-          {error}
+        <p className="mt-1 text-sm text-app-muted">
+          {formatDisplayDate(achievement.date)}
         </p>
-      )}
 
-      <div className="mt-3 flex items-center gap-3 border-t border-slate-100 pt-3">
-        {confirmingDelete ? (
-          <>
-            <span className="text-sm text-slate-700">Delete this?</span>
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={deleting}
-              className="text-sm font-medium text-red-600 hover:underline disabled:opacity-50"
-            >
-              {deleting ? "Deleting..." : "Yes, delete"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirmingDelete(false)}
-              disabled={deleting}
-              className="text-sm text-slate-600 hover:underline disabled:opacity-50"
-            >
-              Cancel
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              type="button"
-              onClick={onEdit}
-              aria-label={`Edit ${achievement.title}`}
-              className="text-sm text-slate-600 hover:text-slate-900 hover:underline"
-            >
-              Edit
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirmingDelete(true)}
-              aria-label={`Delete ${achievement.title}`}
-              className="text-sm text-slate-600 hover:text-red-600 hover:underline"
-            >
-              Delete
-            </button>
-          </>
+        {achievement.note && (
+          <p className="mt-2 text-sm leading-relaxed whitespace-pre-line">
+            {achievement.note}
+          </p>
         )}
+
+        {error && (
+          <p role="alert" className="mt-3 text-sm text-app-danger">
+            {error}
+          </p>
+        )}
+
+        <div className="mt-3 flex items-center gap-4 border-t border-app-border pt-3">
+          {confirmingDelete ? (
+            <>
+              <span className="text-sm">Delete this?</span>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="tappable text-sm font-semibold text-app-danger disabled:opacity-50"
+              >
+                {deleting ? "Deleting…" : "Yes, delete"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmingDelete(false)}
+                disabled={deleting}
+                className="tappable text-sm text-app-muted disabled:opacity-50"
+              >
+                Keep it
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={onEdit}
+                aria-label={`Edit ${achievement.title}`}
+                className="tappable text-sm font-medium text-app-muted"
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmingDelete(true)}
+                aria-label={`Delete ${achievement.title}`}
+                className="tappable text-sm font-medium text-app-muted"
+              >
+                Delete
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </li>
   );

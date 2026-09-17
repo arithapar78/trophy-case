@@ -1,90 +1,61 @@
 # Trophy Case
 
-A personal achievement timeline. Save every win — big and small — from a young age, and let AI help turn them into college essay ideas later.
+Snap a photo. Save the win. Build your timeline.
+
+A phone-first app for recording achievements the moment they happen — a medal, a certificate, a finished project — so that years later you still have the whole record instead of the three things you happen to remember.
 
 ## The problem it solves
 
-By the time a student sits down to write college applications, they have to remember years of activities, awards, and projects. Most of it is gone: the certificate went in a drawer, the photo is buried in a camera roll, the debate trophy is in a box somewhere. Students end up writing essays about the three things they happen to remember instead of the things that actually shaped them.
+By the time a student sits down to write college applications, they have to remember years of activities, awards and projects. Most of it is gone: the certificate went in a drawer, the photo is buried in a camera roll, the trophy is in a box somewhere.
 
-Trophy Case fixes this by making it take less than 10 seconds to save an achievement the moment it happens. Years later, the timeline is still there — and the AI can read all of it at once.
+Trophy Case makes saving an achievement take under 10 seconds: point the camera at the thing, type a title, tap a category, done.
 
 ## Who it's for
 
 - **Students** (roughly ages 8–18) who want a running record of what they've done.
 - **Parents** who want to capture their kid's wins before they're forgotten.
 
-Version 1 is a single-user app that runs on your own computer. There are no accounts and nothing is uploaded to a server.
+This version runs on your own computer, and your phone opens it over your home Wi-Fi. There are no accounts and nothing is uploaded to anyone's server.
 
-## MVP features (version 1)
+## What it does right now
 
-1. **Add an achievement in under 10 seconds** — title, date, category (School, Sports, Debate, Cooking, Arts, Other), a short note, and an optional photo or PDF.
-2. **Timeline view** — every achievement, newest first, with a category filter and a search box.
-3. **Edit and delete** — fix a typo or remove something you didn't mean to save.
-4. **AI essay ideas** — a "Give me 3 college essay ideas" button that reads your achievements and returns 3 ideas, each with a one-line hook and the list of achievements it draws on.
+1. **Take a photo** — a big camera button at the bottom of the screen opens your phone's camera.
+2. **Add the details** — a sheet slides up: title, category (one tap), date (already today) and an optional note.
+3. **See your timeline** — every achievement, newest first, with its photo, plus search and a category filter.
+4. **Fix mistakes** — edit anything, or delete it with a confirmation.
 
-## Future ideas (NOT in version 1)
+That's the whole app. It is deliberately small.
 
-These are deliberately out of scope for v1. They're written down so we don't forget them, not so we build them now.
+### It installs on your phone
 
-- Reels / short video creation from achievements
-- LinkedIn posts and profile generation
-- Life plan and "what to do next" coaching
-- Parent accounts (separate logins linked to a student)
-- Sharing achievements or timelines with other people
-- A mobile app
-- Payments and subscriptions
+Open it in Safari on your iPhone, tap the Share button, then **Add to Home Screen**. You get a trophy icon on your Home Screen, and tapping it opens the app full-screen with no address bar — it behaves like any other app on the phone. It follows your phone's light or dark mode automatically.
 
-### Future plan: free vs. Pro, and one shared AI assistant
+> **On the App Store?** Not yet, and this version can't be. A real App Store app needs an Apple Developer account ($99/year), a build made in Xcode, Apple's review process, and — the big one — your achievements would have to live on a server on the internet rather than on your own computer. The Home Screen install above gets you the same everyday feel without any of that. This app is built so that a real iOS wrapper can come later without redoing the work.
 
-Parked here, not being built yet. This all needs a hosted version with accounts, which v1 is not.
+## What comes next (NOT built yet)
 
-**One AI assistant ("the helper")** that does all the smart jobs:
-- sorts and tags achievements
-- edits an achievement based on what you upload (e.g. reads a certificate and fills in the title and date)
-- writes LinkedIn post templates
-- suggests colleges
-- builds life plans
-- can read your files, but only the ones you pick
+These are written down so we don't forget them, not so we build them now. One at a time, in this order:
 
-**Who can use it:** anyone on the internet, with an account.
-- Free: 10 prompts, then it resets 5 hours later.
-- Pro: higher limit, plus college recommendations.
+1. **The AI essay-ideas feature** — reads your achievements and suggests college essay angles. This existed in an earlier version and was removed to get back to a solid core. It comes back first.
+2. **The AI helper** — a chat assistant that sorts, tags and fills in achievements from a photo.
+3. **Accounts and a hosted site** — so your timeline follows you to any device.
+4. **A real native iOS app** — the actual App Store submission.
 
-**Free vs. Pro:**
-
-| Feature | Free | Pro |
-|---|---|---|
-| Timeline, add/edit/delete | Yes | Yes |
-| The AI helper | 10 prompts every 5 hours | Higher limit |
-| College recommendations | No | Yes |
-| Uploaded photos | Deleted after 60 days | Kept forever |
-| Avatar customization | Basic | Separate paid add-on |
-
-**Low-energy AI:** this project will live on learntav.com, which is built to be energy efficient, so the helper should be too:
-- use the smallest model that does the job well (a "Haiku"-size model for most tasks)
-- keep prompts short and send only the achievements needed, not the whole history
-- save (cache) answers so the same question isn't asked twice
-- don't send photos to the AI unless the job needs them
-
-**Open questions to settle before building:**
-1. Anonymous users can't be rate-limited fairly (they just clear cookies), so free use needs a login.
-2. Before a free user's photo is deleted at day 60, warn them and let them download it. The achievement itself stays; only the file goes.
-3. Hosting kids' data online means COPPA applies (see PRIVACY.md): parental consent for under-13s, and strip location data from photos.
-4. Every free prompt costs real money. Set a monthly spending cap on the API key.
+Also parked: sharing, reels/video, LinkedIn posts, life planning, payments.
 
 ## Tech stack
 
 | Piece | What we use | Why |
 |---|---|---|
-| Framework | Next.js (App Router) + TypeScript | One tool for both the page and the server |
-| Styling | Tailwind CSS | Style directly in the markup, no separate CSS files |
+| Framework | Next.js (App Router) + TypeScript | One tool for both the screen and the server |
+| Styling | Tailwind CSS | Style directly in the markup, no separate stylesheets |
 | Database | SQLite via Prisma | A single file on your computer, no cloud account |
-| File uploads | Local `/uploads` folder | Photos and PDFs stay on your machine |
-| AI | Claude API (Anthropic SDK) | Generates the essay ideas |
+| Photos | Local `/uploads` folder | Your photos stay on your machine |
+| Camera | The browser's own file input | No camera library — the phone does the work |
 | Unit tests | Vitest | Fast tests for the logic |
-| End-to-end test | Playwright | Drives a real browser like a real user |
+| Browser tests | Playwright | Drives a real browser at phone size |
 
-If you don't have a Claude API key, the app runs in **MOCK mode** and returns sample essay ideas so everything still works.
+There is **no AI in this version** and no API key is needed. The app makes no outbound network calls at all.
 
 ## Install and run it
 
@@ -98,7 +69,7 @@ You need **Node.js version 20 or newer**. To check, open Terminal and type:
 node --version
 ```
 
-If you see something like `v20.11.0` or higher, you're good. If you get "command not found" or a lower number, download the LTS version from https://nodejs.org and install it, then close and reopen Terminal.
+If you see `v20.11.0` or higher, you're good. If you get "command not found" or a lower number, download the LTS version from https://nodejs.org, install it, then close and reopen Terminal.
 
 ### Step 1 — Go to the project folder
 
@@ -112,68 +83,58 @@ cd /Users/Ari/workplace/ari-workspace/projects/achievement-tracker
 npm install
 ```
 
-This downloads every library the project needs into a `node_modules` folder. It takes a minute or two the first time. You only do this once (and again whenever we add a new library).
+This downloads every library the project needs into a `node_modules` folder. It takes a minute or two the first time, and you only do it once.
 
-### Step 3 — Set up your settings file
-
-```bash
-cp .env.example .env.local
-```
-
-This makes your private settings file from the example. Open `.env.local` in a text editor. If you have a Claude API key, paste it after `ANTHROPIC_API_KEY=`. **If you don't have one, leave it blank** — the app will use MOCK mode and still work.
-
-### Step 4 — Create the database
+### Step 3 — Create the database
 
 ```bash
 npm run db:push
 ```
 
-This creates the SQLite database file and sets up the table that holds achievements.
+This creates the SQLite database file and the table that holds achievements.
 
-### Step 5 — Add sample data (optional but recommended)
+### Step 4 — Add sample data (optional)
 
 ```bash
 npm run seed
 ```
 
-This adds 8 example achievements for a made-up student so you can see the app working immediately instead of staring at an empty screen.
+Adds 8 example achievements for a made-up student, so you see the app working instead of an empty screen. Running it again replaces them rather than duplicating.
 
-### Step 6 — Start the app
+### Step 5 — Start the app
 
 ```bash
 npm run dev
 ```
 
-Then open your browser to **http://localhost:3000**.
+Open **http://localhost:3000** in your browser.
 
-To stop the app either way: close that Terminal window, or click it and press
-`Ctrl + C`.
+**The app only runs while that Terminal window is open.** That's normal — Trophy Case needs a running program to hold your database and save your photos, so there's no single file you can double-click. To stop it, click that window and press `Ctrl + C`.
 
-### About the desktop launcher
+## Opening it on your phone
 
-**Trophy Case LIVE** (the green icon) is on the Desktop. It starts the live
-site on port 3100 — see "Running the live site" below.
+The camera button only really does its job on a phone. To get it there:
 
-Your personal copy has no Desktop icon; start it with `npm run dev` and open
-http://localhost:3000. Both can run at the same time without interfering.
+1. Make sure your phone and this Mac are on **the same Wi-Fi network**.
+2. Find this Mac's address on the network:
 
-(If you ever want a Desktop icon for the personal copy back, ask Claude — the
-script it uses, `scripts/start-trophy-case.sh`, is still here.)
+   ```bash
+   ipconfig getifaddr en0
+   ```
 
-That script:
+   That prints something like `192.168.1.42`.
+3. Start the app so it accepts connections from other devices on the network:
 
-- Starts the app and opens your browser once it's actually ready
-- Notices if it's already running and just opens the browser instead of
-  starting a second copy
-- Sets up the database and sample data on a first run
-- Tells you what to do if Node.js isn't installed
+   ```bash
+   npm run dev -- --hostname 0.0.0.0
+   ```
 
-**The app only runs while that Terminal window is open.** This is normal:
-Trophy Case needs a running program to hold your database and save your
-photos, so there's no single file you can open on its own.
+4. On your phone, open Safari and go to `http://192.168.1.42:3000` (using the number from step 2).
+5. Tap Share → **Add to Home Screen** to install it.
 
-If you ever move or rename the project folder, the launcher will say so —
-ask Claude to point it at the new location.
+If the page doesn't load, the usual cause is a firewall: check System Settings → Network → Firewall on this Mac.
+
+> **A note on the camera:** browsers only allow camera access on a secure (`https://`) address, with one exception — `localhost`. Over plain `http://` to an IP address, tapping the camera button opens your **photo library** rather than the live camera. Everything else works exactly the same, and the photo still saves. Getting the true camera on your phone needs an `https` address, which is part of the hosted version listed under "What comes next".
 
 ## How to run the tests
 
@@ -183,7 +144,7 @@ ask Claude to point it at the new location.
 npm test
 ```
 
-**End-to-end test** (opens a real browser and clicks through the app):
+**Browser tests** (opens a real browser at phone size and clicks through the app):
 
 ```bash
 npx playwright install chromium   # one time only
@@ -194,171 +155,64 @@ npm run test:e2e
 
 | Command | What it does |
 |---|---|
-| `npm run dev` | Starts the app for development at http://localhost:3000 |
+| `npm run dev` | Starts the app at http://localhost:3000 |
 | `npm run build` | Builds the production version |
 | `npm start` | Runs the production build |
 | `npm test` | Runs the unit tests once |
 | `npm run test:watch` | Runs unit tests and re-runs them as you edit |
-| `npm run test:e2e` | Runs the Playwright browser test |
+| `npm run test:e2e` | Runs the Playwright browser tests |
 | `npm run seed` | Adds 8 sample achievements |
 | `npm run db:push` | Creates or updates the database to match the schema |
 | `npm run db:studio` | Opens a visual database browser |
-| `npm run start:live` | Starts the live site on port 3100 (see below) |
-| `npm run stop:live` | Stops the live site |
 
 ## Folder structure
 
 ```
 achievement-tracker/
 ├── README.md              You are here
-├── REQUIREMENTS.md        User stories + acceptance criteria to test by hand
+├── REQUIREMENTS.md        What this version includes, with tests to check by hand
 ├── CLAUDE.md              Rules for Claude Code when working on this project
 ├── PRIVACY.md             How we keep a kid's data safe
 ├── .env.example           Template for settings (safe to commit)
-├── .env.local             Your real settings (NEVER committed)
 ├── .gitignore             Files git should ignore
 ├── prisma/
 │   ├── schema.prisma      The shape of the database
 │   ├── seed.ts            Script that adds 8 sample achievements
 │   └── dev.db             The database file itself (NEVER committed)
 ├── prisma.config.ts       Tells the Prisma tools where the database is
+├── public/
+│   └── icon.svg           The trophy icon used on the Home Screen
 ├── src/
 │   ├── app/
-│   │   ├── page.tsx       The timeline page
-│   │   ├── layout.tsx     The page shell
-│   │   └── api/           Server endpoints the page talks to
+│   │   ├── page.tsx       The one screen: the timeline
+│   │   ├── layout.tsx     The page shell, and the phone viewport settings
+│   │   ├── manifest.ts    What makes it installable on a Home Screen
+│   │   ├── globals.css    The colours, light and dark, in one place
+│   │   └── api/           Server endpoints the screen talks to
 │   │       ├── achievements/       List and create
 │   │       ├── achievements/[id]/  Edit and delete one
-│   │       ├── essay-ideas/        The AI feature
-│   │       └── uploads/[filename]/ Serves your photos and PDFs
+│   │       └── uploads/[filename]/ Serves your photos back
 │   ├── components/
-│   │   ├── AchievementForm.tsx   Add and edit form
-│   │   ├── AchievementCard.tsx   One row on the timeline
-│   │   ├── TimelineFilters.tsx   Search box and category chips
-│   │   └── EssayIdeas.tsx        The essay ideas button and results
+│   │   ├── CameraButton.tsx      The big round camera button
+│   │   ├── AchievementSheet.tsx  The slide-up details form
+│   │   ├── AchievementCard.tsx   One card on the timeline
+│   │   └── TimelineFilters.tsx   Search box and category chips
 │   └── lib/
-│       ├── db.ts          The one database connection
-│       ├── achievements.ts Create, edit, delete, list logic
-│       ├── validation.ts  The rules for a valid achievement
-│       ├── uploads.ts     Saving and deleting attached files
-│       ├── essay-ideas.ts The Claude API call, with MOCK fallback
-│       └── dates.ts       Timezone-safe date handling
+│       ├── db.ts            The one database connection
+│       ├── achievements.ts  Create, edit, delete, list logic
+│       ├── validation.ts    The rules for a valid achievement
+│       ├── uploads.ts       Saving and deleting photos
+│       ├── paths.ts         Where the data lives
+│       ├── dates.ts         Timezone-safe date handling
+│       └── types.ts         Shared shapes
 ├── tests/
-│   ├── unit/              Vitest tests (run with npm test)
-│   └── e2e/               Playwright tests (run with npm run test:e2e)
-└── uploads/               Photos and PDFs you upload (NEVER committed)
+│   ├── unit/              Vitest tests (npm test)
+│   └── e2e/               Playwright tests (npm run test:e2e)
+└── uploads/               Your photos (NEVER committed)
 ```
-
-## The AI essay ideas feature
-
-Click **"Give me 3 college essay ideas"** and Claude reads your achievements,
-then suggests three angles for a college essay. Each idea has a title, a
-one-line hook, and the list of achievements it draws on.
-
-**Without an API key** the app runs in MOCK mode: it returns clearly labelled
-sample ideas so you can see how the feature works. A yellow banner says so, and
-no network call is made.
-
-**With an API key** you get real suggestions. To set one up:
-
-1. Go to https://console.anthropic.com and create an API key.
-2. Open `.env.local` and paste it after `ANTHROPIC_API_KEY=`.
-3. Restart the app (`Ctrl + C`, then `npm run dev` again) — the key is only
-   read at startup.
-
-Only the **text** of your achievements (titles, dates, categories, notes) is
-sent. Your photos and PDFs never leave your computer. The key is used on the
-server only and is never sent to your browser.
-
-## Running the live site
-
-The live site is the public one. It runs the production build on this Mac,
-on **port 3100**, with its own data in `~/TrophyCaseLive/` — completely
-separate from your personal copy on port 3000.
-
-**It is not on the internet yet.** Tailscale Funnel is what would make it
-public, and that stays off until the per-visitor privacy features are built.
-Right now the live site is reachable only from this Mac.
-
-### One-time setup
-
-```bash
-cp .env.production.example .env.production.local
-```
-
-Open `.env.production.local` and check the paths point somewhere under
-`~/TrophyCaseLive`. Add an API key if you want the AI to work — use a
-**separate key** from your personal one, with a monthly spending limit set in
-the Anthropic Console, so the live site can be switched off on its own and a
-runaway cost is capped. Leave it blank to run with no AI costs at all.
-
-### Start it
-
-**The easy way:** double-click **Trophy Case LIVE** on your Desktop (the green
-icon with the broadcast waves).
-
-**Or from Terminal:**
-
-```bash
-npm run start:live
-```
-
-This checks Node, creates the data folder, sets up the live database, builds
-the production version, keeps the Mac awake, and starts the site. Then open
-**http://127.0.0.1:3100**.
-
-### Stop it
-
-```bash
-npm run stop:live
-```
-
-This turns the public address off first, then stops the app and lets the Mac
-sleep normally again.
-
-### Update it
-
-```bash
-npm run stop:live
-npm run start:live
-```
-
-The start script rebuilds every time, so your latest changes are picked up.
-
-### Emergency: take it off the internet now
-
-Once the funnel is on, this is the fastest way to make the site unreachable:
-
-```bash
-tailscale funnel --https=443 off
-```
-
-Or just `npm run stop:live`, which does that first before anything else.
-
-### What's different on the live site
-
-| | Your copy (3000) | Live site (3100) |
-|---|---|---|
-| Data | `prisma/dev.db`, `./uploads` | `~/TrophyCaseLive/` |
-| Plan switch | Works | Hidden and refused |
-| Test clock | Works | Hidden and refused |
-| Everyone's plan | Your choice | Always Free |
-
-### Restoring from a backup
-
-**From an app backup** (taken every 6 hours, newest 8 kept):
-
-```bash
-npm run stop:live
-ls -la ~/TrophyCaseLive/backups          # find the one you want
-cp ~/TrophyCaseLive/backups/<file> ~/TrophyCaseLive/trophy-case.db
-npm run start:live
-```
-
-**From Time Machine:** open Time Machine, browse to `~/TrophyCaseLive`, pick a
-date before the problem, and restore the whole folder. Stop the live site
-first.
 
 ## Privacy
 
-This app is built to hold a child's personal information. Read [PRIVACY.md](PRIVACY.md) before you change how data is stored or before putting this online.
+Everything stays on this computer. Your photos are written to the `uploads` folder, your achievements to a SQLite file, and nothing is sent over the internet — this version has no outbound network calls at all.
+
+This app is built to hold a child's personal information. Read [PRIVACY.md](PRIVACY.md) before you change how data is stored, or before putting this online.

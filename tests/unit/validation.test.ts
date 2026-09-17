@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   achievementSchema,
-  validateFile,
+  validatePhoto,
   endOfToday,
   CATEGORIES,
 } from "@/lib/validation";
@@ -108,28 +108,34 @@ describe("endOfToday", () => {
   });
 });
 
-describe("file validation", () => {
+describe("photo validation", () => {
   it("accepts a JPEG under the size limit", () => {
-    expect(validateFile({ size: 1_000_000, type: "image/jpeg" })).toBeNull();
+    expect(validatePhoto({ size: 1_000_000, type: "image/jpeg" })).toBeNull();
   });
 
-  it("accepts a PDF", () => {
-    expect(validateFile({ size: 500_000, type: "application/pdf" })).toBeNull();
+  it("accepts a HEIC photo from an iPhone", () => {
+    expect(validatePhoto({ size: 2_000_000, type: "image/heic" })).toBeNull();
   });
 
-  it("rejects a file type that is not an image or PDF", () => {
-    expect(validateFile({ size: 1000, type: "application/zip" })).toMatch(
-      /Only images/,
+  it("rejects a PDF, which is no longer supported", () => {
+    expect(validatePhoto({ size: 500_000, type: "application/pdf" })).toMatch(
+      /isn't a photo/,
     );
   });
 
-  it("rejects a file larger than 10 MB", () => {
-    expect(validateFile({ size: 11 * 1024 * 1024, type: "image/png" })).toMatch(
+  it("rejects a file that is not a photo", () => {
+    expect(validatePhoto({ size: 1000, type: "application/zip" })).toMatch(
+      /isn't a photo/,
+    );
+  });
+
+  it("rejects a photo larger than 10 MB", () => {
+    expect(validatePhoto({ size: 11 * 1024 * 1024, type: "image/png" })).toMatch(
       /too big/,
     );
   });
 
-  it("accepts a file of exactly 10 MB", () => {
-    expect(validateFile({ size: 10 * 1024 * 1024, type: "image/png" })).toBeNull();
+  it("accepts a photo of exactly 10 MB", () => {
+    expect(validatePhoto({ size: 10 * 1024 * 1024, type: "image/png" })).toBeNull();
   });
 });

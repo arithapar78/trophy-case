@@ -1,9 +1,9 @@
 "use client";
 
-import { CATEGORIES } from "@/lib/validation";
+import { CATEGORIES, CATEGORY_EMOJI } from "@/lib/validation";
 
-// The category filter and search box above the timeline.
-// REQUIREMENTS.md 2.7 to 2.13.
+// The search box and the row of category chips above the timeline.
+// REQUIREMENTS.md Feature 3.
 
 export type CategoryFilter = (typeof CATEGORIES)[number] | "All";
 
@@ -30,12 +30,16 @@ export default function TimelineFilters({
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Search your achievements"
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-slate-900 focus:outline-none"
+          /* text-base is deliberate: at anything smaller iOS zooms the page
+             in when the box is focused. */
+          className="w-full rounded-xl border border-app-border bg-app-surface px-4 py-3 text-base outline-none focus:border-app-accent"
         />
       </div>
 
+      {/* Scrolls sideways on a narrow phone instead of wrapping to two rows
+          and pushing the timeline down. */}
       <div
-        className="flex flex-wrap gap-2"
+        className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         role="group"
         aria-label="Filter by category"
       >
@@ -49,10 +53,13 @@ export default function TimelineFilters({
               aria-pressed={isActive}
               className={
                 isActive
-                  ? "rounded-full bg-slate-900 px-3 py-1 text-sm font-medium text-white"
-                  : "rounded-full border border-slate-300 bg-white px-3 py-1 text-sm text-slate-600 hover:bg-slate-50"
+                  ? "tappable shrink-0 rounded-full bg-app-accent px-4 py-2 text-sm font-semibold text-app-accent-text"
+                  : "tappable shrink-0 rounded-full border border-app-border bg-app-surface px-4 py-2 text-sm text-app-muted"
               }
             >
+              {option !== "All" && (
+                <span aria-hidden="true">{CATEGORY_EMOJI[option]} </span>
+              )}
               {option}
             </button>
           );

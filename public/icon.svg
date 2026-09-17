@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0b1020"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="55%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <!-- Trophy cup -->
+  <path d="M176 112h160v104a80 80 0 0 1-160 0V112Z" fill="url(#gold)"/>
+  <!-- Handles -->
+  <path d="M176 136h-30a42 42 0 0 0 0 84h12" fill="none" stroke="url(#gold)" stroke-width="22" stroke-linecap="round"/>
+  <path d="M336 136h30a42 42 0 0 1 0 84h-12" fill="none" stroke="url(#gold)" stroke-width="22" stroke-linecap="round"/>
+  <!-- Stem and base -->
+  <rect x="240" y="292" width="32" height="56" fill="url(#gold)"/>
+  <rect x="188" y="348" width="136" height="30" rx="10" fill="url(#gold)"/>
+  <rect x="164" y="386" width="184" height="34" rx="12" fill="url(#gold)"/>
+  <!-- Star on the cup -->
+  <path d="m256 150 16.2 33 36.4 5.3-26.3 25.7 6.2 36.3L256 233.1l-32.5 17.2 6.2-36.3-26.3-25.7 36.4-5.3Z" fill="#0b1020" opacity=".55"/>
+</svg>

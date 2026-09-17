@@ -1,23 +1,29 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import AchievementForm from "@/components/AchievementForm";
+import AchievementSheet from "@/components/AchievementSheet";
 import AchievementCard from "@/components/AchievementCard";
+import CameraButton from "@/components/CameraButton";
 import TimelineFilters, {
   type CategoryFilter,
 } from "@/components/TimelineFilters";
-import Link from "next/link";
-import EssayIdeas from "@/components/EssayIdeas";
 import type { AchievementJson } from "@/lib/types";
 
-// The timeline. REQUIREMENTS.md Feature 2.
+// The one screen the app has: your timeline, with a camera button on top.
+// REQUIREMENTS.md Features 1 to 4.
 
 export default function HomePage() {
   const [achievements, setAchievements] = useState<AchievementJson[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  // The achievement currently being edited, or null when adding.
-  const [editing, setEditing] = useState<AchievementJson | null>(null);
+
+  // What the sheet is doing right now:
+  //   null              closed
+  //   {}                adding, no photo
+  //   { photo }         adding, with a photo just taken
+  //   { achievement }   editing an existing one
+  const [sheet, setSheet] = useState<
+    { photo?: File; achievement?: AchievementJson } | null
+  >(null);
 
   const [category, setCategory] = useState<CategoryFilter>("All");
   const [search, setSearch] = useState("");
@@ -26,7 +32,7 @@ export default function HomePage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
   // Tracks whether anything has been saved at all, so an empty result from a
-  // filter reads differently from a genuinely empty Trophy Case (2.14, 2.15).
+  // filter reads differently from a genuinely empty Trophy Case.
   const [hasAnyAchievements, setHasAnyAchievements] = useState(false);
 
   useEffect(() => {
@@ -60,115 +66,100 @@ export default function HomePage() {
   const isFiltering = category !== "All" || debouncedSearch.trim().length > 0;
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-10">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Trophy Case</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Your personal achievement timeline.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href="/helper"
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50"
-          >
-            Helper
-          </Link>
-          <Link
-            href="/settings"
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50"
-          >
-            Settings
-          </Link>
-          {!showForm && !editing && (
-            <button
-              type="button"
-              onClick={() => setShowForm(true)}
-              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
-            >
-              Add achievement
-            </button>
-          )}
+    <div className="mx-auto flex min-h-dvh max-w-2xl flex-col">
+      <header className="sticky top-0 z-30 bg-app-bg/85 px-4 pt-safe pb-3 backdrop-blur-xl">
+        <h1 className="text-[28px] leading-tight font-bold tracking-tight">
+          Trophy Case
+        </h1>
+        <p className="mt-0.5 text-sm text-app-muted">
+          {hasAnyAchievements
+            ? `${achievements.length} ${
+                achievements.length === 1 ? "achievement" : "achievements"
+              }${isFiltering ? " shown" : ""}`
+            : "Snap a photo. Save the win."}
+        </p>
+
+        <div className="mt-3">
+          <TimelineFilters
+            category={category}
+            search={search}
+            onCategoryChange={setCategory}
+            onSearchChange={setSearch}
+          />
         </div>
       </header>
 
-      {(showForm || editing) && (
-        <div className="mt-6">
-          <AchievementForm
-            // Remounts when switching between achievements, so the fields
-            // reset to the one being edited rather than keeping stale values.
-            key={editing?.id ?? "new"}
-            achievement={editing ?? undefined}
-            onSaved={() => {
-              setShowForm(false);
-              setEditing(null);
-              void loadAchievements();
-            }}
-            onCancel={() => {
-              setShowForm(false);
-              setEditing(null);
-            }}
-          />
-        </div>
-      )}
-
-      <div className="mt-8">
-        <EssayIdeas />
-      </div>
-
-      <div className="mt-8">
-        <TimelineFilters
-          category={category}
-          search={search}
-          onCategoryChange={setCategory}
-          onSearchChange={setSearch}
-        />
-      </div>
-
-      <section className="mt-6">
+      {/* pb-40 leaves room for the floating camera bar so the last card is
+          never hidden behind it. */}
+      <main className="flex-1 px-4 pt-2 pb-40">
         {loading ? (
-          <p className="text-sm text-slate-500">Loading...</p>
+          <p className="py-10 text-center text-sm text-app-muted">Loading…</p>
         ) : achievements.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-300 p-8 text-center">
+          <div className="mt-10 rounded-2xl border border-dashed border-app-border px-6 py-12 text-center">
             {isFiltering || hasAnyAchievements ? (
               <>
-                <p className="font-medium">Nothing matches that</p>
-                <p className="mt-1 text-sm text-slate-500">
-                  Try a different search, or choose “All” to see everything.
+                <p className="text-4xl" aria-hidden="true">
+                  🔍
+                </p>
+                <p className="mt-3 font-semibold">Nothing matches that</p>
+                <p className="mt-1 text-sm text-app-muted">
+                  Try a different search, or tap “All” to see everything.
                 </p>
               </>
             ) : (
               <>
-                <p className="font-medium">No achievements yet</p>
-                <p className="mt-1 text-sm text-slate-500">
-                  Click “Add achievement” to save your first one.
+                <p className="text-4xl" aria-hidden="true">
+                  🏆
+                </p>
+                <p className="mt-3 font-semibold">Your trophy case is empty</p>
+                <p className="mt-1 text-sm text-app-muted">
+                  Tap the camera button to save your first achievement.
                 </p>
               </>
             )}
           </div>
         ) : (
-          <>
-            <p className="mb-3 text-sm text-slate-500">
-              {achievements.length}{" "}
-              {achievements.length === 1 ? "achievement" : "achievements"}
-            </p>
-            <ul className="space-y-3">
-              {achievements.map((achievement) => (
-                <AchievementCard
-                  key={achievement.id}
-                  achievement={achievement}
-                  onEdit={() => {
-                    setShowForm(false);
-                    setEditing(achievement);
-                  }}
-                  onDeleted={() => void loadAchievements()}
-                />
-              ))}
-            </ul>
-          </>
+          <ul className="space-y-4">
+            {achievements.map((achievement) => (
+              <AchievementCard
+                key={achievement.id}
+                achievement={achievement}
+                onEdit={() => setSheet({ achievement })}
+                onDeleted={() => void loadAchievements()}
+              />
+            ))}
+          </ul>
         )}
-      </section>
-    </main>
+      </main>
+
+      {/* The camera bar, pinned to the bottom the way a real app's tab bar is. */}
+      <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-2xl">
+        <div className="flex flex-col items-center gap-2 bg-gradient-to-t from-app-bg via-app-bg/95 to-transparent px-4 pt-8 pb-safe">
+          <CameraButton onPhotoChosen={(photo) => setSheet({ photo })} />
+          <button
+            type="button"
+            onClick={() => setSheet({})}
+            className="tappable text-sm font-medium text-app-muted"
+          >
+            Add without a photo
+          </button>
+        </div>
+      </div>
+
+      {sheet && (
+        <AchievementSheet
+          // Remounts when switching between achievements, so the fields reset
+          // to the one being edited rather than keeping stale values.
+          key={sheet.achievement?.id ?? "new"}
+          achievement={sheet.achievement}
+          photo={sheet.photo}
+          onSaved={() => {
+            setSheet(null);
+            void loadAchievements();
+          }}
+          onClose={() => setSheet(null)}
+        />
+      )}
+    </div>
   );
 }

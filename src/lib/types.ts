@@ -9,9 +9,8 @@ export type AchievementJson = {
   date: string;
   category: string;
   note: string | null;
-  filePath: string | null;
-  fileName: string | null;
-  fileType: string | null;
+  photoPath: string | null;
+  photoType: string | null;
   createdAt: string;
   updatedAt: string;
 };

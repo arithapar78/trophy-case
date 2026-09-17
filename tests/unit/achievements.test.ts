@@ -10,7 +10,7 @@ import {
 } from "@/lib/achievements";
 import { db } from "@/lib/db";
 
-// Covers REQUIREMENTS.md T.1 through T.11.
+// Covers REQUIREMENTS.md T.1 through T.5.
 
 const validInput = {
   title: "Won the regional science fair",
@@ -48,7 +48,7 @@ describe("createAchievement (T.1, T.2)", () => {
 
     expect(created.title).toBe("Learned to poach an egg");
     expect(created.note).toBeNull();
-    expect(created.filePath).toBeNull();
+    expect(created.photoPath).toBeNull();
   });
 
   it("trims whitespace from the title", async () => {
@@ -60,16 +60,14 @@ describe("createAchievement (T.1, T.2)", () => {
     expect(created.title).toBe("Padded title");
   });
 
-  it("stores an attachment when one is given", async () => {
+  it("stores a photo when one is given", async () => {
     const created = await createAchievement(validInput, {
-      filePath: "abc123.jpg",
-      fileName: "certificate.jpg",
-      fileType: "image/jpeg",
+      photoPath: "abc123.jpg",
+      photoType: "image/jpeg",
     });
 
-    expect(created.filePath).toBe("abc123.jpg");
-    expect(created.fileName).toBe("certificate.jpg");
-    expect(created.fileType).toBe("image/jpeg");
+    expect(created.photoPath).toBe("abc123.jpg");
+    expect(created.photoType).toBe("image/jpeg");
   });
 
   it("rejects an empty title and saves nothing", async () => {
@@ -147,11 +145,10 @@ describe("updateAchievement (T.3, T.4)", () => {
     expect(updated.category).toBe("Arts");
   });
 
-  it("leaves the attachment alone when none is specified", async () => {
+  it("leaves the photo alone when none is specified", async () => {
     const created = await createAchievement(validInput, {
-      filePath: "abc123.jpg",
-      fileName: "certificate.jpg",
-      fileType: "image/jpeg",
+      photoPath: "abc123.jpg",
+      photoType: "image/jpeg",
     });
 
     const updated = await updateAchievement(created.id, {
@@ -159,38 +156,34 @@ describe("updateAchievement (T.3, T.4)", () => {
       title: "New title",
     });
 
-    expect(updated.filePath).toBe("abc123.jpg");
+    expect(updated.photoPath).toBe("abc123.jpg");
   });
 
-  it("removes the attachment when given null", async () => {
+  it("removes the photo when given null", async () => {
     const created = await createAchievement(validInput, {
-      filePath: "abc123.jpg",
-      fileName: "certificate.jpg",
-      fileType: "image/jpeg",
+      photoPath: "abc123.jpg",
+      photoType: "image/jpeg",
     });
 
     const updated = await updateAchievement(created.id, validInput, null);
 
-    expect(updated.filePath).toBeNull();
-    expect(updated.fileName).toBeNull();
-    expect(updated.fileType).toBeNull();
+    expect(updated.photoPath).toBeNull();
+    expect(updated.photoType).toBeNull();
   });
 
-  it("replaces the attachment when given a new file", async () => {
+  it("replaces the photo when given a new one", async () => {
     const created = await createAchievement(validInput, {
-      filePath: "old.jpg",
-      fileName: "old.jpg",
-      fileType: "image/jpeg",
+      photoPath: "old.jpg",
+      photoType: "image/jpeg",
     });
 
     const updated = await updateAchievement(created.id, validInput, {
-      filePath: "new.pdf",
-      fileName: "new.pdf",
-      fileType: "application/pdf",
+      photoPath: "new.png",
+      photoType: "image/png",
     });
 
-    expect(updated.filePath).toBe("new.pdf");
-    expect(updated.fileType).toBe("application/pdf");
+    expect(updated.photoPath).toBe("new.png");
+    expect(updated.photoType).toBe("image/png");
   });
 
   it("rejects invalid data and leaves the original untouched", async () => {

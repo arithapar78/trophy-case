@@ -4,7 +4,8 @@
  * Run with:  npm run seed
  *
  * Running it twice replaces the samples rather than duplicating them.
- * These belong to a made-up student, "Maya Ramirez".
+ * These belong to a made-up student, "Maya Ramirez", and have no photos —
+ * photos come from your own camera.
  */
 import { PrismaClient } from "@prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
@@ -58,35 +59,28 @@ const SAMPLE_ACHIEVEMENTS = [
     note: "Second attempt, up 90 points from the first.",
   },
   {
-    title: "Taught my little brother to ride a bike",
-    date: day("2024-07-15"),
-    category: "Other",
-    note: "Took four afternoons. He fell a lot and kept going.",
+    title: "Ran a 5K in under 22 minutes",
+    date: day("2025-04-12"),
+    category: "Sports",
+    note: "21:47 at the spring charity run. Beat my goal by 13 seconds.",
   },
   {
-    title: "Volunteered 50 hours at the animal shelter",
-    date: day("2025-01-20"),
+    title: "Taught my grandmother to video call",
+    date: day("2024-12-15"),
     category: "Other",
-    note: "Mostly dog walking and cleaning kennels. Helped three dogs get adopted by writing their profile cards.",
+    note: "Wrote her a one-page guide with big print. She calls every Sunday now.",
   },
 ];
 
 async function main() {
-  console.log("Seeding sample achievements...");
-
-  // Clear old samples so running this twice doesn't pile up duplicates.
-  const deleted = await db.achievement.deleteMany({});
-  if (deleted.count > 0) {
-    console.log(`  Removed ${deleted.count} existing achievement(s).`);
-  }
+  // Clear the samples first so running this twice doesn't duplicate them.
+  await db.achievement.deleteMany({});
 
   for (const achievement of SAMPLE_ACHIEVEMENTS) {
     await db.achievement.create({ data: achievement });
-    console.log(`  + ${achievement.title}`);
   }
 
-  console.log(`\nDone. Added ${SAMPLE_ACHIEVEMENTS.length} sample achievements.`);
-  console.log("Run `npm run dev` and open http://localhost:3000 to see them.");
+  console.log(`Added ${SAMPLE_ACHIEVEMENTS.length} sample achievements.`);
 }
 
 main()

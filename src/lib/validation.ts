@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 // The single source of truth for what a valid achievement looks like.
-// Both the server and the browser forms use these rules, so they can
-// never drift apart. Rules come from REQUIREMENTS.md.
+// Both the server and the browser form use these rules, so they can never
+// drift apart. Rules come from REQUIREMENTS.md.
 
 export const CATEGORIES = [
   "School",
@@ -15,16 +15,28 @@ export const CATEGORIES = [
 
 export type Category = (typeof CATEGORIES)[number];
 
+/** The emoji shown on each category chip and card. */
+export const CATEGORY_EMOJI: Record<Category, string> = {
+  School: "🎓",
+  Sports: "⚽",
+  Debate: "🎤",
+  Cooking: "🍳",
+  Arts: "🎨",
+  Other: "⭐",
+};
+
 export const TITLE_MAX_LENGTH = 120;
 export const NOTE_MAX_LENGTH = 500;
-export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+export const MAX_PHOTO_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
-export const ALLOWED_FILE_TYPES = [
+// Photos only. A phone camera produces JPEG or HEIC; Safari converts HEIC to
+// JPEG on upload, so the list below covers every photo this app will see.
+export const ALLOWED_PHOTO_TYPES = [
   "image/jpeg",
   "image/png",
   "image/webp",
-  "image/gif",
-  "application/pdf",
+  "image/heic",
+  "image/heif",
 ] as const;
 
 /**
@@ -66,16 +78,16 @@ export const achievementSchema = z.object({
 
 export type AchievementInput = z.infer<typeof achievementSchema>;
 
-/** Checks an uploaded file. Returns null when the file is fine. */
-export function validateFile(file: {
+/** Checks an uploaded photo. Returns null when the photo is fine. */
+export function validatePhoto(photo: {
   size: number;
   type: string;
 }): string | null {
-  if (!ALLOWED_FILE_TYPES.includes(file.type as (typeof ALLOWED_FILE_TYPES)[number])) {
-    return "Only images (JPG, PNG, WEBP, GIF) and PDFs can be attached.";
+  if (!ALLOWED_PHOTO_TYPES.includes(photo.type as (typeof ALLOWED_PHOTO_TYPES)[number])) {
+    return "That file isn't a photo. Use a JPG, PNG, WEBP or HEIC image.";
   }
-  if (file.size > MAX_FILE_SIZE_BYTES) {
-    return "That file is too big. The limit is 10 MB.";
+  if (photo.size > MAX_PHOTO_SIZE_BYTES) {
+    return "That photo is too big. The limit is 10 MB.";
   }
   return null;
 }

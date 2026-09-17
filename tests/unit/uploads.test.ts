@@ -3,15 +3,14 @@ import { readdir, writeFile, mkdir, rm } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import {
-  saveUploadedFile,
-  deleteStoredFile,
-  FileValidationError,
+  savePhoto,
+  deleteStoredPhoto,
+  PhotoValidationError,
   getUploadsDir,
 } from "@/lib/uploads";
 
-// Covers saving and cleaning up attachments (REQUIREMENTS.md 1.11 to 1.14,
-// 3.6, 3.7). These write into the real uploads folder, so each test cleans
-// up after itself.
+// Covers saving and cleaning up photos (REQUIREMENTS.md T.6 to T.9).
+// These write into the real uploads folder, so each test cleans up after itself.
 
 const written: string[] = [];
 
@@ -21,70 +20,79 @@ afterEach(async () => {
   }
 });
 
-function fakeFile(name: string, type: string, sizeBytes = 100): File {
+function fakePhoto(name: string, type: string, sizeBytes = 100): File {
   return new File([new Uint8Array(sizeBytes)], name, { type });
 }
 
-describe("saveUploadedFile", () => {
-  it("saves an image and reports where it went", async () => {
-    const saved = await saveUploadedFile(fakeFile("certificate.png", "image/png"));
-    written.push(saved.filePath);
+describe("savePhoto", () => {
+  it("saves a photo and reports where it went", async () => {
+    const saved = await savePhoto(fakePhoto("certificate.png", "image/png"));
+    written.push(saved.photoPath);
 
-    expect(saved.fileName).toBe("certificate.png");
-    expect(saved.fileType).toBe("image/png");
-    expect(saved.filePath).toMatch(/\.png$/);
-    expect(existsSync(path.join(getUploadsDir(), saved.filePath))).toBe(true);
+    expect(saved.photoType).toBe("image/png");
+    expect(saved.photoPath).toMatch(/\.png$/);
+    expect(existsSync(path.join(getUploadsDir(), saved.photoPath))).toBe(true);
   });
 
-  it("saves a PDF", async () => {
-    const saved = await saveUploadedFile(fakeFile("award.pdf", "application/pdf"));
-    written.push(saved.filePath);
+  it("saves a JPEG from a phone camera", async () => {
+    const saved = await savePhoto(fakePhoto("IMG_0001.jpg", "image/jpeg"));
+    written.push(saved.photoPath);
 
-    expect(saved.filePath).toMatch(/\.pdf$/);
-    expect(existsSync(path.join(getUploadsDir(), saved.filePath))).toBe(true);
+    expect(saved.photoPath).toMatch(/\.jpg$/);
+    expect(existsSync(path.join(getUploadsDir(), saved.photoPath))).toBe(true);
   });
 
-  it("gives two files with the same name different stored names", async () => {
-    const first = await saveUploadedFile(fakeFile("photo.jpg", "image/jpeg"));
-    const second = await saveUploadedFile(fakeFile("photo.jpg", "image/jpeg"));
-    written.push(first.filePath, second.filePath);
+  it("saves a HEIC photo from an iPhone", async () => {
+    const saved = await savePhoto(fakePhoto("IMG_0002.heic", "image/heic"));
+    written.push(saved.photoPath);
 
-    expect(first.filePath).not.toBe(second.filePath);
-    // Both keep the original name for display.
-    expect(first.fileName).toBe("photo.jpg");
-    expect(second.fileName).toBe("photo.jpg");
+    expect(saved.photoPath).toMatch(/\.heic$/);
+    expect(existsSync(path.join(getUploadsDir(), saved.photoPath))).toBe(true);
+  });
+
+  it("gives two photos with the same name different stored names", async () => {
+    const first = await savePhoto(fakePhoto("photo.jpg", "image/jpeg"));
+    const second = await savePhoto(fakePhoto("photo.jpg", "image/jpeg"));
+    written.push(first.photoPath, second.photoPath);
+
+    expect(first.photoPath).not.toBe(second.photoPath);
   });
 
   it("never lets a crafted filename escape the uploads folder", async () => {
-    const saved = await saveUploadedFile(
-      fakeFile("../../../etc/passwd.png", "image/png"),
+    const saved = await savePhoto(
+      fakePhoto("../../../etc/passwd.png", "image/png"),
     );
-    written.push(saved.filePath);
+    written.push(saved.photoPath);
 
-    // The stored name is generated, and the display name is stripped of path parts.
-    expect(saved.filePath).not.toContain("/");
-    expect(saved.filePath).not.toContain("..");
-    expect(saved.fileName).toBe("passwd.png");
+    // The stored name is generated, so the supplied name can't steer it.
+    expect(saved.photoPath).not.toContain("/");
+    expect(saved.photoPath).not.toContain("..");
 
     const entries = await readdir(getUploadsDir());
-    expect(entries).toContain(saved.filePath);
+    expect(entries).toContain(saved.photoPath);
   });
 
-  it("rejects a file type that isn't an image or PDF", async () => {
+  it("rejects a file that isn't a photo", async () => {
     await expect(
-      saveUploadedFile(fakeFile("archive.zip", "application/zip")),
-    ).rejects.toThrow(FileValidationError);
+      savePhoto(fakePhoto("archive.zip", "application/zip")),
+    ).rejects.toThrow(PhotoValidationError);
   });
 
-  it("rejects a file over 10 MB", async () => {
-    const tooBig = fakeFile("huge.png", "image/png", 11 * 1024 * 1024);
-    await expect(saveUploadedFile(tooBig)).rejects.toThrow(FileValidationError);
+  it("rejects a PDF, which is no longer supported", async () => {
+    await expect(
+      savePhoto(fakePhoto("award.pdf", "application/pdf")),
+    ).rejects.toThrow(PhotoValidationError);
   });
 
-  it("writes nothing when the file is rejected", async () => {
+  it("rejects a photo over 10 MB", async () => {
+    const tooBig = fakePhoto("huge.png", "image/png", 11 * 1024 * 1024);
+    await expect(savePhoto(tooBig)).rejects.toThrow(PhotoValidationError);
+  });
+
+  it("writes nothing when the photo is rejected", async () => {
     const before = await readdir(getUploadsDir()).catch(() => []);
     await expect(
-      saveUploadedFile(fakeFile("bad.zip", "application/zip")),
+      savePhoto(fakePhoto("bad.zip", "application/zip")),
     ).rejects.toThrow();
     const after = await readdir(getUploadsDir()).catch(() => []);
 
@@ -92,24 +100,24 @@ describe("saveUploadedFile", () => {
   });
 });
 
-describe("deleteStoredFile", () => {
-  it("removes the file from disk", async () => {
-    const saved = await saveUploadedFile(fakeFile("gone.png", "image/png"));
-    const fullPath = path.join(getUploadsDir(), saved.filePath);
+describe("deleteStoredPhoto", () => {
+  it("removes the photo from disk", async () => {
+    const saved = await savePhoto(fakePhoto("gone.png", "image/png"));
+    const fullPath = path.join(getUploadsDir(), saved.photoPath);
     expect(existsSync(fullPath)).toBe(true);
 
-    await deleteStoredFile(saved.filePath);
+    await deleteStoredPhoto(saved.photoPath);
 
     expect(existsSync(fullPath)).toBe(false);
   });
 
-  it("does nothing when there is no file", async () => {
-    await expect(deleteStoredFile(null)).resolves.toBeUndefined();
+  it("does nothing when there is no photo", async () => {
+    await expect(deleteStoredPhoto(null)).resolves.toBeUndefined();
   });
 
-  it("stays quiet when the file is already gone", async () => {
+  it("stays quiet when the photo is already gone", async () => {
     await expect(
-      deleteStoredFile("never-existed-abc123.png"),
+      deleteStoredPhoto("never-existed-abc123.png"),
     ).resolves.toBeUndefined();
   });
 
@@ -119,7 +127,7 @@ describe("deleteStoredFile", () => {
     const canary = path.join(getUploadsDir(), "..", "delete-canary.tmp");
     await writeFile(canary, "do not delete");
 
-    await deleteStoredFile("../delete-canary.tmp");
+    await deleteStoredPhoto("../delete-canary.tmp");
 
     expect(existsSync(canary)).toBe(true);
     await rm(canary, { force: true });

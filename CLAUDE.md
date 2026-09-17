@@ -4,7 +4,11 @@ Read this before doing anything in this repo.
 
 ## What this project is
 
-Trophy Case — a local-only app where a student (or their parent) saves achievements to a timeline, and AI turns those achievements into college essay ideas. See [README.md](README.md) for the full picture and [REQUIREMENTS.md](REQUIREMENTS.md) for exactly what v1 includes.
+Trophy Case — a local-only, phone-first app where a student (or their parent) photographs an achievement and saves it to a timeline. See [README.md](README.md) for the full picture and [REQUIREMENTS.md](REQUIREMENTS.md) for exactly what the current version includes.
+
+**There is no AI in the app right now.** It was removed deliberately to get back to a working core. It comes back later, one feature at a time, in the order listed under "What comes next" in the README. Don't re-add it early.
+
+**It is built for a phone screen first.** Every new screen or control has to work with a thumb on an iPhone before it works anywhere else.
 
 The person you're working with is learning as they go. Optimize for *them understanding the code*, not for cleverness.
 
@@ -12,16 +16,18 @@ The person you're working with is learning as they go. Optimize for *them unders
 
 **Don't add features that aren't in REQUIREMENTS.md.**
 
-If you think something is missing or wrong, say so and ask — don't just build it. If you notice something genuinely broken while doing other work, mention it rather than silently fixing unrelated code. The "Future ideas" list in the README is a parking lot, not a to-do list.
+If you think something is missing or wrong, say so and ask — don't just build it. If you notice something genuinely broken while doing other work, mention it rather than silently fixing unrelated code. The "What comes next" list in the README is a parking lot, not a to-do list.
 
 ## Tech stack — use these, don't swap them
 
 - **Next.js with TypeScript, App Router** (`src/app/`, not `pages/`)
 - **Tailwind CSS** for all styling — no CSS modules, no styled-components, no separate stylesheets
 - **SQLite via Prisma** — the database is a local file
-- **Local `/uploads` folder** for files — no S3, no cloud storage
-- **Anthropic SDK** for the Claude API, with MOCK-mode fallback when there's no key
-- **Vitest** for unit tests, **Playwright** for the end-to-end test
+- **Local `/uploads` folder** for photos — no S3, no cloud storage
+- **The browser's own file input** for the camera — no camera library
+- **Vitest** for unit tests, **Playwright** for the end-to-end tests, run at phone size
+
+When the AI comes back, it uses the **Anthropic SDK** with a MOCK-mode fallback when there's no key. Nothing else.
 
 Don't introduce a new library without asking first. Every new dependency is one more thing the user has to understand.
 
@@ -85,7 +91,7 @@ Build features in the order listed in REQUIREMENTS.md. After each feature: run t
 
 ## Privacy
 
-This app holds a child's personal data. Read [PRIVACY.md](PRIVACY.md) before changing anything about how data is stored, sent, or logged. Don't add analytics, tracking, crash reporting, or any third-party service that sees user data. The only outbound network call in v1 is the Claude API for essay ideas.
+This app holds a child's personal data. Read [PRIVACY.md](PRIVACY.md) before changing anything about how data is stored, sent, or logged. Don't add analytics, tracking, crash reporting, or any third-party service that sees user data. **This version makes no outbound network calls at all.** When the AI feature returns, the Claude API will be the only one.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

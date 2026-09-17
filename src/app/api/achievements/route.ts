@@ -4,7 +4,7 @@ import {
   listAchievements,
   ValidationError,
 } from "@/lib/achievements";
-import { saveUploadedFile, FileValidationError } from "@/lib/uploads";
+import { savePhoto, PhotoValidationError } from "@/lib/uploads";
 import type { Category } from "@/lib/validation";
 import { inputValueToDate } from "@/lib/dates";
 
@@ -29,12 +29,12 @@ export async function POST(request: Request) {
     const formData = await request.formData();
 
     const rawDate = String(formData.get("date") ?? "");
-    const file = formData.get("file");
+    const photo = formData.get("photo");
 
-    // Save the file first so a failed upload doesn't leave a half-made record.
-    let attachment = null;
-    if (file instanceof File && file.size > 0) {
-      attachment = await saveUploadedFile(file);
+    // Save the photo first so a failed upload doesn't leave a half-made record.
+    let savedPhoto = null;
+    if (photo instanceof File && photo.size > 0) {
+      savedPhoto = await savePhoto(photo);
     }
 
     const achievement = await createAchievement(
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
         category: String(formData.get("category") ?? ""),
         note: String(formData.get("note") ?? ""),
       },
-      attachment,
+      savedPhoto,
     );
 
     return NextResponse.json({ achievement }, { status: 201 });
@@ -57,9 +57,9 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-    if (error instanceof FileValidationError) {
+    if (error instanceof PhotoValidationError) {
       return NextResponse.json(
-        { error: error.message, fieldErrors: { file: error.message } },
+        { error: error.message, fieldErrors: { photo: error.message } },
         { status: 400 },
       );
     }

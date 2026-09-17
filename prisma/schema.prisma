@@ -20,10 +20,9 @@ model Achievement {
   category String
   note     String?
 
-  // Attachment. All three are set together, or all three are null.
-  filePath String? // path relative to the uploads folder, e.g. "abc123.jpg"
-  fileName String? // the original name, shown to the user
-  fileType String? // MIME type, e.g. "image/jpeg" or "application/pdf"
+  // The photo. Both are set together, or both are null.
+  photoPath String? // file name inside the uploads folder, e.g. "abc123.jpg"
+  photoType String? // MIME type, e.g. "image/jpeg"
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -31,78 +30,4 @@ model Achievement {
   // Newest-first timeline ordering. createdAt breaks ties on the same date.
   @@index([date, createdAt])
   @@index([category])
-}
-
-// App settings. There are no accounts in v2, so there is exactly one row,
-// always with id "singleton".
-model Settings {
-  id String @id @default("singleton")
-
-  // "Free" or "Pro". A test switch in v2 — no real subscription behind it.
-  plan String @default("Free")
-
-  // Dev-only clock offset in milliseconds, used to test the 5-hour prompt
-  // window and 60-day file expiry without waiting. Always 0 in production.
-  clockOffsetMs Int @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// One row per prompt that actually reached the Claude API.
-//
-// The 5-hour window is worked out from these rows rather than stored as a
-// countdown, so it can't drift and there's an audit trail of what was spent.
-// A prompt that failed is never recorded (criterion 2.17).
-//
-// v3 adds a visitorId here; v2 has a single user, so it is null for now.
-model PromptUsage {
-  id String @id @default(cuid())
-
-  // Which job spent it: "chat", "essay-ideas", "tags", and so on.
-  job String
-
-  // When it was spent, by the app's clock (which the test clock can move).
-  usedAt DateTime
-
-  createdAt DateTime @default(now())
-
-  @@index([usedAt])
-}
-
-// A saved answer, so asking the same thing twice doesn't cost a prompt.
-//
-// The key is a hash of the job plus the exact question plus a fingerprint of
-// the achievements it depended on. Changing an achievement changes the
-// fingerprint, which misses the cache rather than serving a stale answer
-// (criterion 2.21).
-model CachedAnswer {
-  id String @id @default(cuid())
-
-  cacheKey String @unique
-  job      String
-  answer   String
-
-  createdAt DateTime @default(now())
-
-  @@index([job])
-}
-
-// One message in the helper conversation. Kept so the chat survives a
-// restart (v2 Decision 7).
-model HelperMessage {
-  id String @id @default(cuid())
-
-  // "user" or "assistant".
-  role    String
-  content String
-
-  // True when this reply came from MOCK mode or the cache, so the UI can
-  // label it honestly (criteria 2.20, 2.22).
-  isMock   Boolean @default(false)
-  isCached Boolean @default(false)
-
-  createdAt DateTime @default(now())
-
-  @@index([createdAt])
 }

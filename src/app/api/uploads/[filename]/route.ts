@@ -2,11 +2,11 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { getUploadsDir } from "@/lib/uploads";
-import { ALLOWED_FILE_TYPES } from "@/lib/validation";
+import { ALLOWED_PHOTO_TYPES } from "@/lib/validation";
 
-// Serves an uploaded photo or PDF back to the browser.
+// Serves a saved photo back to the browser.
 //
-// Files live outside /public on purpose: going through this route lets us
+// Photos live outside /public on purpose: going through this route lets us
 // check the filename before reading anything off disk.
 
 const CONTENT_TYPES: Record<string, string> = {
@@ -14,8 +14,8 @@ const CONTENT_TYPES: Record<string, string> = {
   ".jpeg": "image/jpeg",
   ".png": "image/png",
   ".webp": "image/webp",
-  ".gif": "image/gif",
-  ".pdf": "application/pdf",
+  ".heic": "image/heic",
+  ".heif": "image/heif",
 };
 
 export async function GET(
@@ -32,7 +32,7 @@ export async function GET(
   }
 
   const contentType = CONTENT_TYPES[path.extname(safeName).toLowerCase()];
-  if (!contentType || !ALLOWED_FILE_TYPES.includes(contentType as never)) {
+  if (!contentType || !ALLOWED_PHOTO_TYPES.includes(contentType as never)) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
