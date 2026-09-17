@@ -140,11 +140,6 @@ This adds 8 example achievements for a made-up student so you can see the app wo
 
 ### Step 6 — Start the app
 
-**The easy way:** double-click **Trophy Case** on your Desktop. A Terminal
-window opens, the app starts, and your browser opens automatically.
-
-**The manual way:**
-
 ```bash
 npm run dev
 ```
@@ -154,19 +149,18 @@ Then open your browser to **http://localhost:3000**.
 To stop the app either way: close that Terminal window, or click it and press
 `Ctrl + C`.
 
-### About the desktop launchers
+### About the desktop launcher
 
-There are two icons on the Desktop, and they do different things:
+**Trophy Case LIVE** (the green icon) is on the Desktop. It starts the live
+site on port 3100 — see "Running the live site" below.
 
-| Icon | What it opens | Port | Data |
-|---|---|---|---|
-| **Trophy Case** (navy) | Your personal copy | 3000 | `prisma/dev.db`, `./uploads` |
-| **Trophy Case LIVE** (green) | The public site | 3100 | `~/TrophyCaseLive/` |
+Your personal copy has no Desktop icon; start it with `npm run dev` and open
+http://localhost:3000. Both can run at the same time without interfering.
 
-Both can run at the same time without interfering. The live one is covered in
-"Running the live site" below.
+(If you ever want a Desktop icon for the personal copy back, ask Claude — the
+script it uses, `scripts/start-trophy-case.sh`, is still here.)
 
-The navy icon runs `scripts/start-trophy-case.sh`, which:
+That script:
 
 - Starts the app and opens your browser once it's actually ready
 - Notices if it's already running and just opens the browser instead of
