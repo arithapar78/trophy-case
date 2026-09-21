@@ -1,6 +1,7 @@
 # Dependencies and build output
 node_modules
 dist
+dev-dist
 
 # Local settings and secrets (the API key lives here in development)
 .env.local

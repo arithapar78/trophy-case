@@ -21,13 +21,13 @@ Trophy Case makes saving an achievement take under 10 seconds: point the camera 
 
 ## What it will do, phase by phase
 
-This is a fresh build. Right now it is Phase 0: an empty shell with the tools wired up. Each phase below is built, tested and tried on a phone before the next one starts. The full contract is in [REQUIREMENTS.md](REQUIREMENTS.md).
+This is a fresh build. Each phase below is built, tested and tried on a phone before the next one starts. The full contract is in [REQUIREMENTS.md](REQUIREMENTS.md).
 
 | Phase | What you get |
 |---|---|
-| 0. Restart (now) | Empty app, tests wired up, this harness |
-| 1. The core | Take a photo or write it down, up to 5 photos, timeline, search, filter, edit, delete. All on the device |
-| 2. On your phone | A real URL, Add to Home Screen, works offline, backup to a file and restore |
+| 0. Restart (done) | Empty app, tests wired up, this harness |
+| 1. The core (done) | Take a photo or write it down, up to 5 photos, timeline, search, filter, edit, delete. All on the device |
+| 2. On your phone (done) | A real URL, Add to Home Screen, works offline, backup to a file and restore, delete everything |
 | 3. AI photo read | AI drafts the title from the photo. Off by default, a button each time to turn it on. 10 uses per 5 hours |
 | 4. Goal and ranking | Set a goal, see which achievements matter most and what to do next. Export as PDF or text |
 | Later | Accounts, a $10/month Pro plan, the assistant, app store listings |
@@ -40,7 +40,8 @@ This is a fresh build. Right now it is Phase 0: an empty shell with the tools wi
 | Styling | Tailwind CSS | Style directly in the markup, no separate stylesheets |
 | Storage | Dexie (over the browser's IndexedDB) | The phone's built-in database. Photos included. Nothing leaves the device |
 | Camera | The browser's own file input | The phone does the work, no camera library |
-| Offline and install | A service worker (Phase 2) | Opens with no signal, installs to the Home Screen |
+| Offline and install | A service worker (vite-plugin-pwa) | Opens with no signal, installs to the Home Screen |
+| Backup | fflate (a tiny zip library) | One zip file with your achievements and photos |
 | AI (Phase 3) | Anthropic SDK inside one small serverless function | The key stays on the server side, never in the app. MOCK mode when there is no key |
 | Unit tests | Vitest | Fast tests for the logic |
 | Browser tests | Playwright | Drives a real browser at iPhone size |
@@ -117,12 +118,15 @@ Then watch the Actions tab on GitHub; the site updates a minute or two later.
 npm test
 ```
 
-**Browser tests** (a real browser at phone size):
+**Browser tests** (a real browser at phone size, against a production build):
 
 ```bash
 npx playwright install chromium   # one time only, downloads the test browser
 npm run test:e2e
 ```
+
+These build the app first and test the built files, the same ones GitHub Pages
+serves, so offline mode and the Home Screen install are tested for real.
 
 **Build check** (catches TypeScript errors):
 
@@ -160,7 +164,15 @@ achievement-tracker/
 │   ├── main.tsx           Starts the app
 │   ├── App.tsx            The top-level screen
 │   ├── index.css          Tailwind entry and the app's colours
+│   ├── components/        The screens: sheet, cards, filters, settings, viewer
+│   ├── hooks/             Small React helpers
 │   └── lib/               Logic with no screen in it, so it can be unit-tested
+│       ├── db.ts            The one database connection (Dexie)
+│       ├── achievements.ts  Create, edit, delete, list
+│       ├── validation.ts    The rules for a valid achievement
+│       ├── photos.ts        Checking, resizing and EXIF stripping
+│       ├── backup.ts        Backup zip in and out
+│       └── storage.ts       Storage usage and "please keep my data"
 └── tests/
     ├── unit/              Vitest tests (npm test)
     └── e2e/               Playwright tests (npm run test:e2e)

@@ -1,7 +1,7 @@
 {
   "name": "trophy-case",
   "private": true,
-  "version": "2.0.0",
+  "version": "2.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,6 +14,7 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "dexie": "^4.4.6",
+    "fflate": "^0.8.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "tailwindcss": "^4.3.3"
@@ -27,6 +28,7 @@
     "fake-indexeddb": "^6.2.5",
     "typescript": "~6.0.2",
     "vite": "^8.3.0",
+    "vite-plugin-pwa": "^1.3.0",
     "vitest": "^5.0.1"
   },
   "description": "A phone-first achievement timeline. Snap a photo, save the win. Everything stays on your device."
