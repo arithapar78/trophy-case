@@ -1,8 +1,8 @@
 # Trophy Case
 
-Snap a photo. Save the win. Build your timeline.
+Snap a photo. Save the win. Build your timeline. Everything stays on your phone.
 
-A phone-first app for recording achievements the moment they happen — a medal, a certificate, a finished project — so that years later you still have the whole record instead of the three things you happen to remember.
+A phone-first app for recording achievements the moment they happen, a medal, a certificate, a finished project, so that years later you still have the whole record instead of the three things you happen to remember. Later, AI tells you which ones matter most for the college or job you are aiming at.
 
 ## The problem it solves
 
@@ -10,142 +10,85 @@ By the time a student sits down to write college applications, they have to reme
 
 Trophy Case makes saving an achievement take under 10 seconds: point the camera at the thing, type a title, tap a category, done.
 
-## Who it's for
+## Who it is for
 
-- **Students** (roughly ages 8–18) who want a running record of what they've done.
-- **Parents** who want to capture their kid's wins before they're forgotten.
+- **Students**, roughly 13 to 18, building a record for college or job applications
+- **Parents** capturing a younger kid's wins before they are forgotten
 
-This version runs on your own computer, and your phone opens it over your home Wi-Fi. There are no accounts and nothing is uploaded to anyone's server.
+## The one rule
 
-## What it does right now
+**Your data stays on your device.** There is no account and no server holding your achievements. The app is a web page your phone downloads once and then runs by itself, keeping everything in the phone's own storage. The only thing that ever leaves the phone is what you choose to send to the AI, and AI is off until you turn it on.
 
-1. **Take a photo** — a big camera button at the bottom of the screen opens your phone's camera.
-2. **Add the details** — a sheet slides up: title, category (one tap), date (already today) and an optional note.
-3. **See your timeline** — every achievement, newest first, with its photo, plus search and a category filter.
-4. **Fix mistakes** — edit anything, or delete it with a confirmation.
+## What it will do, phase by phase
 
-That's the whole app. It is deliberately small.
+This is a fresh build. Right now it is Phase 0: an empty shell with the tools wired up. Each phase below is built, tested and tried on a phone before the next one starts. The full contract is in [REQUIREMENTS.md](REQUIREMENTS.md).
 
-### It installs on your phone
-
-Open it in Safari on your iPhone, tap the Share button, then **Add to Home Screen**. You get a trophy icon on your Home Screen, and tapping it opens the app full-screen with no address bar — it behaves like any other app on the phone. It follows your phone's light or dark mode automatically.
-
-> **On the App Store?** Not yet, and this version can't be. A real App Store app needs an Apple Developer account ($99/year), a build made in Xcode, Apple's review process, and — the big one — your achievements would have to live on a server on the internet rather than on your own computer. The Home Screen install above gets you the same everyday feel without any of that. This app is built so that a real iOS wrapper can come later without redoing the work.
-
-## What comes next (NOT built yet)
-
-These are written down so we don't forget them, not so we build them now. One at a time, in this order:
-
-1. **The AI essay-ideas feature** — reads your achievements and suggests college essay angles. This existed in an earlier version and was removed to get back to a solid core. It comes back first.
-2. **The AI helper** — a chat assistant that sorts, tags and fills in achievements from a photo.
-3. **Accounts and a hosted site** — so your timeline follows you to any device.
-4. **A real native iOS app** — the actual App Store submission.
-
-Also parked: sharing, reels/video, LinkedIn posts, life planning, payments.
+| Phase | What you get |
+|---|---|
+| 0. Restart (now) | Empty app, tests wired up, this harness |
+| 1. The core | Take a photo or write it down, up to 5 photos, timeline, search, filter, edit, delete. All on the device |
+| 2. On your phone | A real URL, Add to Home Screen, works offline, backup to a file and restore |
+| 3. AI photo read | AI drafts the title from the photo. Off by default, a button each time to turn it on. 10 uses per 5 hours |
+| 4. Goal and ranking | Set a goal, see which achievements matter most and what to do next. Export as PDF or text |
+| Later | Accounts, a $10/month Pro plan, the assistant, app store listings |
 
 ## Tech stack
 
 | Piece | What we use | Why |
 |---|---|---|
-| Framework | Next.js (App Router) + TypeScript | One tool for both the screen and the server |
+| App | Vite + React + TypeScript | Builds a static page that runs entirely on the phone |
 | Styling | Tailwind CSS | Style directly in the markup, no separate stylesheets |
-| Database | SQLite via Prisma | A single file on your computer, no cloud account |
-| Photos | Local `/uploads` folder | Your photos stay on your machine |
-| Camera | The browser's own file input | No camera library — the phone does the work |
+| Storage | Dexie (over the browser's IndexedDB) | The phone's built-in database. Photos included. Nothing leaves the device |
+| Camera | The browser's own file input | The phone does the work, no camera library |
+| Offline and install | A service worker (Phase 2) | Opens with no signal, installs to the Home Screen |
+| AI (Phase 3) | Anthropic SDK inside one small serverless function | The key stays on the server side, never in the app. MOCK mode when there is no key |
 | Unit tests | Vitest | Fast tests for the logic |
-| Browser tests | Playwright | Drives a real browser at phone size |
-
-There is **no AI in this version** and no API key is needed. The app makes no outbound network calls at all.
+| Browser tests | Playwright | Drives a real browser at iPhone size |
 
 ## Install and run it
 
-Assume you've never done this before. Follow these in order.
+Assume you have never done this before. Follow these in order.
 
-### Step 0 — What you need first
+### Step 0: What you need
 
-You need **Node.js version 20 or newer**. To check, open Terminal and type:
+**Node.js 20 or newer.** In Terminal:
 
 ```bash
 node --version
 ```
 
-If you see `v20.11.0` or higher, you're good. If you get "command not found" or a lower number, download the LTS version from https://nodejs.org, install it, then close and reopen Terminal.
+If you see `v20` or higher, you are good. Otherwise install the LTS version from https://nodejs.org, then close and reopen Terminal.
 
-### Step 1 — Go to the project folder
+### Step 1: Go to the project folder
 
 ```bash
 cd /Users/Ari/workplace/ari-workspace/projects/achievement-tracker
 ```
 
-### Step 2 — Install the building blocks
+### Step 2: Install the building blocks
 
 ```bash
 npm install
 ```
 
-This downloads every library the project needs into a `node_modules` folder. It takes a minute or two the first time, and you only do it once.
+Downloads every library the project needs into `node_modules`. A minute or two, once.
 
-### Step 3 — Create the database
-
-```bash
-npm run db:push
-```
-
-This creates the SQLite database file and the table that holds achievements.
-
-### Step 4 — Add sample data (optional)
-
-```bash
-npm run seed
-```
-
-Adds 8 example achievements for a made-up student, so you see the app working instead of an empty screen. Running it again replaces them rather than duplicating.
-
-### Step 5 — Start the app
+### Step 3: Start the app
 
 ```bash
 npm run dev
 ```
 
-Open **http://localhost:3000** in your browser.
+Open **http://localhost:5173**. The app runs while that Terminal window is open. `Ctrl + C` stops it.
 
-**The app only runs while that Terminal window is open.** That's normal — Trophy Case needs a running program to hold your database and save your photos, so there's no single file you can double-click. To stop it, click that window and press `Ctrl + C`.
+### Opening it on your phone (during development)
 
-## Opening it on your phone
+1. Phone and Mac on the **same Wi-Fi**.
+2. Find the Mac's address: `ipconfig getifaddr en0` (prints something like `192.168.1.42`).
+3. Start the app so other devices can reach it: `npm run dev -- --host`
+4. On the phone, open `http://192.168.1.42:5173`.
 
-The camera button only really does its job on a phone. To get it there:
-
-1. Make sure your phone and this Mac are on **the same Wi-Fi network**.
-2. Find this Mac's address on the network:
-
-   ```bash
-   ipconfig getifaddr en0
-   ```
-
-   That prints something like `192.168.1.42`.
-3. Start the app so it accepts connections from other devices on the network:
-
-   ```bash
-   npm run dev -- --hostname 0.0.0.0
-   ```
-
-4. On your phone, open Safari and go to `http://192.168.1.42:3000` (using the number from step 2).
-5. Tap Share → **Add to Home Screen** to install it.
-
-**If the page doesn't load at all,** the usual cause is your router blocking
-devices from talking to each other (often called "AP isolation" or "client
-isolation"). It's on by default on a lot of home routers. The quickest way
-around it is to skip the router entirely: turn on **Personal Hotspot** on your
-iPhone, connect this Mac to it, then run `ipconfig getifaddr en0` again for the
-new address. A hotspot has no isolation, so it just works.
-
-**If the page loads but nothing you tap does anything,** the phone isn't
-receiving the app's JavaScript. That's what `allowedDevOrigins` in
-`next.config.ts` is for — it lists the network address ranges the development
-server trusts. It already covers home Wi-Fi, iPhone hotspots, and `10.x`
-networks. If your network uses something else, add it there and restart.
-
-> **A note on the camera:** browsers only allow camera access on a secure (`https://`) address, with one exception — `localhost`. Over plain `http://` to an IP address, tapping the camera button opens your **photo library** rather than the live camera. Everything else works exactly the same, and the photo still saves. Getting the true camera on your phone needs an `https` address, which is part of the hosted version listed under "What comes next".
+Over plain `http://` the camera button opens the photo library instead of the live camera, because browsers only allow the camera on a secure address. Everything else works the same. The real camera arrives with the https URL in Phase 2.
 
 ## How to run the tests
 
@@ -155,75 +98,59 @@ networks. If your network uses something else, add it there and restart.
 npm test
 ```
 
-**Browser tests** (opens a real browser at phone size and clicks through the app):
+**Browser tests** (a real browser at phone size):
 
 ```bash
-npx playwright install chromium   # one time only
+npx playwright install chromium   # one time only, downloads the test browser
 npm run test:e2e
+```
+
+**Build check** (catches TypeScript errors):
+
+```bash
+npm run build
 ```
 
 ## All the npm scripts
 
 | Command | What it does |
 |---|---|
-| `npm run dev` | Starts the app at http://localhost:3000 |
-| `npm run build` | Builds the production version |
-| `npm start` | Runs the production build |
+| `npm run dev` | Starts the app at http://localhost:5173 |
+| `npm run build` | Builds the production version into `dist/` |
+| `npm run preview` | Serves the production build locally |
 | `npm test` | Runs the unit tests once |
-| `npm run test:watch` | Runs unit tests and re-runs them as you edit |
+| `npm run test:watch` | Re-runs unit tests as you edit |
 | `npm run test:e2e` | Runs the Playwright browser tests |
-| `npm run seed` | Adds 8 sample achievements |
-| `npm run db:push` | Creates or updates the database to match the schema |
-| `npm run db:studio` | Opens a visual database browser |
 
 ## Folder structure
 
 ```
 achievement-tracker/
 ├── README.md              You are here
-├── REQUIREMENTS.md        What this version includes, with tests to check by hand
-├── CLAUDE.md              Rules for Claude Code when working on this project
+├── REQUIREMENTS.md        The contract: every phase, numbered, testable
+├── CLAUDE.md              Rules for Claude Code on this project
 ├── PRIVACY.md             How we keep a kid's data safe
 ├── .env.example           Template for settings (safe to commit)
-├── .gitignore             Files git should ignore
-├── prisma/
-│   ├── schema.prisma      The shape of the database
-│   ├── seed.ts            Script that adds 8 sample achievements
-│   └── dev.db             The database file itself (NEVER committed)
-├── prisma.config.ts       Tells the Prisma tools where the database is
+├── index.html             The one HTML page
+├── vite.config.ts         Build settings (Vite + Tailwind)
+├── vitest.config.ts       Unit test settings
+├── playwright.config.ts   Browser test settings (iPhone size)
 ├── public/
-│   └── icon.svg           The trophy icon used on the Home Screen
+│   └── icon.svg           The trophy icon
 ├── src/
-│   ├── app/
-│   │   ├── page.tsx       The one screen: the timeline
-│   │   ├── layout.tsx     The page shell, and the phone viewport settings
-│   │   ├── manifest.ts    What makes it installable on a Home Screen
-│   │   ├── globals.css    The colours, light and dark, in one place
-│   │   └── api/           Server endpoints the screen talks to
-│   │       ├── achievements/       List and create
-│   │       ├── achievements/[id]/  Edit and delete one
-│   │       └── uploads/[filename]/ Serves your photos back
-│   ├── components/
-│   │   ├── CameraButton.tsx      The big round camera button
-│   │   ├── AchievementSheet.tsx  The slide-up details form
-│   │   ├── AchievementCard.tsx   One card on the timeline
-│   │   └── TimelineFilters.tsx   Search box and category chips
-│   └── lib/
-│       ├── db.ts            The one database connection
-│       ├── achievements.ts  Create, edit, delete, list logic
-│       ├── validation.ts    The rules for a valid achievement
-│       ├── uploads.ts       Saving and deleting photos
-│       ├── paths.ts         Where the data lives
-│       ├── dates.ts         Timezone-safe date handling
-│       └── types.ts         Shared shapes
-├── tests/
-│   ├── unit/              Vitest tests (npm test)
-│   └── e2e/               Playwright tests (npm run test:e2e)
-└── uploads/               Your photos (NEVER committed)
+│   ├── main.tsx           Starts the app
+│   ├── App.tsx            The top-level screen
+│   ├── index.css          Tailwind entry and the app's colours
+│   └── lib/               Logic with no screen in it, so it can be unit-tested
+└── tests/
+    ├── unit/              Vitest tests (npm test)
+    └── e2e/               Playwright tests (npm run test:e2e)
 ```
 
 ## Privacy
 
-Everything stays on this computer. Your photos are written to the `uploads` folder, your achievements to a SQLite file, and nothing is sent over the internet — this version has no outbound network calls at all.
+Everything you save stays on your device. Read [PRIVACY.md](PRIVACY.md) before changing how data is stored or sent.
 
-This app is built to hold a child's personal information. Read [PRIVACY.md](PRIVACY.md) before you change how data is stored, or before putting this online.
+## The earlier version
+
+An earlier version of this app (a Next.js server with a SQLite database on the Mac) lives in git history before the "Phase 0" commit. It is not used and should not be copied back. The ideas carried over; the code did not.

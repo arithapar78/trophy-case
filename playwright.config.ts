@@ -1,33 +1,16 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig, devices } from '@playwright/test'
 
-// Drives a real browser against a real running app.
-// Run with: npm run test:e2e
+// End-to-end tests drive a real browser at iPhone size against the dev server.
 export default defineConfig({
-  testDir: "./tests/e2e",
-  fullyParallel: false,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: 1,
-  reporter: "list",
-
+  testDir: 'tests/e2e',
+  timeout: 30_000,
   use: {
-    baseURL: "http://localhost:3000",
-    trace: "on-first-retry",
+    ...devices['iPhone 14'],
+    baseURL: 'http://localhost:5173',
   },
-
-  projects: [
-    {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
-    },
-  ],
-
-  // Starts the app automatically before the tests, and reuses an already
-  // running one if you have `npm run dev` open.
   webServer: {
-    command: "npm run dev",
-    url: "http://localhost:3000",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    command: 'npm run dev',
+    url: 'http://localhost:5173',
+    reuseExistingServer: true,
   },
-});
+})

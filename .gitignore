@@ -1,60 +1,19 @@
-# --- Secrets: never commit these ---
+# Dependencies and build output
+node_modules
+dist
+
+# Local settings and secrets (the API key lives here in development)
 .env.local
-.env*.local
-.env
+*.local
 
-# --- Uploaded files: photos and PDFs of a child, never commit ---
-# The leading slash matters: it pins this to the uploads folder at the
-# project root, so it doesn't also swallow source folders that happen to
-# be named "uploads" (like src/app/api/uploads/).
-/uploads/
+# Test output
+test-results
+playwright-report
+coverage
 
-# --- Database backups: full copies of everyone's data, never commit ---
-/backups/
-
-# --- Database: contains personal data, never commit ---
-*.db
-*.db-journal
-*.sqlite
-*.sqlite3
-prisma/dev.db
-prisma/*.db
-
-# --- Dependencies ---
-node_modules/
-.pnp
-.pnp.js
-
-# --- Next.js build output ---
-.next/
-out/
-build/
-dist/
-next-env.d.ts
-
-# --- Test output ---
-coverage/
-test-results/
-playwright-report/
-blob-report/
-playwright/.cache/
-
-# --- Editor and OS noise ---
-.DS_Store
-Thumbs.db
-*.swp
-.idea/
+# Editor and OS
 .vscode/*
 !.vscode/extensions.json
-
-# --- Logs ---
+.idea
+.DS_Store
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# --- TypeScript ---
-*.tsbuildinfo
-
-# --- Vercel ---
-.vercel

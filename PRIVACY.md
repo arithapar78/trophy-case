@@ -1,56 +1,47 @@
-# Privacy notes — Trophy Case
+# Privacy notes: Trophy Case
 
-This app is designed to hold a child's personal information: their name, their school, photos of them, their test scores, and a record of where they were and when. That deserves care.
+This app holds a child's personal information: photos of them, their school, their wins, and a record of where they were and when. That deserves care.
 
-## The core rule: data stays local
+## The core rule: data stays on the device
 
-Everything lives on your own computer:
+Everything the user saves lives in the browser storage of the phone (or computer) they are using:
 
-- **Achievements** are in a SQLite database file at `prisma/dev.db`.
-- **Photos** are in the `/uploads` folder.
-- **There is no server, no account, and no cloud sync.** Nothing is uploaded anywhere.
+- **Achievements** and **photos** are in IndexedDB, managed by Dexie
+- **There is no server database, no account, and no cloud sync**
+- The website that serves the app only serves code. It never sees what anyone saves
 
-**There are no exceptions in this version.** The app makes no outbound network calls at all — there is no AI feature and no API key. Nothing you save ever leaves this computer.
+Because no server holds anyone's data, there is no database of children's records to protect or to be breached. That is the whole point of the design.
 
-When the AI essay-ideas feature comes back (see "What comes next" in the README), it will send the **text** of your achievements to the Claude API. Photos will never be sent. That is the only network call that is ever planned, and this file gets updated before it is built.
+## The one exception: AI
 
-## Never commit these
+When the user turns AI on for a photo, the app sends that photo (resized) or the text of their achievements to a small serverless function, which passes it to the Anthropic API and returns the result. The function stores nothing.
 
-These are in `.gitignore`. Keep them there.
+- AI is **off by default**. It is turned on per photo, or left on in Settings
+- The app says in plain words, next to the toggle, that the photo will be sent to Anthropic
+- Nothing is ever sent in the background
 
-| What | Why |
-|---|---|
-| `.env.local` | Holds your local settings, and any API key added later. A committed key can be found and used by anyone, and you pay for it. |
-| `/uploads` | Photos of a child. These must never end up in a git repo, which is often public and always permanent. |
-| `prisma/dev.db` | The whole achievement history, including names and schools. |
-| `node_modules` | Not a privacy issue — just huge and rebuildable. |
+## Photos
 
-**If you ever commit a secret by accident:** treat the key as compromised. Go to the service it belongs to, delete that key, and create a new one. Removing it in a later commit is not enough — git keeps the history.
+Phone photos carry EXIF data: GPS coordinates and a timestamp, which can reveal a home address or a school. **EXIF is stripped from every photo when it is saved**, before it is stored and before it could ever be sent anywhere. Photos are also resized on save, which keeps storage small.
 
-## Photos deserve extra thought
+## Backups
 
-Photos of children carry more than the picture. Many phone photos include GPS coordinates and a timestamp in their EXIF data, which can reveal a home address or a school. In this version the files never leave your machine, so this is fine. **Before this app is ever shared or hosted, EXIF data should be stripped from uploads.**
+The backup file is a zip of the user's records and photos. It is theirs to keep wherever they want. The app never uploads it anywhere; the user shares it using the phone's own share sheet.
 
-## If this ever goes public: COPPA
+## The API key
 
-Version 1 is a single-user local app, so COPPA doesn't apply. That changes completely if a hosted version collects data from children under 13.
+- Lives only in the serverless function's environment settings, and in a git-ignored `.env.local` for local development
+- Never in the app the phone downloads, never in git
+- **If a key is ever committed by accident,** treat it as compromised: delete it in the Anthropic console and make a new one. Removing it in a later commit is not enough, git keeps history
+- Set a monthly spending cap in the Anthropic console so a bug can never run up a bill
 
-The US Children's Online Privacy Protection Act would then require, among other things:
+## If accounts are ever added
 
-- **Verifiable parental consent** before collecting any personal information from a child under 13 — a real verification step, not a checkbox.
-- **A clear privacy policy** saying what's collected, how it's used, and who it's shared with.
-- **Parental access rights** — a parent can review their child's data, delete it, and refuse further collection.
-- **Data minimization** — collect only what the feature genuinely needs.
-- **Reasonable security** for everything collected.
-- **Retention limits** — don't keep the data longer than it's needed for.
+The current design collects nothing, so COPPA (the US law about collecting data from children under 13) does not apply in the usual way. That changes the moment a server stores data for users. Before adding accounts, read up on COPPA, the UK Age Appropriate Design Code and GDPR-K, and get real legal advice. Do not host children's data without it.
 
-Similar rules apply elsewhere: the UK's Age Appropriate Design Code and GDPR-K in the EU, which sets the consent age between 13 and 16 depending on the country.
+## Things to never add
 
-**Practical takeaway:** don't host a multi-user version of this app for under-13s without proper legal advice. That is a much bigger project than the MVP, and getting it wrong carries real penalties.
-
-## Things to avoid adding
-
-- Analytics or tracking scripts that see a child's data.
-- Crash reporting that uploads app state.
-- Logging personal information to the console or a log file in production.
-- Any third-party service that isn't strictly needed.
+- Analytics or tracking scripts
+- Crash reporting that uploads app state
+- Logging personal information to the console in production
+- Any third-party service that is not strictly needed

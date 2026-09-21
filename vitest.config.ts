@@ -1,20 +1,11 @@
-import { defineConfig } from "vitest/config";
-import react from "@vitejs/plugin-react";
+import { defineConfig } from 'vitest/config'
 
-
+// Unit tests live in tests/unit and run in a fake browser (jsdom) so code
+// that touches the DOM or browser storage can be tested without opening a
+// real browser. The e2e folder is excluded: Playwright runs those.
 export default defineConfig({
-  plugins: [react()],
   test: {
-    environment: "node",
-    // Only unit tests. Playwright runs the e2e folder itself.
-    include: ["tests/unit/**/*.test.ts", "tests/unit/**/*.test.tsx"],
-    globals: true,
-    // Point the tests at a throwaway database before any test file loads.
-    setupFiles: ["./tests/unit/setup-db.ts"],
+    environment: 'jsdom',
+    include: ['tests/unit/**/*.test.ts', 'tests/unit/**/*.test.tsx'],
   },
-  resolve: {
-    alias: {
-      "@": new URL("./src", import.meta.url).pathname,
-    },
-  },
-});
+})

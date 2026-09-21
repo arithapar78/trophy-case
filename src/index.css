@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/* One place for the app's colours. Tailwind reads these as utilities like
+   bg-surface and text-ink. Dark mode follows the phone automatically. */
+@theme {
+  --color-surface: #ffffff;
+  --color-ink: #0f172a;
+  --color-accent: #f59e0b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-surface: #0f172a;
+    --color-ink: #f8fafc;
+  }
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  /* Keep content clear of the notch and home indicator on iPhone. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+           env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* iOS zooms into inputs smaller than 16px. This stops that. */
+input, textarea, select, button {
+  font-size: 16px;
+}
