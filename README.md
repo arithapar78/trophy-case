@@ -90,6 +90,25 @@ Open **http://localhost:5173**. The app runs while that Terminal window is open.
 
 Over plain `http://` the camera button opens the photo library instead of the live camera, because browsers only allow the camera on a secure address. Everything else works the same. The real camera arrives with the https URL in Phase 2.
 
+## The live site (GitHub Pages)
+
+Every push to `main` on GitHub builds the app and publishes it at
+**https://arithapar78.github.io/trophy-case/**. That is a real https address, so the
+phone camera and Add to Home Screen both work there. GitHub only serves the code;
+what you save stays on your phone.
+
+One-time setup on GitHub: open the repo, Settings, Pages, and under "Build and
+deployment" set Source to **GitHub Actions**. After that, `git push` is the whole
+deploy.
+
+To publish from your Mac:
+
+```bash
+git push Trophy-Case main
+```
+
+Then watch the Actions tab on GitHub; the site updates a minute or two later.
+
 ## How to run the tests
 
 **Unit tests** (fast, check the logic):
