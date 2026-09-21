@@ -4,9 +4,9 @@ import { readFileSync } from 'node:fs'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// BASE_PATH is the folder the site is served from. Locally it is "/". On
-// GitHub Pages the site lives under "/trophy-case/", and the deploy
-// workflow sets it. With a custom domain later it goes back to "/".
+// BASE_PATH is the folder the site is served from. It is "/" everywhere we
+// host now (Vercel, local). It only needs setting if the app is ever served
+// from a sub-folder, like GitHub Pages' /trophy-case/.
 const base = process.env.BASE_PATH ?? '/'
 
 const { version } = JSON.parse(readFileSync('./package.json', 'utf8')) as { version: string }

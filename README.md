@@ -37,6 +37,7 @@ This is a fresh build. Each phase below is built, tested and tried on a phone be
 | Piece | What we use | Why |
 |---|---|---|
 | App | Vite + React + TypeScript | Builds a static page that runs entirely on the phone |
+| Hosting | Vercel (free) | Serves the built files over https and runs the AI function later |
 | Styling | Tailwind CSS | Style directly in the markup, no separate stylesheets |
 | Storage | Dexie (over the browser's IndexedDB) | The phone's built-in database. Photos included. Nothing leaves the device |
 | Camera | The browser's own file input | The phone does the work, no camera library |
@@ -91,24 +92,29 @@ Open **http://localhost:5173**. The app runs while that Terminal window is open.
 
 Over plain `http://` the camera button opens the photo library instead of the live camera, because browsers only allow the camera on a secure address. Everything else works the same. The real camera arrives with the https URL in Phase 2.
 
-## The live site (GitHub Pages)
+## The live site (Vercel)
 
-Every push to `main` on GitHub builds the app and publishes it at
-**https://arithapar78.github.io/trophy-case/**. That is a real https address, so the
-phone camera and Add to Home Screen both work there. GitHub only serves the code;
-what you save stays on your phone.
+The app is hosted on Vercel. Every push to `main` on GitHub builds it (the unit
+tests run first) and publishes it at a real https address, so the phone camera
+and Add to Home Screen both work. Vercel only serves the code; what you save
+stays on your phone.
 
-One-time setup on GitHub: open the repo, Settings, Pages, and under "Build and
-deployment" set Source to **GitHub Actions**. After that, `git push` is the whole
-deploy.
+One-time setup:
 
-To publish from your Mac:
+1. Go to https://vercel.com and choose **Continue with GitHub**.
+2. **Add New** then **Project**, pick the `trophy-case` repo, and click **Deploy**.
+   The defaults are right; `vercel.json` in this repo tells Vercel what to run.
+3. Vercel shows the address when it finishes, something like
+   `https://trophy-case.vercel.app`. That's the app.
+
+After that, publishing is just:
 
 ```bash
 git push Trophy-Case main
 ```
 
-Then watch the Actions tab on GitHub; the site updates a minute or two later.
+The same Vercel project will also run the small AI function (Phase 3), which
+GitHub Pages could not do.
 
 ## How to run the tests
 
@@ -125,7 +131,7 @@ npx playwright install chromium   # one time only, downloads the test browser
 npm run test:e2e
 ```
 
-These build the app first and test the built files, the same ones GitHub Pages
+These build the app first and test the built files, the same ones Vercel
 serves, so offline mode and the Home Screen install are tested for real.
 
 **Build check** (catches TypeScript errors):
