@@ -6,9 +6,9 @@
 //
 // It stores nothing.
 
-import { MAX_IMAGE_BASE64_LENGTH, type PhotoDraft, type ReadPhotoRequest, type ReadPhotoResponse } from '../src/lib/aiTypes'
-import { CATEGORIES, type Category } from '../src/lib/types'
-import { isValidISODate } from '../src/lib/dates'
+import { MAX_IMAGE_BASE64_LENGTH, type PhotoDraft, type ReadPhotoRequest, type ReadPhotoResponse } from '../src/lib/aiTypes.js'
+import { CATEGORIES, type Category } from '../src/lib/types.js'
+import { isValidISODate } from '../src/lib/dates.js'
 
 export const MODEL = 'claude-haiku-4-5'
 

@@ -1,6 +1,6 @@
 // Shapes shared by the app (phone) and the AI function (server).
 
-import type { Category } from './types'
+import type { Category } from './types.js'
 
 // What the AI hands back: a draft the user can change before saving.
 export interface PhotoDraft {
