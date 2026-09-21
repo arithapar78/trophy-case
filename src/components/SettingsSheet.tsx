@@ -1,17 +1,26 @@
 import { useEffect, useRef, useState } from 'react'
 import { getAlwaysReadPhotos, setAlwaysReadPhotos } from '../lib/aiSettings'
 import { formatWait, getUsage } from '../lib/aiUsage'
+import { listAchievements } from '../lib/achievements'
 import { BadBackupError, backupFileName, buildBackup, deleteEverything, restoreBackup } from '../lib/backup'
+import { buildTextExport, exportFileName } from '../lib/exportText'
+import { getGoal, setGoal as storeGoal } from '../lib/goal'
+import { buildPdf } from '../lib/pdf'
+import { MAX_GOAL_LENGTH } from '../lib/types'
 import { shareOrDownload } from '../lib/share'
 import { formatBytes, getStorageUsage, type StorageUsage } from '../lib/storage'
 
 interface Props {
   achievementCount: number
+  // The saved goal, handed in by the app so the field is right from the
+  // first frame. Loading it here instead could overwrite what the user
+  // had already started typing.
+  goal: string
   onClose: () => void
   onDataChanged: () => void
 }
 
-export default function SettingsSheet({ achievementCount, onClose, onDataChanged }: Props) {
+export default function SettingsSheet({ achievementCount, goal: savedGoal, onClose, onDataChanged }: Props) {
   const [usage, setUsage] = useState<StorageUsage>()
   const [message, setMessage] = useState<string>()
   const [error, setError] = useState<string>()
@@ -19,12 +28,21 @@ export default function SettingsSheet({ achievementCount, onClose, onDataChanged
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleteWord, setDeleteWord] = useState('')
   const [alwaysAi, setAlwaysAi] = useState(() => getAlwaysReadPhotos())
+  const [goal, setGoal] = useState(savedGoal)
+  const [goalSaved, setGoalSaved] = useState(false)
   const aiUsage = getUsage()
   const restoreRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     void getStorageUsage().then(setUsage)
   }, [achievementCount, message])
+
+  async function saveGoal() {
+    const cleaned = await storeGoal(goal)
+    setGoal(cleaned)
+    setGoalSaved(true)
+    onDataChanged()
+  }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -60,6 +78,20 @@ export default function SettingsSheet({ achievementCount, onClose, onDataChanged
       const summary = await restoreBackup(file)
       onDataChanged()
       return `Restored ${summary.achievements} achievement${summary.achievements === 1 ? '' : 's'} and ${summary.photos} photo${summary.photos === 1 ? '' : 's'}.`
+    })
+
+  const exportText = () =>
+    run('Exporting', async () => {
+      const blob = new Blob([buildTextExport(await listAchievements(), await getGoal())], { type: 'text/plain' })
+      const how = await shareOrDownload(blob, exportFileName('txt'))
+      return how === 'downloaded' ? 'Text file saved to your downloads.' : 'Text file ready to share.'
+    })
+
+  const exportPdf = () =>
+    run('Exporting', async () => {
+      const blob = buildPdf(await listAchievements(), await getGoal())
+      const how = await shareOrDownload(blob, exportFileName('pdf'))
+      return how === 'downloaded' ? 'PDF saved to your downloads.' : 'PDF ready to share.'
     })
 
   const wipe = () =>
@@ -98,6 +130,22 @@ export default function SettingsSheet({ achievementCount, onClose, onDataChanged
         </section>
 
         <section className="mt-5">
+          <h3 className="text-sm font-medium opacity-70">Your goal</h3>
+          <p className="mt-1 text-sm opacity-70">One sentence. The Ranked view uses it to sort your achievements and suggest what to do next.</p>
+          <input
+            aria-label="Goal"
+            value={goal}
+            maxLength={MAX_GOAL_LENGTH}
+            placeholder="get into a top engineering school"
+            onChange={(e) => { setGoal(e.target.value); setGoalSaved(false) }}
+            className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent px-4 py-3"
+          />
+          <button type="button" onClick={() => void saveGoal()} className="mt-2 min-h-11 rounded-xl bg-accent px-4 text-sm font-semibold text-white">
+            {goalSaved ? 'Goal saved' : 'Save goal'}
+          </button>
+        </section>
+
+        <section className="mt-5">
           <h3 className="text-sm font-medium opacity-70">AI</h3>
           <label className="mt-2 flex min-h-12 items-center justify-between gap-4">
             <span>
@@ -131,6 +179,14 @@ export default function SettingsSheet({ achievementCount, onClose, onDataChanged
           <button type="button" className={button} onClick={() => restoreRef.current?.click()} disabled={busy}>
             <span className="font-medium">Restore from backup</span>
             <span className="block text-sm opacity-70">Choose a Trophy Case backup zip</span>
+          </button>
+          <button type="button" className={button} onClick={() => void exportPdf()} disabled={busy || achievementCount === 0}>
+            <span className="font-medium">Export as PDF</span>
+            <span className="block text-sm opacity-70">A clean list for a counselor or an application. No photos</span>
+          </button>
+          <button type="button" className={button} onClick={() => void exportText()} disabled={busy || achievementCount === 0}>
+            <span className="font-medium">Export as text</span>
+            <span className="block text-sm opacity-70">The same list as plain text</span>
           </button>
           <input
             ref={restoreRef}

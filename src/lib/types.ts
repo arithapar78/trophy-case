@@ -58,3 +58,32 @@ export interface AchievementWithPhotos {
 }
 
 export const MAX_PHOTOS = 5
+
+// One sentence the user is aiming at, like "get into a top engineering school".
+export const MAX_GOAL_LENGTH = 200
+
+// How one achievement ranks against the goal. Kept until the user ranks again.
+export interface Ranking {
+  achievementId: string
+  rank: number // 1 = matters most
+  reason: string
+  rankedAt: number
+}
+
+// A suggested next achievement for the goal.
+export interface Recommendation {
+  title: string
+  why: string
+}
+
+export interface RecommendationSet {
+  goal: string
+  items: Recommendation[]
+  createdAt: number
+}
+
+// Small key/value rows: the goal, the last recommendations.
+export interface Setting {
+  key: 'goal' | 'recommendations'
+  value: unknown
+}

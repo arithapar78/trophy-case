@@ -7,10 +7,11 @@
 
 import { unzipSync, zipSync } from 'fflate'
 import { db } from './db'
-import { CATEGORIES, type Achievement, type Photo } from './types'
+import { CATEGORIES, type Achievement, type Photo, type Ranking, type RecommendationSet } from './types'
+import { getGoal, getRecommendations, setGoal, setRecommendations } from './goal'
 
 export const BACKUP_APP = 'trophy-case'
-export const BACKUP_FORMAT = 1
+export const BACKUP_FORMAT = 2
 
 interface PhotoEntry {
   id: string
@@ -27,6 +28,10 @@ interface Manifest {
   exportedAt: string
   achievements: Achievement[]
   photos: PhotoEntry[]
+  // Added in format 2. Older backups simply don't have them.
+  goal?: string
+  rankings?: Ranking[]
+  recommendations?: RecommendationSet
 }
 
 export interface BackupSummary {
@@ -64,6 +69,9 @@ export async function buildBackup(): Promise<Blob> {
     exportedAt: new Date().toISOString(),
     achievements,
     photos: entries,
+    goal: await getGoal(),
+    rankings: await db.rankings.toArray(),
+    recommendations: await getRecommendations(),
   }
   files['manifest.json'] = new TextEncoder().encode(JSON.stringify(manifest, null, 2))
 
@@ -139,17 +147,26 @@ export async function restoreBackup(file: Blob): Promise<BackupSummary> {
 
   // bulkPut replaces rows with the same id, which is what makes a second
   // restore a no-op instead of a duplicate.
-  await db.transaction('rw', db.achievements, db.photos, async () => {
+  const rankings = (manifest.rankings ?? []).filter(
+    (r) => knownIds.has(r.achievementId) && typeof r.rank === 'number' && typeof r.reason === 'string',
+  )
+
+  await db.transaction('rw', db.achievements, db.photos, db.rankings, db.settings, async () => {
     await db.achievements.bulkPut(achievements)
     await db.photos.bulkPut(photos)
+    await db.rankings.bulkPut(rankings)
+    if (typeof manifest.goal === 'string' && manifest.goal) await setGoal(manifest.goal)
+    if (manifest.recommendations?.items) await setRecommendations(manifest.recommendations)
   })
 
   return { achievements: achievements.length, photos: photos.length }
 }
 
 export async function deleteEverything(): Promise<void> {
-  await db.transaction('rw', db.achievements, db.photos, async () => {
+  await db.transaction('rw', db.achievements, db.photos, db.rankings, db.settings, async () => {
     await db.photos.clear()
     await db.achievements.clear()
+    await db.rankings.clear()
+    await db.settings.clear()
   })
 }

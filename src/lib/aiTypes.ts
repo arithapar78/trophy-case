@@ -24,3 +24,42 @@ export type ReadPhotoResponse =
 // About 1024 px of JPEG is 100 to 300 KB. Base64 adds a third. Anything
 // past this was not resized and is refused.
 export const MAX_IMAGE_BASE64_LENGTH = 1_500_000
+
+// What the ranking and recommendation calls send: the goal plus the text
+// of every achievement. Never photos.
+export interface AchievementSummary {
+  id: string
+  title: string
+  category: string
+  date: string
+  note: string
+  organisation: string
+  role: string
+  result: string
+}
+
+export interface GoalRequest {
+  goal: string
+  achievements: AchievementSummary[]
+}
+
+export interface RankItem {
+  id: string
+  rank: number
+  reason: string
+}
+
+export type RankResponse =
+  | { ok: true; ranks: RankItem[]; mock: boolean }
+  | { ok: false; message: string }
+
+export interface SuggestionItem {
+  title: string
+  why: string
+}
+
+export type RecommendResponse =
+  | { ok: true; suggestions: SuggestionItem[]; mock: boolean }
+  | { ok: false; message: string }
+
+export const MAX_ACHIEVEMENTS_PER_REQUEST = 500

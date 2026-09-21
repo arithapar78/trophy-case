@@ -4,9 +4,11 @@ import AchievementSheet, { type SheetMode } from './components/AchievementSheet'
 import CameraButton from './components/CameraButton'
 import ConfirmDialog from './components/ConfirmDialog'
 import PhotoViewer from './components/PhotoViewer'
+import RankedView from './components/RankedView'
 import SettingsSheet from './components/SettingsSheet'
 import TimelineFilters from './components/TimelineFilters'
 import { deleteAchievement, listAchievementsWithPhotos } from './lib/achievements'
+import { getGoal } from './lib/goal'
 import { askForPersistentStorage } from './lib/storage'
 import type { AchievementWithPhotos } from './lib/types'
 
@@ -20,14 +22,20 @@ export default function App() {
   const [viewer, setViewer] = useState<{ row: AchievementWithPhotos; index: number }>()
   const [loadError, setLoadError] = useState<string>()
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [view, setView] = useState<'timeline' | 'ranked'>('timeline')
+  const [allRows, setAllRows] = useState<AchievementWithPhotos[]>([])
+  const [goal, setGoal] = useState('')
 
   const reload = useCallback(async () => {
     try {
-      const [filtered, all] = await Promise.all([
+      const [filtered, all, savedGoal] = await Promise.all([
         listAchievementsWithPhotos({ search, category }),
         listAchievementsWithPhotos(),
+        getGoal(),
       ])
       setRows(filtered)
+      setAllRows(all)
+      setGoal(savedGoal)
       setTotal(all.length)
       setLoadError(undefined)
     } catch {
@@ -71,20 +79,40 @@ export default function App() {
         </button>
       </header>
 
-      <TimelineFilters search={search} category={category} onSearch={setSearch} onCategory={setCategory} />
+      <div className="mb-4 flex rounded-xl border border-ink/15 p-1" role="tablist" aria-label="View">
+        {(['timeline', 'ranked'] as const).map((v) => (
+          <button
+            key={v}
+            type="button"
+            role="tab"
+            aria-selected={view === v}
+            onClick={() => setView(v)}
+            className={`min-h-10 flex-1 rounded-lg text-sm font-medium ${view === v ? 'bg-accent text-white' : ''}`}
+          >
+            {v === 'timeline' ? 'Timeline' : 'Ranked'}
+          </button>
+        ))}
+      </div>
+
+      {view === 'timeline' && (
+        <TimelineFilters search={search} category={category} onSearch={setSearch} onCategory={setCategory} />
+      )}
 
       {/* Bottom padding keeps the camera button off the last card. */}
       <main className="mt-4 flex flex-col gap-4 pb-40">
         {loadError && <p className="text-red-600">{loadError}</p>}
-        {rows && rows.length === 0 && total === 0 && (
+        {view === 'ranked' && (
+          <RankedView achievements={allRows.map((r) => r.achievement)} goal={goal} onOpenSettings={() => setSettingsOpen(true)} />
+        )}
+        {view === 'timeline' && rows && rows.length === 0 && total === 0 && (
           <p className="mt-10 text-center opacity-70">
             Nothing here yet. Tap the camera to save your first win, or add one without a photo.
           </p>
         )}
-        {rows && rows.length === 0 && total > 0 && (
+        {view === 'timeline' && rows && rows.length === 0 && total > 0 && (
           <p className="mt-10 text-center opacity-70">Nothing matches. Try a different search or category.</p>
         )}
-        {rows?.map((row) => (
+        {view === 'timeline' && rows?.map((row) => (
           <AchievementCard
             key={row.achievement.id}
             row={row}
@@ -125,7 +153,7 @@ export default function App() {
       )}
 
       {settingsOpen && (
-        <SettingsSheet achievementCount={total} onClose={closeSettings} onDataChanged={() => void reload()} />
+        <SettingsSheet achievementCount={total} goal={goal} onClose={closeSettings} onDataChanged={() => void reload()} />
       )}
 
       {viewer && <PhotoViewer photos={viewer.row.photos} startIndex={viewer.index} onClose={closeViewer} />}

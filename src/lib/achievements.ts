@@ -108,8 +108,9 @@ export async function deleteAchievement(id: string): Promise<void> {
   const existing = await db.achievements.get(id)
   if (!existing) throw new NotFoundError()
 
-  await db.transaction('rw', db.achievements, db.photos, async () => {
+  await db.transaction('rw', db.achievements, db.photos, db.rankings, async () => {
     await db.photos.where('achievementId').equals(id).delete()
+    await db.rankings.delete(id)
     await db.achievements.delete(id)
   })
 }

@@ -84,3 +84,25 @@ describe('backup and restore', () => {
     expect(summary).toEqual({ achievements: 1, photos: 0 })
   })
 })
+
+describe('backup carries the goal and rankings', () => {
+  it('round-trips them and reads an old format-1 backup without them', async () => {
+    const { getGoal, getRankings, saveRankings, setGoal } = await import('../../src/lib/goal')
+    const a = await createAchievement({ title: 'Ranked', date: '2026-05-10', category: 'School' })
+    await setGoal('Engineering')
+    await saveRankings([{ achievementId: a.id, rank: 1, reason: 'Because', rankedAt: 1 }])
+
+    const zip = await buildBackup()
+    await deleteEverything()
+    expect(await getGoal()).toBe('')
+
+    await restoreBackup(zip)
+    expect(await getGoal()).toBe('Engineering')
+    expect((await getRankings()).get(a.id)?.reason).toBe('Because')
+
+    const oldFormat = new Blob([
+      zipSync({ 'manifest.json': new TextEncoder().encode(JSON.stringify({ app: 'trophy-case', format: 1, exportedAt: 'x', achievements: [], photos: [] })) }) as BlobPart,
+    ])
+    expect(await restoreBackup(oldFormat)).toEqual({ achievements: 0, photos: 0 })
+  })
+})

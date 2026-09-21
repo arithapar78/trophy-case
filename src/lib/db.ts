@@ -4,11 +4,13 @@
 // Never create another Dexie instance elsewhere. Import `db` from here.
 
 import Dexie, { type EntityTable } from 'dexie'
-import type { Achievement, Photo } from './types'
+import type { Achievement, Photo, Ranking, Setting } from './types'
 
 export class TrophyCaseDB extends Dexie {
   achievements!: EntityTable<Achievement, 'id'>
   photos!: EntityTable<Photo, 'id'>
+  rankings!: EntityTable<Ranking, 'achievementId'>
+  settings!: EntityTable<Setting, 'key'>
 
   constructor(name = 'trophy-case') {
     super(name)
@@ -17,6 +19,14 @@ export class TrophyCaseDB extends Dexie {
     this.version(1).stores({
       achievements: 'id, date, category, createdAt',
       photos: 'id, achievementId, [achievementId+order]',
+    })
+    // Version 2 (Phase 4) adds the goal, rankings and recommendations.
+    // Dexie upgrades an existing phone's database in place; nothing is lost.
+    this.version(2).stores({
+      achievements: 'id, date, category, createdAt',
+      photos: 'id, achievementId, [achievementId+order]',
+      rankings: 'achievementId',
+      settings: 'key',
     })
   }
 }
