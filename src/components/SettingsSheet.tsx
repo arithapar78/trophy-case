@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { getAlwaysReadPhotos, setAlwaysReadPhotos } from '../lib/aiSettings'
+import { formatWait, getUsage } from '../lib/aiUsage'
 import { BadBackupError, backupFileName, buildBackup, deleteEverything, restoreBackup } from '../lib/backup'
 import { shareOrDownload } from '../lib/share'
 import { formatBytes, getStorageUsage, type StorageUsage } from '../lib/storage'
@@ -16,6 +18,8 @@ export default function SettingsSheet({ achievementCount, onClose, onDataChanged
   const [busy, setBusy] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleteWord, setDeleteWord] = useState('')
+  const [alwaysAi, setAlwaysAi] = useState(() => getAlwaysReadPhotos())
+  const aiUsage = getUsage()
   const restoreRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -90,6 +94,32 @@ export default function SettingsSheet({ achievementCount, onClose, onDataChanged
           </p>
           <p className="mt-1 text-sm opacity-70">
             Everything stays on this phone. A backup is the only copy anywhere else, so make one now and then.
+          </p>
+        </section>
+
+        <section className="mt-5">
+          <h3 className="text-sm font-medium opacity-70">AI</h3>
+          <label className="mt-2 flex min-h-12 items-center justify-between gap-4">
+            <span>
+              <span className="font-medium">Always let AI read my photos</span>
+              <span className="block text-sm opacity-70">
+                Off means nothing is sent unless you tap the button. On sends a small copy of each new photo to Anthropic's AI, which is not stored there.
+              </span>
+            </span>
+            <input
+              type="checkbox"
+              role="switch"
+              checked={alwaysAi}
+              onChange={(e) => {
+                setAlwaysAi(e.target.checked)
+                setAlwaysReadPhotos(e.target.checked)
+              }}
+              className="h-6 w-6 shrink-0 accent-accent"
+            />
+          </label>
+          <p className="mt-2 text-sm opacity-70" data-testid="ai-usage">
+            {aiUsage.remaining} of 10 AI uses left for the next 5 hours
+            {aiUsage.nextFreeAt ? `. Next one frees up in ${formatWait(aiUsage.nextFreeAt)}` : ''}.
           </p>
         </section>
 

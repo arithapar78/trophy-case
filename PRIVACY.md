@@ -14,7 +14,7 @@ Because no server holds anyone's data, there is no database of children's record
 
 ## The one exception: AI
 
-When the user turns AI on for a photo, the app sends that photo (resized) or the text of their achievements to a small serverless function, which passes it to the Anthropic API and returns the result. The function stores nothing.
+When the user turns AI on for a photo, the app sends a small copy of that photo (about 1024 px, EXIF already stripped) to `api/read-photo.ts`, a serverless function on Vercel, which passes it to the Anthropic API (Claude Haiku) and returns a draft title. The function stores nothing and logs nothing about the photo. Ranking (Phase 4) sends text only, never photos.
 
 - AI is **off by default**. It is turned on per photo, or left on in Settings
 - The app says in plain words, next to the toggle, that the photo will be sent to Anthropic

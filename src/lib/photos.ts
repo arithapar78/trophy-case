@@ -52,9 +52,13 @@ async function decode(file: Blob): Promise<ImageBitmap | HTMLImageElement> {
   })
 }
 
-export async function prepareForStorage(file: Blob): Promise<PreparedPhoto> {
+export async function prepareForStorage(
+  file: Blob,
+  maxSide: number = MAX_STORED_SIDE,
+  quality: number = JPEG_QUALITY,
+): Promise<PreparedPhoto> {
   const source = await decode(file)
-  const { width, height } = fitWithin(source.width, source.height)
+  const { width, height } = fitWithin(source.width, source.height, maxSide)
 
   const canvas = document.createElement('canvas')
   canvas.width = width
@@ -65,7 +69,7 @@ export async function prepareForStorage(file: Blob): Promise<PreparedPhoto> {
   if ('close' in source) source.close()
 
   const blob = await new Promise<Blob | null>((resolve) =>
-    canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY),
+    canvas.toBlob(resolve, 'image/jpeg', quality),
   )
   if (!blob) throw new Error("Couldn't process that photo.")
   return { blob, width, height }

@@ -28,7 +28,7 @@ This is a fresh build. Each phase below is built, tested and tried on a phone be
 | 0. Restart (done) | Empty app, tests wired up, this harness |
 | 1. The core (done) | Take a photo or write it down, up to 5 photos, timeline, search, filter, edit, delete. All on the device |
 | 2. On your phone (done) | A real URL, Add to Home Screen, works offline, backup to a file and restore, delete everything |
-| 3. AI photo read | AI drafts the title from the photo. Off by default, a button each time to turn it on. 10 uses per 5 hours |
+| 3. AI photo read (done) | AI drafts the title from the photo. Off by default, a button each time to turn it on. 10 uses per 5 hours |
 | 4. Goal and ranking | Set a goal, see which achievements matter most and what to do next. Export as PDF or text |
 | Later | Accounts, a $10/month Pro plan, the assistant, app store listings |
 
@@ -43,7 +43,7 @@ This is a fresh build. Each phase below is built, tested and tried on a phone be
 | Camera | The browser's own file input | The phone does the work, no camera library |
 | Offline and install | A service worker (vite-plugin-pwa) | Opens with no signal, installs to the Home Screen |
 | Backup | fflate (a tiny zip library) | One zip file with your achievements and photos |
-| AI (Phase 3) | Anthropic SDK inside one small serverless function | The key stays on the server side, never in the app. MOCK mode when there is no key |
+| AI | Anthropic SDK (Claude Haiku 4.5) inside one small Vercel function, `api/read-photo.ts` | The key stays on the server side, never in the app. MOCK mode when there is no key |
 | Unit tests | Vitest | Fast tests for the logic |
 | Browser tests | Playwright | Drives a real browser at iPhone size |
 
@@ -113,8 +113,18 @@ After that, publishing is just:
 git push Trophy-Case main
 ```
 
-The same Vercel project will also run the small AI function (Phase 3), which
-GitHub Pages could not do.
+The same Vercel project also runs the small AI function (`api/read-photo.ts`).
+
+### The AI key
+
+The AI reads photos through Claude Haiku. The key lives in Vercel only:
+project, **Settings**, **Environment Variables**, name `ANTHROPIC_API_KEY`,
+paste the key, Save. Without it the AI answers in MOCK mode with a labelled
+sample, so everything still works. Set a monthly spending limit in the
+Anthropic console too.
+
+For local development, put the same line in `.env.local` (git-ignored). Leave
+it out and the local server answers in MOCK mode.
 
 ## How to run the tests
 
@@ -160,6 +170,11 @@ achievement-tracker/
 ├── CLAUDE.md              Rules for Claude Code on this project
 ├── PRIVACY.md             How we keep a kid's data safe
 ├── .env.example           Template for settings (safe to commit)
+├── vercel.json            Tells Vercel how to build
+├── api/
+│   └── read-photo.ts      The one server function: holds the key, asks the AI
+├── server/
+│   └── photoRead.ts       What the function does, testable without a server
 ├── index.html             The one HTML page
 ├── vite.config.ts         Build settings (Vite + Tailwind)
 ├── vitest.config.ts       Unit test settings
@@ -178,6 +193,9 @@ achievement-tracker/
 │       ├── validation.ts    The rules for a valid achievement
 │       ├── photos.ts        Checking, resizing and EXIF stripping
 │       ├── backup.ts        Backup zip in and out
+│       ├── aiClient.ts      Sends a small copy of a photo to the function
+│       ├── aiUsage.ts       The 10-per-5-hours counter
+│       ├── aiSettings.ts    The "always let AI read my photos" switch
 │       └── storage.ts       Storage usage and "please keep my data"
 └── tests/
     ├── unit/              Vitest tests (npm test)

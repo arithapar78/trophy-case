@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useObjectUrl } from '../hooks/useObjectUrl'
 import { createAchievement, updateAchievement, ValidationError } from '../lib/achievements'
+import { AiUnavailableError, readPhotoWithAi } from '../lib/aiClient'
+import { getAlwaysReadPhotos } from '../lib/aiSettings'
+import { getUsage, recordUse } from '../lib/aiUsage'
+import AiPhotoPanel, { type AiState } from './AiPhotoPanel'
 import { todayISO } from '../lib/dates'
 import { checkPhotoFile, prepareForStorage } from '../lib/photos'
 import { CATEGORIES, MAX_PHOTOS, type AchievementWithPhotos, type Photo, type PhotoPlanItem, type PreparedPhoto } from '../lib/types'
@@ -74,6 +78,8 @@ export default function AchievementSheet({ mode, onClose, onSaved }: Props) {
   const [saveError, setSaveError] = useState<string>()
   const [showMore, setShowMore] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [ai, setAi] = useState<AiState>({ kind: 'idle' })
+  const [usage, setUsage] = useState(() => getUsage())
   const titleRef = useRef<HTMLInputElement>(null)
   const addPhotoRef = useRef<HTMLInputElement>(null)
   const openedRef = useRef(false)
@@ -100,12 +106,35 @@ export default function AchievementSheet({ mode, onClose, onSaved }: Props) {
     }
   }
 
+  // Sends the first photo to the AI and fills the fields with its draft.
+  // Only ever called because the user tapped the button, or turned on
+  // "always" in Settings.
+  async function runAi(photo: Blob) {
+    if (!recordUse()) {
+      setUsage(getUsage())
+      return
+    }
+    setUsage(getUsage())
+    setAi({ kind: 'running' })
+    try {
+      const { draft, mock } = await readPhotoWithAi(photo)
+      setFields((f) => ({ ...f, title: draft.title, category: draft.category, date: draft.date, note: draft.note || f.note }))
+      if (draft.note) setShowMore(true)
+      setAi({ kind: 'done', mock })
+    } catch (err) {
+      setAi({ kind: 'error', message: err instanceof AiUnavailableError ? err.message : "The AI didn't work this time. Fill it in yourself." })
+    }
+  }
+
   useEffect(() => {
     // Runs once when the sheet opens. The ref guard matters because React's
     // development mode runs effects twice, which would add the photo twice.
     if (openedRef.current) return
     openedRef.current = true
-    if (mode.kind === 'add' && mode.firstPhoto) addFiles([mode.firstPhoto])
+    if (mode.kind === 'add' && mode.firstPhoto) {
+      addFiles([mode.firstPhoto])
+      if (getAlwaysReadPhotos()) void runAi(mode.firstPhoto)
+    }
     titleRef.current?.focus()
   })
 
@@ -119,6 +148,7 @@ export default function AchievementSheet({ mode, onClose, onSaved }: Props) {
 
   const set = (name: keyof Fields) => (value: string) => setFields((f) => ({ ...f, [name]: value }))
 
+  const firstNewPhoto = photos.find((p): p is Extract<SheetPhoto, { kind: 'new' }> => p.kind === 'new' && !p.error)?.file
   const photoProblems = photos.filter((p) => p.kind === 'new' && p.error)
   const stillPreparing = photos.some((p) => p.kind === 'new' && !p.prepared && !p.error)
 
@@ -196,6 +226,10 @@ export default function AchievementSheet({ mode, onClose, onSaved }: Props) {
           />
         </div>
         {errors.photos && <p className="-mt-2 mb-3 text-sm text-red-600">{errors.photos}</p>}
+
+        {mode.kind === 'add' && firstNewPhoto && (
+          <AiPhotoPanel state={ai} usage={usage} onRun={() => void runAi(firstNewPhoto)} />
+        )}
 
         <label className={labelClass} htmlFor="title">Title</label>
         <input
