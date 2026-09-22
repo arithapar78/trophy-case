@@ -1,51 +1,34 @@
 import { describe, expect, it } from 'vitest'
-import { FREE_USES_PER_WINDOW, WINDOW_MS, formatWait, getUsage, recordUse, type UsageStore } from '../../src/lib/aiUsage'
-
-function memoryStore(initial: number[] = []): UsageStore {
-  let times = initial
-  return { read: () => times, write: (t) => { times = t } }
-}
+import { WINDOW_MS, formatWait, windowStatus } from '../../src/lib/aiUsage'
 
 const HOUR = 60 * 60 * 1000
 
-describe('AI usage limit', () => {
-  it('allows 10 uses in a 5-hour window and refuses the 11th', () => {
-    const store = memoryStore()
-    const start = 1_000_000_000_000
-    for (let i = 0; i < FREE_USES_PER_WINDOW; i++) {
-      expect(recordUse(store, start + i * 1000)).toBe(true)
-    }
-    expect(getUsage(store, start + 20_000).remaining).toBe(0)
-    expect(recordUse(store, start + 20_000)).toBe(false)
-    expect(store.read()).toHaveLength(FREE_USES_PER_WINDOW)
+describe('AI usage window', () => {
+  it('counts uses in the last 5 hours against the limit', () => {
+    const now = 1_000_000_000_000
+    const times = Array.from({ length: 10 }, (_, i) => now - i * 1000)
+    const status = windowStatus(times, 10, now)
+    expect(status).toMatchObject({ used: 10, limit: 10, remaining: 0 })
+    expect(status.nextFreeAt).toBe(now - 9000 + WINDOW_MS)
+    expect(windowStatus(times, 100, now)).toMatchObject({ used: 10, remaining: 90, nextFreeAt: undefined })
   })
 
   it('frees a slot exactly 5 hours after the first use', () => {
-    const store = memoryStore()
     const start = 1_000_000_000_000
-    for (let i = 0; i < FREE_USES_PER_WINDOW; i++) recordUse(store, start + i * 1000)
-
-    const justBefore = getUsage(store, start + WINDOW_MS - 1)
-    expect(justBefore.remaining).toBe(0)
-    expect(justBefore.nextFreeAt).toBe(start + WINDOW_MS)
-
-    const exactly = getUsage(store, start + WINDOW_MS)
-    expect(exactly.remaining).toBe(1)
-    expect(exactly.nextFreeAt).toBeUndefined()
-    expect(recordUse(store, start + WINDOW_MS)).toBe(true)
+    const times = Array.from({ length: 10 }, (_, i) => start + i * 1000)
+    expect(windowStatus(times, 10, start + WINDOW_MS - 1).remaining).toBe(0)
+    expect(windowStatus(times, 10, start + WINDOW_MS).remaining).toBe(1)
   })
 
-  it('ignores old and broken entries', () => {
+  it('ignores old and future entries', () => {
     const now = 1_000_000_000_000
-    const store = memoryStore([now - 6 * HOUR, now - HOUR, now + HOUR])
-    expect(getUsage(store, now).used).toBe(1)
+    expect(windowStatus([now - 6 * HOUR, now - HOUR, now + HOUR], 10, now).used).toBe(1)
   })
 
   it('says how long until the next use in plain words', () => {
-    const now = 0
-    expect(formatWait(now + 30_000, now)).toBe('1 minute')
-    expect(formatWait(now + 45 * 60_000, now)).toBe('45 minutes')
-    expect(formatWait(now + 2 * HOUR, now)).toBe('2 hours')
-    expect(formatWait(now + 2 * HOUR + 5 * 60_000, now)).toBe('2 h 5 min')
+    expect(formatWait(30_000, 0)).toBe('1 minute')
+    expect(formatWait(45 * 60_000, 0)).toBe('45 minutes')
+    expect(formatWait(2 * HOUR, 0)).toBe('2 hours')
+    expect(formatWait(2 * HOUR + 5 * 60_000, 0)).toBe('2 h 5 min')
   })
 })

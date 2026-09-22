@@ -3,6 +3,11 @@ import tailwindcss from '@tailwindcss/vite'
 import { readFileSync } from 'node:fs'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import devLoginHandler from './api/auth/dev.ts'
+import googleLoginHandler from './api/auth/google.ts'
+import signOutHandler from './api/auth/signout.ts'
+import configHandler from './api/config.ts'
+import meHandler from './api/me.ts'
 import rankHandler from './api/rank.ts'
 import readPhotoHandler from './api/read-photo.ts'
 import recommendHandler from './api/recommend.ts'
@@ -21,7 +26,16 @@ const { version } = JSON.parse(readFileSync('./package.json', 'utf8')) as { vers
 function localApi(mode: string): Plugin {
   const env = loadEnv(mode, process.cwd(), '')
   if (env.ANTHROPIC_API_KEY) process.env.ANTHROPIC_API_KEY = env.ANTHROPIC_API_KEY
-  const handlers = { '/api/read-photo': readPhotoHandler, '/api/rank': rankHandler, '/api/recommend': recommendHandler }
+  const handlers = {
+    '/api/read-photo': readPhotoHandler,
+    '/api/rank': rankHandler,
+    '/api/recommend': recommendHandler,
+    '/api/config': configHandler,
+    '/api/me': meHandler,
+    '/api/auth/google': googleLoginHandler,
+    '/api/auth/dev': devLoginHandler,
+    '/api/auth/signout': signOutHandler,
+  }
   const attach = (server: { middlewares: { use: (path: string, fn: (req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse) => void) => void } }) => {
     for (const [path, handler] of Object.entries(handlers)) {
       server.middlewares.use(path, (req, res) => {

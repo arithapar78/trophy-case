@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useObjectUrl } from '../hooks/useObjectUrl'
 import { createAchievement, updateAchievement, ValidationError } from '../lib/achievements'
-import { AiUnavailableError, readPhotoWithAi } from '../lib/aiClient'
+import { AiSignInRequiredError, AiUnavailableError, readPhotoWithAi } from '../lib/aiClient'
 import { getAlwaysReadPhotos } from '../lib/aiSettings'
-import { getUsage, recordUse } from '../lib/aiUsage'
+import { getToken } from '../lib/account'
 import AiPhotoPanel, { type AiState } from './AiPhotoPanel'
 import { todayISO } from '../lib/dates'
 import { checkPhotoFile, prepareForStorage } from '../lib/photos'
@@ -16,6 +16,7 @@ interface Props {
   mode: SheetMode
   onClose: () => void
   onSaved: () => void
+  onOpenSettings: () => void
 }
 
 // A photo shown in the sheet: either one already stored, or one just chosen
@@ -71,7 +72,7 @@ function Thumb({ item, onRemove }: { item: SheetPhoto; onRemove: () => void }) {
   )
 }
 
-export default function AchievementSheet({ mode, onClose, onSaved }: Props) {
+export default function AchievementSheet({ mode, onClose, onSaved, onOpenSettings }: Props) {
   const [fields, setFields] = useState<Fields>(() => initialFields(mode))
   const [photos, setPhotos] = useState<SheetPhoto[]>(() => initialPhotos(mode))
   const [errors, setErrors] = useState<FieldErrors>({})
@@ -79,7 +80,6 @@ export default function AchievementSheet({ mode, onClose, onSaved }: Props) {
   const [showMore, setShowMore] = useState(false)
   const [saving, setSaving] = useState(false)
   const [ai, setAi] = useState<AiState>({ kind: 'idle' })
-  const [usage, setUsage] = useState(() => getUsage())
   const titleRef = useRef<HTMLInputElement>(null)
   const addPhotoRef = useRef<HTMLInputElement>(null)
   const openedRef = useRef(false)
@@ -110,11 +110,6 @@ export default function AchievementSheet({ mode, onClose, onSaved }: Props) {
   // Only ever called because the user tapped the button, or turned on
   // "always" in Settings.
   async function runAi(photo: Blob) {
-    if (!recordUse()) {
-      setUsage(getUsage())
-      return
-    }
-    setUsage(getUsage())
     setAi({ kind: 'running' })
     try {
       const { draft, mock } = await readPhotoWithAi(photo)
@@ -122,7 +117,8 @@ export default function AchievementSheet({ mode, onClose, onSaved }: Props) {
       if (draft.note) setShowMore(true)
       setAi({ kind: 'done', mock })
     } catch (err) {
-      setAi({ kind: 'error', message: err instanceof AiUnavailableError ? err.message : "The AI didn't work this time. Fill it in yourself." })
+      if (err instanceof AiSignInRequiredError) setAi({ kind: 'idle' })
+      else setAi({ kind: 'error', message: err instanceof AiUnavailableError ? err.message : "The AI didn't work this time. Fill it in yourself." })
     }
   }
 
@@ -133,7 +129,7 @@ export default function AchievementSheet({ mode, onClose, onSaved }: Props) {
     openedRef.current = true
     if (mode.kind === 'add' && mode.firstPhoto) {
       addFiles([mode.firstPhoto])
-      if (getAlwaysReadPhotos()) void runAi(mode.firstPhoto)
+      if (getAlwaysReadPhotos() && getToken()) void runAi(mode.firstPhoto)
     }
     titleRef.current?.focus()
   })
@@ -228,7 +224,7 @@ export default function AchievementSheet({ mode, onClose, onSaved }: Props) {
         {errors.photos && <p className="-mt-2 mb-3 text-sm text-red-600">{errors.photos}</p>}
 
         {mode.kind === 'add' && firstNewPhoto && (
-          <AiPhotoPanel state={ai} usage={usage} onRun={() => void runAi(firstNewPhoto)} />
+          <AiPhotoPanel state={ai} onRun={() => void runAi(firstNewPhoto)} onOpenSettings={onOpenSettings} />
         )}
 
         <label className={labelClass} htmlFor="title">Title</label>

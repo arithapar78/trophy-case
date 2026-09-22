@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import { AiUnavailableError } from '../lib/aiClient'
-import { formatWait, getUsage, recordUse } from '../lib/aiUsage'
+import { useAccount } from '../lib/account'
+import { AiSignInRequiredError, AiUnavailableError } from '../lib/aiClient'
+import { formatWait } from '../lib/aiUsage'
 import { formatDate } from '../lib/dates'
 import { getRankings, getRecommendations, orderByRank, saveRankings, setRecommendations, type RankedRow } from '../lib/goal'
 import { rankWithAi, recommendWithAi } from '../lib/goalClient'
@@ -23,13 +24,12 @@ export default function RankedView({ achievements, goal, onOpenSettings }: Props
   const [busy, setBusy] = useState<Busy>()
   const [mock, setMock] = useState(false)
   const [error, setError] = useState<string>()
-  const [usage, setUsage] = useState(() => getUsage())
+  const { user, usage } = useAccount()
 
   const load = useCallback(async () => {
     const [rankings, r] = await Promise.all([getRankings(), getRecommendations()])
     setRows(orderByRank(achievements, rankings))
     setRecs(r)
-    setUsage(getUsage())
   }, [achievements])
 
   useEffect(() => {
@@ -39,11 +39,6 @@ export default function RankedView({ achievements, goal, onOpenSettings }: Props
   async function run(kind: Exclude<Busy, undefined>) {
     if (!goal) return
     setError(undefined)
-    if (!recordUse()) {
-      setUsage(getUsage())
-      return
-    }
-    setUsage(getUsage())
     setBusy(kind)
     try {
       if (kind === 'rank') {
@@ -57,7 +52,8 @@ export default function RankedView({ achievements, goal, onOpenSettings }: Props
       }
       await load()
     } catch (err) {
-      setError(err instanceof AiUnavailableError ? err.message : "The AI didn't work this time. Try again in a minute.")
+      if (err instanceof AiSignInRequiredError) setError('Sign in to use AI. Open Settings to sign in.')
+      else setError(err instanceof AiUnavailableError ? err.message : "The AI didn't work this time. Try again in a minute.")
     } finally {
       setBusy(undefined)
     }
@@ -74,7 +70,7 @@ export default function RankedView({ achievements, goal, onOpenSettings }: Props
     )
   }
 
-  const atLimit = usage.remaining === 0
+  const atLimit = usage?.remaining === 0
   const button = 'min-h-12 flex-1 rounded-xl border border-accent bg-accent/10 px-3 text-sm font-semibold disabled:opacity-50'
   const unranked = rows.filter((r) => !r.ranking).length
 
@@ -85,19 +81,30 @@ export default function RankedView({ achievements, goal, onOpenSettings }: Props
         <button type="button" onClick={onOpenSettings} className="underline underline-offset-4">change</button>
       </p>
 
-      <div className="flex gap-2">
-        <button type="button" className={button} disabled={!!busy || atLimit || achievements.length === 0} onClick={() => void run('rank')}>
-          {busy === 'rank' ? 'Ranking…' : 'Rank my achievements'}
-        </button>
-        <button type="button" className={button} disabled={!!busy || atLimit} onClick={() => void run('recommend')}>
-          {busy === 'recommend' ? 'Thinking…' : 'What should I do next?'}
-        </button>
-      </div>
-      <p className="-mt-2 text-xs opacity-60">
-        {atLimit && usage.nextFreeAt
-          ? `All 10 AI uses are used up for now. The next one frees up in ${formatWait(usage.nextFreeAt)}.`
-          : `Each button is one AI use. ${usage.remaining} of 10 left for the next 5 hours. Only the words are sent, never photos.`}
-      </p>
+      {user === null ? (
+        <div className="rounded-2xl border border-accent/40 bg-accent/10 p-3" data-testid="ranked-signin">
+          <p className="text-sm">Ranking and suggestions use AI, which needs a sign-in so your limit follows you.</p>
+          <button type="button" onClick={onOpenSettings} className="mt-2 min-h-11 w-full rounded-xl border border-accent px-4 text-sm font-semibold">
+            Sign in to use AI
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="flex gap-2">
+            <button type="button" className={button} disabled={!!busy || atLimit || achievements.length === 0} onClick={() => void run('rank')}>
+              {busy === 'rank' ? 'Ranking…' : 'Rank my achievements'}
+            </button>
+            <button type="button" className={button} disabled={!!busy || atLimit} onClick={() => void run('recommend')}>
+              {busy === 'recommend' ? 'Thinking…' : 'What should I do next?'}
+            </button>
+          </div>
+          <p className="-mt-2 text-xs opacity-60">
+            {atLimit && usage?.nextFreeAt
+              ? `All ${usage.limit} AI uses are used up for now. The next one frees up in ${formatWait(usage.nextFreeAt)}.`
+              : `Each button is one AI use.${usage ? ` ${usage.remaining} of ${usage.limit} left for the next 5 hours.` : ''} Only the words are sent, never photos.`}
+          </p>
+        </>
+      )}
 
       {achievements.length === 0 && <p className="opacity-70">Nothing to rank yet. Add an achievement first.</p>}
       {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
