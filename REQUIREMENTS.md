@@ -244,3 +244,37 @@ Written down so they are not forgotten, in this order:
 5. **App store wrappers**: Amazon Appstore and Apple App Store around this same web app.
 
 Also parked: sharing, reels and video, LinkedIn posts, cloud backup beyond the share sheet.
+
+---
+
+## Phase 5: Accounts (identity only)
+
+**The rule still holds:** achievements and photos stay on the device. An account is only who you are, your plan, and your AI usage count. Nothing about your achievements is stored on the server. Signing in is needed for the AI features so the API key cannot be run up by strangers; everything else works signed out.
+
+### Feature 10: Sign in with Google
+
+> **As a student, I want to** sign in with one tap and no password, **so that** the AI knows it is me and my limit follows me.
+
+- [ ] 10.1 Settings has "Continue with Google". Tapping it signs in with the phone's Google account and shows the email signed in as.
+- [ ] 10.2 Signed in, Settings has "Sign out". Signing out keeps every achievement on the device.
+- [ ] 10.3 Signed out, the AI buttons (photo read, rank, recommend) are replaced by a "Sign in to use AI" message with a button that opens Settings. Saving, editing, backup and export all work signed out.
+- [ ] 10.4 The sign-in survives closing and reopening the app.
+- [ ] 10.5 The server stores only: a user id, the email, the plan, when the account was made, and the timestamps of AI uses in the last 5 hours.
+- [ ] 10.6 With no Google client id configured (local development), Settings shows a clearly labelled test-mode sign-in that takes any email. It is refused on the live site.
+- [ ] 10.7 Settings has "Delete my account", with a confirmation. It removes the user from the server. The achievements on the device are untouched.
+
+### Feature 11: The limit lives on the server
+
+- [ ] 11.1 Each AI function checks the sign-in token, refuses without one, and counts the use against the account: 10 per rolling 5 hours on Free, 100 on Pro.
+- [ ] 11.2 At the limit the function refuses with a message saying when the next use frees up, and the app shows it.
+- [ ] 11.3 Every AI answer includes how many uses are left, and the app shows that number instead of counting on the device.
+- [ ] 11.4 Clearing the app's data on the phone does not reset the limit.
+
+### Phase 5 tests
+
+- [ ] T5.1 Unit: a session token that does not exist, or has expired, is refused; a valid one returns the user.
+- [ ] T5.2 Unit: the server-side counter allows 10 uses for Free and 100 for Pro in a 5-hour window, refuses the next, and frees a slot after 5 hours.
+- [ ] T5.3 Unit: each AI function refuses a request with no token, and counts one use on success and none on a refused request.
+- [ ] T5.4 Unit: deleting an account removes the user, their sessions and their usage.
+- [ ] T5.5 E2E: signed out, the AI panel says to sign in and makes no AI request. Test-mode sign-in, then the AI works and the remaining count comes from the server.
+- [ ] T5.6 E2E: sign out keeps the achievements; sign-in survives a reload.
