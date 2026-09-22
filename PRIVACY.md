@@ -49,6 +49,8 @@ The server stores exactly this, and nothing else:
 - when the account was made
 - the sign-in tokens for that account, which expire after 90 days
 - the times of the AI uses in the last 5 hours, which expire on their own
+- from Phase 6, once someone has paid: the Stripe customer id and the
+  subscription's status (`active`, `canceled` and so on)
 
 That is the whole list. **No achievements, no photos, no goal, no rankings, no IP addresses, no analytics.** The records live in Upstash Redis, reached only by the serverless functions.
 
@@ -56,9 +58,16 @@ That is the whole list. **No achievements, no photos, no goal, no rankings, no I
 
 Sign-in uses Google Identity Services, which means Google sees that someone signed in to this app. Nothing about the achievements goes to Google.
 
+### Paying (Phase 6)
+Payment happens on Stripe's own page, not in this app. **No card number, expiry, CVC or billing address ever reaches this app or its server**, which is the main reason for using Stripe Checkout rather than building a payment form. What comes back is a customer id, which is a reference, not a card.
+
+Stripe is therefore a third party that sees the payer: their card, their email and their billing country. That is unavoidable for taking money, and it is the only third party besides Anthropic (the AI) and Google (sign-in) in the whole app.
+
+Changing a plan is one-directional on purpose: only a message from Stripe, checked against a shared secret, can move an account between Free and Pro. Nothing the app or a phone sends can do it.
+
 ### The law, still
 
-Storing an email address for a user under 13 is collecting a child's personal information, which is what COPPA (the US law), the UK Age Appropriate Design Code and GDPR-K are about. The app is meant for ages 13 and up and this is a family project, not a public service. **Before it is opened to strangers or charged for, read those rules properly and get real legal advice.** Adding sync, which would put achievements themselves on a server, is a much bigger step again and has not been agreed.
+Storing an email address for a user under 13 is collecting a child's personal information, which is what COPPA (the US law), the UK Age Appropriate Design Code and GDPR-K are about. The app is meant for ages 13 and up and this is a family project, not a public service. **Before it is opened to strangers or charged for, read those rules properly and get real legal advice.** Charging money raises this further: the payer would be a parent, the user a minor, and terms and a privacy policy would have to be published and accurate. Adding sync, which would put achievements themselves on a server, is a much bigger step again and has not been agreed.
 
 ## Things to never add
 

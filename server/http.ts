@@ -27,6 +27,19 @@ export async function readFormBody(req: IncomingMessage & { body?: unknown }): P
   return Object.fromEntries(new URLSearchParams(text))
 }
 
+// Stripe's signature covers the exact bytes it sent, so the webhook needs
+// the body untouched. Some hosts parse JSON bodies before the handler runs,
+// which loses the original bytes: if that has happened we return undefined
+// rather than re-stringifying and failing the signature check in a way that
+// looks like an attack.
+export async function readWebhookBody(req: IncomingMessage & { body?: unknown }): Promise<string | undefined> {
+  const body = req.body
+  if (Buffer.isBuffer(body)) return body.toString('utf8')
+  if (typeof body === 'string') return body
+  if (body && typeof body === 'object') return undefined
+  return readRawBody(req)
+}
+
 export function readCookie(req: IncomingMessage, name: string): string | undefined {
   const header = req.headers.cookie ?? ''
   for (const part of header.split(';')) {

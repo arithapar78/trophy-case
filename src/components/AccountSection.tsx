@@ -9,6 +9,7 @@ import {
   type ServerConfig,
 } from '../lib/account'
 import { formatWait } from '../lib/aiUsage'
+import PlanSection from './PlanSection'
 
 // Google's sign-in script puts this on the window once it has loaded. Only
 // the two calls we make are described here.
@@ -174,6 +175,8 @@ export default function AccountSection() {
             {usage ? `${usage.remaining} of ${usage.limit} AI uses left for the next 5 hours` : 'AI uses left: checking…'}
             {usage?.nextFreeAt ? `. The next one frees up in ${formatWait(usage.nextFreeAt)}` : ''}.
           </p>
+
+          <PlanSection billing={config?.billing} />
 
           <div className="mt-3 flex flex-col gap-3">
             <button type="button" className={button} data-testid="sign-out" disabled={busy} onClick={() => void run(signOut)}>

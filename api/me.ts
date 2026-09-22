@@ -4,6 +4,7 @@
 
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { authenticate } from '../server/auth.js'
+import { mockBillingAllowed } from '../server/billing.js'
 import { sendJson } from '../server/http.js'
 import { getStore } from '../server/storeInstance.js'
 import { getUsageFor } from '../server/usage.js'
@@ -20,5 +21,15 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     sendJson(res, 200, { ok: true })
     return
   }
-  sendJson(res, 200, { ok: true, user: { email: user.email, plan: user.plan }, usage: await getUsageFor(store, user) })
+  sendJson(res, 200, {
+    ok: true,
+    user: {
+      email: user.email,
+      plan: user.plan,
+      subscriptionStatus: user.subscriptionStatus ?? null,
+      // Whether "Manage subscription" can do anything yet.
+      canManage: Boolean(user.stripeCustomerId) || mockBillingAllowed(),
+    },
+    usage: await getUsageFor(store, user),
+  })
 }

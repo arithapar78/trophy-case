@@ -7,7 +7,7 @@ import PhotoViewer from './components/PhotoViewer'
 import RankedView from './components/RankedView'
 import SettingsSheet from './components/SettingsSheet'
 import TimelineFilters from './components/TimelineFilters'
-import { refreshAccount, takeTokenFromUrl } from './lib/account'
+import { confirmUpgrade, refreshAccount, takeBillingResultFromUrl, takeTokenFromUrl } from './lib/account'
 import { deleteAchievement, listAchievementsWithPhotos } from './lib/achievements'
 import { getGoal } from './lib/goal'
 import { askForPersistentStorage } from './lib/storage'
@@ -48,11 +48,21 @@ export default function App() {
     void reload()
   }, [reload])
 
-  // On start: pick up a session token Google's redirect left in the
-  // address bar, then ask the server who is signed in.
+  // On start: pick up a session token Google's redirect left in the address
+  // bar, then ask the server who is signed in. Stripe also sends people back
+  // here, so check for that too and open Settings on the way through, since
+  // that is where the plan is shown.
   useEffect(() => {
     takeTokenFromUrl()
-    void refreshAccount()
+    const billing = takeBillingResultFromUrl()
+    if (billing) setSettingsOpen(true)
+    if (billing === 'success') {
+      // Stripe returns the user before it tells our server about the
+      // payment, so keep asking for a few seconds rather than showing Free.
+      void confirmUpgrade()
+    } else {
+      void refreshAccount()
+    }
   }, [])
 
   async function confirmDelete() {

@@ -11,6 +11,9 @@ import meHandler from './api/me.ts'
 import rankHandler from './api/rank.ts'
 import readPhotoHandler from './api/read-photo.ts'
 import recommendHandler from './api/recommend.ts'
+import stripeCheckoutHandler from './api/stripe/checkout.ts'
+import stripePortalHandler from './api/stripe/portal.ts'
+import stripeWebhookHandler from './api/stripe/webhook.ts'
 
 // BASE_PATH is the folder the site is served from. It is "/" everywhere we
 // host now (Vercel, local). It only needs setting if the app is ever served
@@ -35,6 +38,9 @@ function localApi(mode: string): Plugin {
     '/api/auth/google': googleLoginHandler,
     '/api/auth/dev': devLoginHandler,
     '/api/auth/signout': signOutHandler,
+    '/api/stripe/checkout': stripeCheckoutHandler,
+    '/api/stripe/portal': stripePortalHandler,
+    '/api/stripe/webhook': stripeWebhookHandler,
   }
   const attach = (server: { middlewares: { use: (path: string, fn: (req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse) => void) => void } }) => {
     for (const [path, handler] of Object.entries(handlers)) {

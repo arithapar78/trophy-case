@@ -8,18 +8,35 @@ import type { UsageStatus } from './aiUsage'
 export interface AccountUser {
   email: string
   plan: 'free' | 'pro'
+  subscriptionStatus?: string | null
+  // Whether "Manage subscription" has anything to open yet.
+  canManage?: boolean
 }
 
 export interface AccountState {
   // undefined = not checked yet, null = signed out
   user: AccountUser | null | undefined
   usage?: UsageStatus
+  // Set just after coming back from Stripe, so Settings can say how it went.
+  billingReturn?: BillingReturn
+  // True while we are waiting for Stripe's message about a payment to land.
+  confirmingUpgrade?: boolean
+}
+
+export interface BillingConfig {
+  // Whether upgrading is possible on this server at all.
+  available: boolean
+  // True when there are no Stripe keys, so the upgrade is a clearly
+  // labelled pretend one for local development and tests.
+  mock: boolean
+  priceText: string
 }
 
 export interface ServerConfig {
   googleClientId: string | null
   devLogin: boolean
   accountsReady: boolean
+  billing: BillingConfig
 }
 
 const TOKEN_KEY = 'trophy-case.session'
@@ -157,4 +174,74 @@ export async function deleteAccount(): Promise<void> {
   await call('/api/me', { method: 'DELETE' })
   setToken(undefined)
   emit({ user: null })
+}
+
+// --- Upgrading and managing the subscription ---
+//
+// Both of these answer with either a Stripe address to send the browser to,
+// or `mock: true` when there are no Stripe keys, in which case the plan has
+// already changed on the server and we just re-read the account.
+
+interface BillingAnswer {
+  url?: string
+  mock?: boolean
+  alreadyPro?: boolean
+}
+
+async function startBilling(path: string): Promise<void> {
+  const answer = await call<BillingAnswer>(path, { method: 'POST' })
+  if (answer.url) {
+    // A full page move, not a popup: a popup does not come back properly
+    // inside an app launched from the Home Screen.
+    window.location.assign(answer.url)
+    return
+  }
+  await refreshAccount()
+}
+
+export async function startUpgrade(): Promise<void> {
+  await startBilling('/api/stripe/checkout')
+}
+
+export async function openSubscriptionPage(): Promise<void> {
+  await startBilling('/api/stripe/portal')
+}
+
+// Coming back from Stripe, the address bar says how it went. Returns what
+// happened so Settings can say something useful, and tidies the address bar.
+export type BillingReturn = 'success' | 'cancelled' | 'portal' | undefined
+
+export function takeBillingResultFromUrl(): BillingReturn {
+  const url = new URL(window.location.href)
+  const value = url.searchParams.get('billing')
+  if (!value) return undefined
+  url.searchParams.delete('billing')
+  window.history.replaceState(null, '', url.pathname + url.search + url.hash)
+  const result = value === 'success' || value === 'cancelled' || value === 'portal' ? value : undefined
+  emit({ ...state, billingReturn: result })
+  return result
+}
+
+export function clearBillingReturn(): void {
+  if (state.billingReturn) emit({ ...state, billingReturn: undefined })
+}
+
+// Stripe sends the user back to the app before it tells our server the
+// payment went through, so for a few seconds the account can still say Free.
+// Rather than showing the wrong plan, we say we are confirming and re-ask a
+// handful of times.
+const CONFIRM_TRIES = 6
+const CONFIRM_GAP_MS = 2000
+
+export async function confirmUpgrade(sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))): Promise<void> {
+  emit({ ...state, confirmingUpgrade: true })
+  try {
+    for (let attempt = 0; attempt < CONFIRM_TRIES; attempt += 1) {
+      await refreshAccount()
+      if (state.user?.plan === 'pro') return
+      if (attempt < CONFIRM_TRIES - 1) await sleep(CONFIRM_GAP_MS)
+    }
+  } finally {
+    emit({ ...state, confirmingUpgrade: false })
+  }
 }

@@ -30,7 +30,9 @@ This is a fresh build. Each phase below is built, tested and tried on a phone be
 | 2. On your phone (done) | A real URL, Add to Home Screen, works offline, backup to a file and restore, delete everything |
 | 3. AI photo read (done) | AI drafts the title from the photo. Off by default, a button each time to turn it on. 10 uses per 5 hours |
 | 4. Goal and ranking (done) | Set a goal, see which achievements matter most and what to do next. Export as PDF or text |
-| Later | Accounts, a $10/month Pro plan, the assistant, app store listings |
+| 5. Accounts (done) | Sign in with Google. The AI limit follows you, not the phone. Achievements still never leave the device |
+| 6. Pro plan (done) | $10 a month through Stripe: 100 AI uses per 5 hours instead of 10 |
+| Later | The assistant, extra categories, app store listings |
 
 ## Tech stack
 
@@ -141,6 +143,40 @@ Two one-time setup jobs in Vercel:
 
 Locally, with no `GOOGLE_CLIENT_ID` set, Settings shows a clearly labelled
 test-mode sign-in that takes any email. It is refused on the live site.
+
+### The Pro plan (Phase 6)
+
+Paying is handled by Stripe Checkout, so no card details ever reach this app.
+Upgrading asks our server for an address on Stripe's own payment page and
+sends the browser there. When the payment goes through, Stripe posts a signed
+message to `/api/stripe/webhook`, and that message is the only thing in the
+whole app allowed to move an account between Free and Pro.
+
+Setting it up, once, by an adult (Stripe needs a real legal identity):
+
+1. Make an account at https://dashboard.stripe.com/register. You do **not**
+   need to activate it for live payments yet. A new account comes with a
+   sandbox, which is a practice mode with fake cards and no real money.
+2. In the sandbox, **Product catalog**, add a product, `Trophy Case Pro`,
+   $10 USD, recurring monthly. Copy the **Price ID** (`price_...`).
+3. **API keys**, copy the **secret key** (`sk_test_...` in the sandbox).
+4. **Webhooks**, create an endpoint at `<the live site>/api/stripe/webhook`
+   listening for `checkout.session.completed`,
+   `customer.subscription.updated` and `customer.subscription.deleted`.
+   Reveal and copy the **signing secret** (`whsec_...`).
+5. Put all three into Vercel as `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID` and
+   `STRIPE_WEBHOOK_SECRET`. Never paste them into chat or into code.
+
+Test with Stripe's card `4242 4242 4242 4242`, any future expiry, any CVC.
+
+Locally, with none of the three set, Settings offers a clearly labelled
+pretend upgrade that flips the plan with no payment, which is what the tests
+use. It is refused on the live site.
+
+**Before charging a real person:** activate the Stripe account (bank, legal
+name, tax details), move Vercel off the Hobby plan (it is for non-commercial
+use only), and publish terms and a privacy policy that a lawyer has read. The
+customers would be parents and the users are minors.
 
 ### The AI key
 
