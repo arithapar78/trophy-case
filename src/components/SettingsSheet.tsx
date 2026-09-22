@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import AccountSection from './AccountSection'
+import CloseButton from './CloseButton'
 import { getAlwaysReadPhotos, setAlwaysReadPhotos } from '../lib/aiSettings'
 import { listAchievements } from '../lib/achievements'
 import { BadBackupError, backupFileName, buildBackup, deleteEverything, restoreBackup } from '../lib/backup'
@@ -113,8 +114,13 @@ export default function SettingsSheet({ achievementCount, goal: savedGoal, onClo
         className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-ink"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-ink/20" />
-        <h2 className="text-xl font-bold">Settings</h2>
+        <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-ink/20" />
+
+        {/* Stays put while the sheet scrolls, so there is always a way out. */}
+        <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between gap-3 bg-surface px-5 pb-3">
+          <h2 className="text-xl font-bold">Settings</h2>
+          <CloseButton onClose={onClose} />
+        </div>
 
         <AccountSection />
 

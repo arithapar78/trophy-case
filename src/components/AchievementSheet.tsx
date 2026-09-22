@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import CloseButton from './CloseButton'
 import { useObjectUrl } from '../hooks/useObjectUrl'
 import { createAchievement, updateAchievement, ValidationError } from '../lib/achievements'
 import { AiSignInRequiredError, AiUnavailableError, readPhotoWithAi } from '../lib/aiClient'
@@ -190,7 +191,13 @@ export default function AchievementSheet({ mode, onClose, onSaved, onOpenSetting
           void save()
         }}
       >
-        <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-ink/20" />
+        <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-ink/20" />
+
+        {/* Stays put while the sheet scrolls, so there is always a way out. */}
+        <div className="sticky top-0 z-10 -mx-5 mb-4 flex items-center justify-between gap-3 bg-surface px-5 pb-3">
+          <h2 className="text-xl font-bold">{mode.kind === 'add' ? 'New achievement' : 'Edit achievement'}</h2>
+          <CloseButton onClose={onClose} label="Close without saving" />
+        </div>
 
         {/* Photo strip */}
         <div className="mb-4 flex gap-2 overflow-x-auto" data-testid="photo-strip">

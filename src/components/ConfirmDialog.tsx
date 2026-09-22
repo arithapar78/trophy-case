@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import CloseButton from './CloseButton'
 
 interface Props {
   title: string
@@ -26,7 +27,10 @@ export default function ConfirmDialog({ title, message, confirmLabel, onConfirm,
         className="w-full max-w-sm rounded-2xl bg-surface p-5 text-ink shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="confirm-title" className="text-lg font-semibold">{title}</h2>
+        <div className="flex items-start justify-between gap-3">
+          <h2 id="confirm-title" className="text-lg font-semibold">{title}</h2>
+          <CloseButton onClose={onCancel} />
+        </div>
         <p className="mt-2 opacity-80">{message}</p>
         <div className="mt-5 flex gap-3">
           <button type="button" onClick={onCancel} className="flex-1 rounded-xl border border-ink/20 py-3">
