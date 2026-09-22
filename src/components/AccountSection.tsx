@@ -8,7 +8,6 @@ import {
   useAccount,
   type ServerConfig,
 } from '../lib/account'
-import { formatWait } from '../lib/aiUsage'
 import PlanSection from './PlanSection'
 
 // Google's sign-in script puts this on the window once it has loaded. Only
@@ -54,7 +53,7 @@ function waitFor(script: HTMLScriptElement): Promise<void> {
 // many AI uses are left, and the ways in and out. Achievements are never
 // touched by anything here.
 export default function AccountSection() {
-  const { user, usage } = useAccount()
+  const { user } = useAccount()
   const [config, setConfig] = useState<ServerConfig>()
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
@@ -169,13 +168,8 @@ export default function AccountSection() {
       {user && (
         <>
           <p className="mt-1 text-sm" data-testid="account-email">
-            Signed in as {user.email} · {user.plan === 'pro' ? 'Pro' : 'Free'}
+            Signed in as {user.email}
           </p>
-          <p className="mt-1 text-sm opacity-70" data-testid="ai-usage">
-            {usage ? `${usage.remaining} of ${usage.limit} AI uses left for the next 5 hours` : 'AI uses left: checking…'}
-            {usage?.nextFreeAt ? `. The next one frees up in ${formatWait(usage.nextFreeAt)}` : ''}.
-          </p>
-
           <PlanSection billing={config?.billing} />
 
           <div className="mt-3 flex flex-col gap-3">

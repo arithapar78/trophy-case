@@ -1,5 +1,7 @@
 // Shared shapes. Everything the app stores is described here.
 
+import type { ProposedAchievement } from './aiTypes.js'
+
 export const CATEGORIES = ['School', 'Sports', 'Debate', 'Cooking', 'Arts', 'Other'] as const
 export type Category = (typeof CATEGORIES)[number]
 
@@ -86,4 +88,24 @@ export interface RecommendationSet {
 export interface Setting {
   key: 'goal' | 'recommendations'
   value: unknown
+}
+
+// One line of the Scout conversation, kept on the device like everything
+// else. `pending` marks a message still waiting for an answer, so a failed
+// send can be shown rather than silently lost.
+export interface ScoutMessage {
+  id: string
+  role: 'user' | 'scout'
+  text: string
+  at: number
+  // An achievement Scout offered to save with this message. Kept with the
+  // conversation rather than in the screen's memory, so tapping through to
+  // the Timeline and back does not lose the offer. `proposedResolved` marks
+  // it as already saved or turned down.
+  proposed?: ProposedAchievement
+  proposedResolved?: boolean
+  // The name of a file attached to this message, so the chat can show that
+  // one was sent. The file itself is never stored.
+  attachmentName?: string
+  failed?: boolean
 }

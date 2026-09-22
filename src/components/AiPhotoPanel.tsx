@@ -67,8 +67,8 @@ export default function AiPhotoPanel({ state, onRun, onOpenSettings }: Props) {
           </button>
           <p className="mt-2 text-xs leading-relaxed text-ink/60">
             {atLimit && usage?.nextFreeAt
-              ? `You've used all ${usage.limit} AI uses for now. The next one frees up in ${formatWait(usage.nextFreeAt)}. You can still fill it in yourself.`
-              : `Sends a small copy of this photo to Anthropic's AI, which is not stored there.${usage ? ` ${usage.remaining} of ${usage.limit} AI uses left for the next 5 hours.` : ''}`}
+              ? `The AI is resting for a moment, back in ${formatWait(usage.nextFreeAt)}. You can still fill this in yourself.`
+              : "Sends a small copy of this photo to Anthropic's AI, which is not stored there."}
           </p>
         </>
       )}

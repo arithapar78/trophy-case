@@ -1,9 +1,12 @@
-// The AI limit window: N uses per rolling 5 hours. A use "frees up" exactly
-// 5 hours after it happened. The counting happens on the server (see
-// server/usage.ts); the app just shows the numbers it is told.
+// The AI ceiling window: N uses per rolling 5 hours. A use "frees up"
+// exactly 5 hours after it happened. The counting happens on the server (see
+// server/usage.ts) and is deliberately invisible in the app.
 
-export const FREE_USES_PER_WINDOW = 10
-export const PRO_USES_PER_WINDOW = 100
+// Kept so the server and the app agree on the number, but the app does not
+// show it any more: there is no counter in the UI. See server/usage.ts for
+// why a ceiling still exists at all.
+export const FREE_USES_PER_WINDOW = 300
+export const PRO_USES_PER_WINDOW = 300
 export const WINDOW_MS = 5 * 60 * 60 * 1000
 
 export interface UsageStatus {

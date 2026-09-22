@@ -5,7 +5,7 @@
 
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { sendJson } from '../server/http.js'
-import { mockBillingAllowed } from '../server/billing.js'
+import { mockBillingAllowed, proEnabled } from '../server/billing.js'
 import { accountsReady, isProduction } from '../server/storeInstance.js'
 import { PRO_PRICE_TEXT, stripeConfigured } from '../server/stripe.js'
 
@@ -19,7 +19,7 @@ export default async function handler(_req: IncomingMessage, res: ServerResponse
     devLogin: devLoginAllowed(),
     accountsReady: accountsReady(),
     billing: {
-      available: stripeConfigured() || mockBillingAllowed(),
+      available: proEnabled() && (stripeConfigured() || mockBillingAllowed()),
       mock: mockBillingAllowed(),
       priceText: PRO_PRICE_TEXT,
     },

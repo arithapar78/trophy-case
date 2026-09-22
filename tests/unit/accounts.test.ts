@@ -86,7 +86,7 @@ describe('T5.1 sessions', () => {
 })
 
 describe('T5.2 the limit', () => {
-  it('allows 10 uses on Free and refuses the eleventh', async () => {
+  it('allows exactly the ceiling on Free and refuses the next one', async () => {
     const { user } = await signIn(store, 'ari@example.com')
     const now = Date.now()
     for (let i = 0; i < USES_PER_WINDOW.free; i++) {
@@ -98,7 +98,7 @@ describe('T5.2 the limit', () => {
     expect(over.usage.nextFreeAt).toBe(now + WINDOW_MS)
   })
 
-  it('allows 100 uses on Pro', async () => {
+  it('allows exactly the ceiling on Pro', async () => {
     const { user } = await signIn(store, 'pro@example.com')
     const pro = { ...user, plan: 'pro' as const }
     await store.putUser(pro)
@@ -121,8 +121,10 @@ describe('T5.2 the limit', () => {
     const { user } = await signIn(store, 'ari@example.com')
     const now = Date.now()
     await useOne(store, user, now)
-    expect(await getUsageFor(store, user, now)).toMatchObject({ used: 1, limit: 10, remaining: 9 })
-    expect(await getUsageFor(store, user, now)).toMatchObject({ used: 1, remaining: 9 })
+    const limit = USES_PER_WINDOW.free
+    expect(await getUsageFor(store, user, now)).toMatchObject({ used: 1, limit, remaining: limit - 1 })
+    // Asking twice does not spend anything.
+    expect(await getUsageFor(store, user, now)).toMatchObject({ used: 1, remaining: limit - 1 })
   })
 })
 
@@ -146,7 +148,7 @@ describe('T5.3 the AI route guard', () => {
     const res = fakeResponse()
     await runAiRoute(fakeRequest(token), res, work, { store })
     expect(res.sent.status).toBe(200)
-    expect(res.sent.body.usage).toMatchObject({ used: 1, limit: 10, remaining: 9 })
+    expect(res.sent.body.usage).toMatchObject({ used: 1, limit: USES_PER_WINDOW.free, remaining: USES_PER_WINDOW.free - 1 })
   })
 
   it('refuses at the limit, spends nothing, and says when the next one frees up', async () => {
@@ -165,8 +167,8 @@ describe('T5.3 the AI route guard', () => {
     expect(res.sent.status).toBe(429)
     expect(res.sent.body.code).toBe('limit')
     expect(String(res.sent.body.message)).toContain('frees up in')
-    // Still exactly 10 used: the refused request did not count.
-    expect(await getUsageFor(store, user, now)).toMatchObject({ used: 10 })
+    // Still exactly at the ceiling: the refused request did not count.
+    expect(await getUsageFor(store, user, now)).toMatchObject({ used: USES_PER_WINDOW.free })
   })
 
   it('answers 405 to anything but POST', async () => {

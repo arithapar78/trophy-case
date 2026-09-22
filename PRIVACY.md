@@ -65,6 +65,14 @@ Stripe is therefore a third party that sees the payer: their card, their email a
 
 Changing a plan is one-directional on purpose: only a message from Stripe, checked against a shared secret, can move an account between Free and Pro. Nothing the app or a phone sends can do it.
 
+### Scout and attached files (Phase 7)
+Scout is a chat that already knows the goal and the achievements. Every message sends, to the same serverless function and on to Anthropic: the goal, the **words** of every achievement (never their photos), the recent part of the conversation, and any file attached to that one message. The conversation itself is kept on the device with everything else; the server stores none of it.
+
+- A file is sent with one message and **is not stored anywhere**, not on the server and not on the device, unless the user taps Save on an achievement Scout offers
+- Pictures are shrunk to about 1024 px and re-encoded before sending, which strips EXIF (where and when the photo was taken), exactly as elsewhere in the app
+- Scout can never change or add anything by itself. An achievement it suggests is a card with a Save button; nothing reaches the database until that is tapped
+- Attaching a transcript or a certificate means sending a real document to Anthropic. The app says what is sent, and nothing is sent unless the user attaches it
+
 ### The law, still
 
 Storing an email address for a user under 13 is collecting a child's personal information, which is what COPPA (the US law), the UK Age Appropriate Design Code and GDPR-K are about. The app is meant for ages 13 and up and this is a family project, not a public service. **Before it is opened to strangers or charged for, read those rules properly and get real legal advice.** Charging money raises this further: the payer would be a parent, the user a minor, and terms and a privacy policy would have to be published and accurate. Adding sync, which would put achievements themselves on a server, is a much bigger step again and has not been agreed.

@@ -31,8 +31,9 @@ This is a fresh build. Each phase below is built, tested and tried on a phone be
 | 3. AI photo read (done) | AI drafts the title from the photo. Off by default, a button each time to turn it on. 10 uses per 5 hours |
 | 4. Goal and ranking (done) | Set a goal, see which achievements matter most and what to do next. Export as PDF or text |
 | 5. Accounts (done) | Sign in with Google. The AI limit follows you, not the phone. Achievements still never leave the device |
-| 6. Pro plan (done) | $10 a month through Stripe: 100 AI uses per 5 hours instead of 10 |
-| Later | The assistant, extra categories, app store listings |
+| 6. Pro plan (built, switched off) | $10 a month through Stripe. All there and tested, but nothing is for sale until there are users |
+| 7. Scout (done) | A chat that knows your goal and your record, with file upload. No AI limit to worry about |
+| Later | Extra categories, app store listings |
 
 ## Tech stack
 
@@ -144,7 +145,33 @@ Two one-time setup jobs in Vercel:
 Locally, with no `GOOGLE_CLIENT_ID` set, Settings shows a clearly labelled
 test-mode sign-in that takes any email. It is refused on the live site.
 
-### The Pro plan (Phase 6)
+### Scout, and why there is no AI limit (Phase 7)
+
+**Scout** is the third tab. It is a chat that already knows the goal and
+every achievement, so a student can ask "what should I put first" in their
+own words. It runs on Claude Haiku like the rest of the app, needs a
+sign-in, and answers in MOCK mode with no key. The conversation is kept on
+the device. A file can be attached to any message: pictures, PDFs and plain
+text, from the phone's photo library or a computer's file picker. The file
+is sent with that one message and stored nowhere. If Scout spots an
+achievement in it, it offers a card with a Save button; nothing is saved
+until that is tapped.
+
+**There is no AI limit shown anywhere.** A counter that runs out reads as a
+paywall, and a paywall in front of someone who has not seen the app work
+sends them away. The server still counts against a ceiling high enough that
+no real person reaches it (`OPEN_CEILING` in `server/usage.ts`), because the
+AI functions are reachable by anyone with a browser and without some ceiling
+one script could run up the whole Anthropic bill. Set a spending cap in the
+Anthropic console as well.
+
+**Selling is switched off.** Every line of the Phase 6 Stripe code is still
+there and still tested; `ENABLE_PRO=1` on the server brings the offer back
+with no code change. The end-to-end tests cover both states: the `iphone`
+project tests the app as it ships, and `iphone-pro` runs the upgrade flow
+against a second preview server started with `ENABLE_PRO=1`.
+
+### The Pro plan (Phase 6, switched off)
 
 Paying is handled by Stripe Checkout, so no card details ever reach this app.
 Upgrading asks our server for an address on Stripe's own payment page and

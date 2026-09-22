@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { signInForTest, spendAiUses } from './helpers/account'
 import { openFreshApp, photoFile } from './helpers/app'
+import { OPEN_CEILING } from '../../server/usage'
 
 test.beforeEach(async ({ page }) => {
   await openFreshApp(page)
@@ -16,7 +17,9 @@ test('with AI off, choosing a photo makes no request to the AI function', async 
   await page.getByTestId('camera-input').setInputFiles(photoFile())
   const sheet = page.getByRole('dialog', { name: 'New achievement' })
   await expect(sheet.getByRole('button', { name: 'Let AI fill this in' })).toBeVisible()
-  await expect(sheet.getByTestId('ai-panel')).toContainText('10 of 10 AI uses left')
+  // Phase 7: no counter anywhere. The panel explains what is sent instead.
+  await expect(sheet.getByTestId('ai-panel')).toContainText('not stored there')
+  await expect(sheet.getByTestId('ai-panel')).not.toContainText('uses left')
   await sheet.getByLabel('Title').fill('Done by hand')
   await sheet.getByRole('button', { name: 'Arts', exact: true }).click()
   await sheet.getByRole('button', { name: 'Save' }).click()
@@ -39,9 +42,10 @@ test('tapping the button fills a MOCK draft and says so', async ({ page }) => {
   await sheet.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByTestId('achievement-card')).toContainText('Edited after AI')
 
-  // One use was counted.
+  // Phase 7: the server still counts, but Settings shows no number at all.
   await page.getByRole('button', { name: 'Settings' }).click()
-  await expect(page.getByTestId('ai-usage')).toContainText('9 of 10 AI uses left')
+  await expect(page.getByTestId('account-section')).toBeVisible()
+  await expect(page.getByTestId('ai-usage')).toHaveCount(0)
 })
 
 test('the Settings switch makes AI run as soon as a photo is chosen', async ({ page }) => {
@@ -55,15 +59,18 @@ test('the Settings switch makes AI run as soon as a photo is chosen', async ({ p
   await expect(sheet.getByLabel('Title')).toHaveValue(/^MOCK/)
 })
 
-test('at the limit the button is disabled but saving by hand still works', async ({ page }) => {
-  // Use up all ten against the real server counter, then reload so the app
-  // shows the numbers the server sends back.
-  await spendAiUses(page, 10)
+test('at the safety ceiling the button is disabled but saving by hand still works', async ({ page }) => {
+  // Spend the whole ceiling against the real server counter, then reload so
+  // the app shows what the server sends back. A person would never get here;
+  // this proves the circuit breaker works and stays polite when it trips.
+  await spendAiUses(page, OPEN_CEILING)
   await page.reload()
   await page.getByTestId('camera-input').setInputFiles(photoFile())
   const sheet = page.getByRole('dialog', { name: 'New achievement' })
   await expect(sheet.getByRole('button', { name: 'Let AI fill this in' })).toBeDisabled()
-  await expect(sheet.getByTestId('ai-panel')).toContainText('frees up in')
+  // The message says when it clears and never mentions paying.
+  await expect(sheet.getByTestId('ai-panel')).toContainText('back in')
+  await expect(sheet.getByTestId('ai-panel')).not.toContainText(/upgrade|pro|pay/i)
 
   await sheet.getByLabel('Title').fill('Still works')
   await sheet.getByRole('button', { name: 'Other', exact: true }).click()

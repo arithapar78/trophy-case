@@ -53,9 +53,10 @@ test('the Ranked view asks for a goal first, then ranks against MOCK with reason
   await expect(recs.locator('li')).toHaveCount(3)
   await expect(recs).toContainText('MOCK')
 
-  // Two AI uses were counted.
+  // Phase 7: the server counted two uses, and the app shows no number.
   await page.getByRole('button', { name: 'Settings' }).click()
-  await expect(page.getByTestId('ai-usage')).toContainText('8 of 10')
+  await expect(page.getByTestId('account-section')).toBeVisible()
+  await expect(page.getByTestId('ai-usage')).toHaveCount(0)
 })
 
 test('rankings and the goal survive a reload', async ({ page }) => {

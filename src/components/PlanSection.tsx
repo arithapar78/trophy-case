@@ -17,7 +17,10 @@ export default function PlanSection({ billing }: { billing: BillingConfig | unde
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string>()
 
-  if (!user) return null
+  // Phase 7: with selling switched off the server reports billing
+  // unavailable, and this whole block stays out of the way. The code below
+  // is unchanged and comes straight back when ENABLE_PRO is set.
+  if (!user || !billing?.available) return null
 
   async function run(work: () => Promise<void>) {
     setBusy(true)
@@ -56,13 +59,7 @@ export default function PlanSection({ billing }: { billing: BillingConfig | unde
         You are on {isPro ? 'Pro' : 'Free'}: {isPro ? PRO_USES_PER_WINDOW : FREE_USES_PER_WINDOW} AI uses every 5 hours.
       </p>
 
-      {billing?.available === false && (
-        <p className="mt-2 text-sm opacity-70" data-testid="plan-unavailable">
-          Upgrading is not switched on yet.
-        </p>
-      )}
-
-      {billing?.available && !isPro && (
+      {!isPro && (
         <div className="mt-3 rounded-2xl bg-ink/[0.03] p-4 ring-1 ring-ink/10">
           <p className="text-sm font-medium">Trophy Case Pro, {billing.priceText}</p>
           <p className="mt-1 text-sm opacity-70">

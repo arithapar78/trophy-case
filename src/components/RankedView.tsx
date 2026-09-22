@@ -83,7 +83,7 @@ export default function RankedView({ achievements, goal, onOpenSettings }: Props
 
       {user === null ? (
         <div className="rounded-2xl bg-accent/10 p-4 ring-1 ring-accent/25" data-testid="ranked-signin">
-          <p className="text-sm">Ranking and suggestions use AI, which needs a sign-in so your limit follows you.</p>
+          <p className="text-sm">Ranking and suggestions use AI, which needs a sign-in.</p>
           <button type="button" onClick={onOpenSettings} className="mt-3 min-h-11 w-full rounded-2xl px-4 text-sm font-semibold text-accent-ink ring-1 ring-accent/50 transition-colors active:bg-accent/15">
             Sign in to use AI
           </button>
@@ -100,8 +100,8 @@ export default function RankedView({ achievements, goal, onOpenSettings }: Props
           </div>
           <p className="-mt-1 text-xs leading-relaxed text-ink/55">
             {atLimit && usage?.nextFreeAt
-              ? `All ${usage.limit} AI uses are used up for now. The next one frees up in ${formatWait(usage.nextFreeAt)}.`
-              : `Each button is one AI use.${usage ? ` ${usage.remaining} of ${usage.limit} left for the next 5 hours.` : ''} Only the words are sent, never photos.`}
+              ? `The AI is resting for a moment, back in ${formatWait(usage.nextFreeAt)}.`
+              : 'Only the words are sent, never photos.'}
           </p>
         </>
       )}

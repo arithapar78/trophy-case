@@ -11,6 +11,7 @@ import meHandler from './api/me.ts'
 import rankHandler from './api/rank.ts'
 import readPhotoHandler from './api/read-photo.ts'
 import recommendHandler from './api/recommend.ts'
+import scoutHandler from './api/scout.ts'
 import stripeCheckoutHandler from './api/stripe/checkout.ts'
 import stripePortalHandler from './api/stripe/portal.ts'
 import stripeWebhookHandler from './api/stripe/webhook.ts'
@@ -33,6 +34,7 @@ function localApi(mode: string): Plugin {
     '/api/read-photo': readPhotoHandler,
     '/api/rank': rankHandler,
     '/api/recommend': recommendHandler,
+    '/api/scout': scoutHandler,
     '/api/config': configHandler,
     '/api/me': meHandler,
     '/api/auth/google': googleLoginHandler,

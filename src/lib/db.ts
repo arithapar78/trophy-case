@@ -4,13 +4,14 @@
 // Never create another Dexie instance elsewhere. Import `db` from here.
 
 import Dexie, { type EntityTable } from 'dexie'
-import type { Achievement, Photo, Ranking, Setting } from './types'
+import type { Achievement, Photo, Ranking, ScoutMessage, Setting } from './types'
 
 export class TrophyCaseDB extends Dexie {
   achievements!: EntityTable<Achievement, 'id'>
   photos!: EntityTable<Photo, 'id'>
   rankings!: EntityTable<Ranking, 'achievementId'>
   settings!: EntityTable<Setting, 'key'>
+  scoutMessages!: EntityTable<ScoutMessage, 'id'>
 
   constructor(name = 'trophy-case') {
     super(name)
@@ -27,6 +28,15 @@ export class TrophyCaseDB extends Dexie {
       photos: 'id, achievementId, [achievementId+order]',
       rankings: 'achievementId',
       settings: 'key',
+    })
+    // Version 3 (Phase 7) adds the Scout conversation. Indexed by `at` so it
+    // reads back oldest first without sorting the whole table.
+    this.version(3).stores({
+      achievements: 'id, date, category, createdAt',
+      photos: 'id, achievementId, [achievementId+order]',
+      rankings: 'achievementId',
+      settings: 'key',
+      scoutMessages: 'id, at',
     })
   }
 }

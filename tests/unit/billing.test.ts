@@ -1,6 +1,10 @@
 // Phase 6 tests: the Pro plan. Checking that a message really came from
 // Stripe, that the right messages flip the right plan, that a repeat does
-// nothing, and that Pro really does get 100 uses.
+// nothing, and that the plan's ceiling is enforced.
+//
+// Phase 7 switched selling off and gave both plans the same ceiling, so
+// these tests set ENABLE_PRO themselves. The machinery still has to work
+// for the day it is switched back on.
 //
 // All of it runs against the in-memory store with fake Stripe messages, so
 // no Stripe account, no keys and no network.
@@ -31,6 +35,9 @@ let store: Store
 beforeEach(() => {
   store = memoryStore()
   setStoreForTests(store)
+  // Phase 7 switched selling off by default. These tests are about the
+  // Stripe machinery, so they switch it back on.
+  process.env.ENABLE_PRO = '1'
   process.env.STRIPE_SECRET_KEY = 'sk_test_fake'
   process.env.STRIPE_PRICE_ID = 'price_fake'
   process.env.STRIPE_WEBHOOK_SECRET = WEBHOOK_SECRET
@@ -42,6 +49,7 @@ afterEach(() => {
   delete process.env.STRIPE_PRICE_ID
   delete process.env.STRIPE_WEBHOOK_SECRET
   delete process.env.VERCEL_ENV
+  delete process.env.ENABLE_PRO
 })
 
 interface FakeResponse extends ServerResponse {
@@ -216,25 +224,37 @@ describe('T6.3 the same message twice changes the account once', () => {
   })
 })
 
-describe('T6.4 Pro gets a hundred uses', () => {
-  it('allows 100 in the window and refuses the 101st', async () => {
+// Phase 7 gave every account the same ceiling, so this no longer asserts
+// that Pro gets more than Free. What still has to hold is that the plan
+// decides the number and the server enforces whatever that number is, which
+// is the part Phase 6 built and the part that has to keep working for the
+// day selling is switched back on.
+describe('T6.4 the plan decides the ceiling and the server enforces it', () => {
+  it('allows exactly the plan ceiling on Pro and refuses the next one', async () => {
     const user = await proUser()
-    expect(USES_PER_WINDOW.pro).toBe(100)
+    const limit = USES_PER_WINDOW.pro
 
-    for (let i = 0; i < 100; i += 1) {
-      const check = await useOne(store, user, NOW)
-      expect(check.ok).toBe(true)
+    for (let i = 0; i < limit; i += 1) {
+      expect((await useOne(store, user, NOW)).ok).toBe(true)
     }
     const overTheLine = await useOne(store, user, NOW)
     expect(overTheLine.ok).toBe(false)
-    expect(overTheLine.usage.limit).toBe(100)
+    expect(overTheLine.usage.limit).toBe(limit)
     expect(overTheLine.usage.remaining).toBe(0)
   })
 
-  it('the same account on Free stops at ten', async () => {
+  it('does the same for Free, at that plan own number', async () => {
     const { user } = await signIn(store, 'free@example.com')
-    for (let i = 0; i < 10; i += 1) expect((await useOne(store, user, NOW)).ok).toBe(true)
+    const limit = USES_PER_WINDOW.free
+    for (let i = 0; i < limit; i += 1) expect((await useOne(store, user, NOW)).ok).toBe(true)
     expect((await useOne(store, user, NOW)).ok).toBe(false)
+  })
+
+  it('the ceiling is high enough not to read as a paywall', () => {
+    // Phase 7's whole point. If someone lowers this to a handful, the app is
+    // metering again and this test should stop them.
+    expect(USES_PER_WINDOW.free).toBeGreaterThanOrEqual(100)
+    expect(USES_PER_WINDOW.free).toBe(USES_PER_WINDOW.pro)
   })
 })
 

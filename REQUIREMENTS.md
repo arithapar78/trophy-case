@@ -323,3 +323,57 @@ Also parked: sharing, reels and video, LinkedIn posts, cloud backup beyond the s
 - [ ] 6.a The Stripe account is activated (bank, legal name, tax details). Until then only test cards work.
 - [ ] 6.b Vercel is on a paid plan. Hobby is for non-commercial use only.
 - [ ] 6.c Terms and a privacy policy are published and linked from Settings, and a lawyer has read them. The customers are parents and the users are minors.
+
+---
+
+## Phase 7: AI for everyone, and Scout
+
+**Why the limit is going.** A counter that runs out after ten tries reads as a paywall, and a paywall in front of someone who has not seen the app work yet sends them away. Until there are real users there is nothing to sell, so there is no reason to meter anything. The Stripe code from Phase 6 stays exactly where it is, switched off.
+
+### Feature 14: Nothing to count
+
+> **As a student, I want to** use the AI as much as I need, **so that** I am not rationing it while I am still working out what the app is for.
+
+- [ ] 14.1 No use counter appears anywhere in the app: not in Settings, not on the AI panel, not on the Ranked view.
+- [ ] 14.2 The server still counts, quietly, against a ceiling high enough that no real person reaches it. It is a circuit breaker against a script hammering the public functions, not a product limit.
+- [ ] 14.3 If the ceiling is ever reached, the message says it is a safety limit and when it clears. It never mentions paying.
+- [ ] 14.4 The Pro offer is hidden and nothing in the app sells anything. Every line of Stripe code from Phase 6 stays and keeps passing its tests; setting `ENABLE_PRO` on the server brings the offer back with no code change.
+- [ ] 14.5 Signing in is still required for AI. That is what keeps the functions from being anonymous and free to abuse.
+
+### Feature 15: Scout
+
+> **As a student, I want to** talk to something that already knows my goal and everything I have done, **so that** I can ask what to do next in my own words instead of tapping buttons.
+
+- [ ] 15.1 A third tab sits next to Timeline and Ranked, called **Scout**.
+- [ ] 15.2 Typing a message and sending it gets a written answer that takes the goal and the achievements into account. One AI use per message.
+- [ ] 15.3 Scout stays on subject: the student's achievements, their goal, and how to get from one to the other. Asked about anything else it says that is not what it is for and steers back.
+- [ ] 15.4 The conversation is kept on the device and is still there after closing and reopening the app.
+- [ ] 15.5 "Clear this conversation" empties it after a confirmation. The achievements are untouched.
+- [ ] 15.6 With no goal set, Scout says a goal would help and offers a button to Settings, and still answers questions about the achievements.
+- [ ] 15.7 With no achievements saved, Scout says the timeline is empty and suggests adding one.
+- [ ] 15.8 Scout uses Claude Haiku, the same model as the rest of the app, because it is the cheapest and lightest that can do the job.
+- [ ] 15.9 Scout works in MOCK mode with no API key, like every other AI feature.
+- [ ] 15.10 While waiting for an answer the app says so, and a failure is a message a 14-year-old understands, not an error code.
+
+### Feature 16: Bringing a file into the conversation
+
+> **As a student, I want to** show Scout my transcript or a certificate, **so that** I do not have to type out what is already in a document.
+
+- [ ] 16.1 An attach button opens whatever the device offers: on a phone that is the photo library, the camera and Files; on a computer it is the ordinary file picker.
+- [ ] 16.2 Images, PDFs and plain text files are accepted. Anything else is refused with a plain message naming what it does take.
+- [ ] 16.3 Images are resized to about 1024 px and have their EXIF stripped before sending, exactly like photos elsewhere in the app.
+- [ ] 16.4 A file is sent with that one message and is not saved anywhere. Nothing about it stays on the server.
+- [ ] 16.5 If Scout finds an achievement in the file or the conversation, it offers it as a card with the fields already filled in. **Nothing is saved until the user taps Save.**
+- [ ] 16.6 Saving adds it to the timeline like any other achievement. Discarding leaves nothing behind.
+- [ ] 16.7 A file too big to send is refused before anything is sent, with a message saying how big is too big.
+
+### Phase 7 tests
+
+- [ ] T7.1 Unit: every account gets the same limit, and the limit is high enough that the number is not a product decision.
+- [ ] T7.2 Unit: with `ENABLE_PRO` unset the server reports that billing is unavailable; with it set the Phase 6 behaviour returns unchanged.
+- [ ] T7.3 Unit: Scout's prompt contains the goal and every achievement's words, and never a photo.
+- [ ] T7.4 Unit: MOCK Scout answers, and a reply carrying a proposed achievement is parsed into a valid draft; a malformed one is ignored rather than crashing.
+- [ ] T7.5 Unit: a file type that is not an image, a PDF or plain text is refused, and so is one over the size cap.
+- [ ] T7.6 E2E: the Scout tab sends a message, shows the answer, and the conversation survives a reload.
+- [ ] T7.7 E2E: a proposed achievement is not saved until Save is tapped, and Discard leaves the timeline unchanged.
+- [ ] T7.8 E2E: no use counter appears anywhere, and Settings offers nothing to buy.

@@ -37,7 +37,8 @@ test('the sign-in button in the AI panel opens Settings, where test-mode sign-in
   await settings.getByTestId('dev-email').fill('panel-test@example.com')
   await settings.getByTestId('dev-signin').click()
   await expect(settings.getByTestId('account-email')).toContainText('panel-test@example.com')
-  await expect(settings.getByTestId('ai-usage')).toContainText('of 10 AI uses left')
+  // Phase 7: signed in, and no counter to worry about.
+  await expect(settings.getByTestId('ai-usage')).toHaveCount(0)
 })
 
 // T5.5
@@ -51,10 +52,11 @@ test('signed in, the AI works and the count comes from the server', async ({ pag
   await sheet.getByRole('button', { name: 'Save' }).click()
 
   await page.getByRole('button', { name: 'Settings' }).click()
-  await expect(page.getByTestId('ai-usage')).toContainText('9 of 10 AI uses left')
+  await expect(page.getByTestId('account-email')).toBeVisible()
+  await expect(page.getByTestId('ai-usage')).toHaveCount(0)
 
-  // The server, not the device, is keeping the count: clearing the app's
-  // own storage leaves it at nine.
+  // The server, not the device, is still keeping the count, even though no
+  // number is shown: clearing the app's own storage keeps the sign-in.
   await page.evaluate(() => {
     const token = localStorage.getItem('trophy-case.session')
     localStorage.clear()
@@ -62,7 +64,7 @@ test('signed in, the AI works and the count comes from the server', async ({ pag
   })
   await page.reload()
   await page.getByRole('button', { name: 'Settings' }).click()
-  await expect(page.getByTestId('ai-usage')).toContainText('9 of 10 AI uses left')
+  await expect(page.getByTestId('account-email')).toBeVisible()
 })
 
 // T5.6

@@ -5,6 +5,7 @@ import CameraButton from './components/CameraButton'
 import ConfirmDialog from './components/ConfirmDialog'
 import PhotoViewer from './components/PhotoViewer'
 import RankedView from './components/RankedView'
+import ScoutView from './components/ScoutView'
 import SettingsSheet from './components/SettingsSheet'
 import TimelineFilters from './components/TimelineFilters'
 import { confirmUpgrade, refreshAccount, takeBillingResultFromUrl, takeTokenFromUrl } from './lib/account'
@@ -23,7 +24,7 @@ export default function App() {
   const [viewer, setViewer] = useState<{ row: AchievementWithPhotos; index: number }>()
   const [loadError, setLoadError] = useState<string>()
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [view, setView] = useState<'timeline' | 'ranked'>('timeline')
+  const [view, setView] = useState<'timeline' | 'ranked' | 'scout'>('timeline')
   const [allRows, setAllRows] = useState<AchievementWithPhotos[]>([])
   const [goal, setGoal] = useState('')
 
@@ -107,7 +108,7 @@ export default function App() {
       </header>
 
       <div className="mb-4 flex rounded-2xl bg-ink/5 p-1" role="tablist" aria-label="View">
-        {(['timeline', 'ranked'] as const).map((v) => (
+        {(['timeline', 'ranked', 'scout'] as const).map((v) => (
           <button
             key={v}
             type="button"
@@ -118,7 +119,7 @@ export default function App() {
               view === v ? 'bg-surface text-ink shadow-card' : 'text-ink/55'
             }`}
           >
-            {v === 'timeline' ? 'Timeline' : 'Ranked'}
+            {v === 'timeline' ? 'Timeline' : v === 'ranked' ? 'Ranked' : 'Scout'}
           </button>
         ))}
       </div>
@@ -132,6 +133,14 @@ export default function App() {
         {loadError && <p className="text-red-600">{loadError}</p>}
         {view === 'ranked' && (
           <RankedView achievements={allRows.map((r) => r.achievement)} goal={goal} onOpenSettings={() => setSettingsOpen(true)} />
+        )}
+        {view === 'scout' && (
+          <ScoutView
+            achievements={allRows.map((r) => r.achievement)}
+            goal={goal}
+            onOpenSettings={() => setSettingsOpen(true)}
+            onSaved={() => void reload()}
+          />
         )}
         {view === 'timeline' && rows && rows.length === 0 && total === 0 && (
           <div className="mt-12 flex flex-col items-center px-6 text-center">
