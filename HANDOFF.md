@@ -1,6 +1,6 @@
 # Trophy Case: handoff for the next Claude chat
 
-Read this first, then [CLAUDE.md](CLAUDE.md) (the rules), then [REQUIREMENTS.md](REQUIREMENTS.md) (the contract). This file says where the project stands, how it is built and deployed, what is half-done, and exactly what comes next. Last updated 2026-09-21.
+Read this first, then [CLAUDE.md](CLAUDE.md) (the rules), then [REQUIREMENTS.md](REQUIREMENTS.md) (the contract). This file says where the project stands, how it is built and deployed, what is half-done, and exactly what comes next. Last updated 2026-09-22.
 
 ## What it is, in one paragraph
 
@@ -34,7 +34,8 @@ Trophy Case is a phone-first web app. A student (13 to 18) or a parent photograp
 5. **Photos:** resizing via canvas and re-encoding as JPEG is what strips EXIF (GPS, time). `prepareForStorage(file, maxSide, quality)` in `src/lib/photos.ts`; 1600 px for storage, 1024 px for the AI.
 6. **iPhone:** the camera only opens over https; over plain http it offers the photo library. Home Wi-Fi often blocks phone-to-laptop; a Personal Hotspot with `npm run dev -- --host` works. The real test is the Vercel URL.
 7. **Vercel Hobby is for non-commercial use.** Before charging money, the project needs Vercel Pro ($20/month) or another host.
-8. **Do not put keys in chat or code.** They live in Vercel's Environment Variables (and a git-ignored `.env.local` locally). If one is ever exposed, rotate it in the Anthropic console.
+8. **The Linux sandbox cannot delete anything in the Mac folder.** `rm` and git's own cleanup both fail with "Operation not permitted", which leaves `.git/*.lock` files behind and makes `git checkout`, `git merge` and `git reset` fail halfway. Working method: commit in the container, `git bundle` it across, `git fetch` the bundle, `git update-ref refs/heads/main <sha>`, then write every file from the commit across with `device_commit_files`. Move stale locks to `.git/tc-stale/` rather than trying to delete them. Ari should periodically `rm -rf .git/tc-stale _to_delete "Claude outputs"` on the Mac.
+9. **Do not put keys in chat or code.** They live in Vercel's Environment Variables (and a git-ignored `.env.local` locally). If one is ever exposed, rotate it in the Anthropic console.
 
 ## Phase status
 
@@ -45,8 +46,9 @@ Trophy Case is a phone-first web app. A student (13 to 18) or a parent photograp
 | 2. Install from a URL (PWA), offline, backup zip and restore, delete everything, storage meter | Done, phone-checked | `cee56a6`, Vercel hosting `43f4bd3` |
 | 3. AI photo read, off by default, per-photo button plus Settings switch, MOCK mode, 10 per 5 h counted on the device | Done, phone-checked | `9adc340`, fix `4df0d83` |
 | 4. Goal, Ranked view, recommendations, export as PDF (hand-built) and text | Done, phone-checked | `b05a89a` |
-| 5. Accounts (identity only), server-side limit | Built and tested, **not yet pushed or phone-checked** | `82cdf4c` on `main` |
-| 6. Pro plan, $10/month via Stripe, 100 uses per 5 h | Planned | |
+| 5. Accounts (identity only), server-side limit | Done and live | `82cdf4c`, docs `23a0f3b` |
+| 5b. Close buttons, design pass, Node 22 pin | Done | `1d1edfa`, `b129f2c`, `52f2370` |
+| 6. Pro plan, $10/month via Stripe, 100 uses per 5 h | Built and tested, **not pushed, not phone-checked, Stripe keys not set** | `ad3d9f3` (requirements), `83ae645` (code) |
 | 7. Assistant (Pro only): chat and confirm-before-edit bulk edits | Planned | |
 | 8. Extra categories (Volunteering, Work, Clubs, Awards) | Planned, needs Ari's yes | |
 | 9. Store wrappers: Amazon Appstore, Apple App Store | Planned | |
@@ -112,11 +114,44 @@ Tests: **77 unit** (11 files) and **30 Playwright** at iPhone size, all passing 
 4. Tick the Phase 5 checkboxes in REQUIREMENTS.md on the phone.
 5. **CLAUDE.md is now out of date**: it still says "No server database, no accounts, no photo bucket". Achievements really do still stay on the device, but there is an account now. Agree the new wording with Ari and fix that line.
 
-## Phase 6: Pro plan (planned)
+## Phase 6: Pro plan. Built, waiting on Stripe keys and a phone check
 
-- Stripe Checkout (subscription, $10/month) started from Settings when signed in; a webhook (`api/stripe/webhook.ts`) verifies the signature and sets `user.plan` to `pro` on `checkout.session.completed` / `customer.subscription.*`, back to `free` when cancelled. Store the Stripe customer id on the user. A "Manage subscription" link to Stripe's customer portal.
-- Needs from Ari/Vishal: a Stripe account (an adult's legal name, address, bank), `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, a Price id; Vercel Pro (Hobby is non-commercial); privacy policy and terms pages, read by a lawyer before charging parents.
-- Tests: webhook signature rejected/accepted, plan flips, usage limit becomes 100.
+Requirements agreed first and written into REQUIREMENTS.md (Features 12 and 13, tests T6.1 to T6.6) in commit `ad3d9f3`. Code in `83ae645`, version 2.5.0.
+
+### Decisions
+
+- **No Stripe library.** Stripe's API is ordinary form-encoded HTTPS, so `server/stripe.ts` is a small `fetch` wrapper and the signature check is Node's own `crypto` doing an HMAC. One less dependency for Ari to learn, and a smaller serverless function.
+- **Stripe Checkout, hosted page, redirect mode.** No card details reach the app. A redirect, not a popup, for the same reason Google sign-in uses one: a popup does not come back inside a Home Screen app.
+- **Only a signed message from Stripe changes a plan.** Nothing the app or a phone sends can. A bad, missing or stale signature changes nothing.
+- **MOCK billing**, exactly like MOCK AI: with no Stripe keys and not in production, Settings offers a clearly labelled pretend upgrade. That is what the tests drive.
+- `past_due` keeps an account on Pro, so a parent is not cut off mid-application while Stripe retries an expired card. `unpaid` and `canceled` drop to Free.
+
+### What was written
+
+- `server/stripe.ts`: `stripeConfig()` (all three keys or none), `stripeApi`, `createCheckoutSession`, `createPortalSession`, `verifyStripeSignature` (v1 scheme only, 5-minute tolerance, constant-time compare), `signPayload` for tests, `parseEvent`, `planChangeFromEvent`.
+- `server/billing.ts`: `mockBillingAllowed()`, `findUserForChange`, `applyPlanChange`, `setPlanForTestingOrMock`.
+- `server/store.ts`: `User` gains `stripeCustomerId` and `subscriptionStatus`; `Store` gains `getUserByStripeCustomer` and `markEventSeen` (atomic, via Redis `nx`, 7-day expiry). Redis keys `customer:<id>` and `event:<id>`; `deleteUser` clears the customer key too.
+- `server/http.ts`: `readWebhookBody`, which prefers a Buffer or string body and refuses rather than re-stringifying a parsed one, because the signature covers the exact bytes.
+- `api/stripe/checkout.ts` (401 without a sign-in, 200 with a Stripe URL or `mock: true`), `api/stripe/portal.ts`, `api/stripe/webhook.ts` (exports `config = { api: { bodyParser: false } }`). All three mounted in `vite.config.ts`.
+- `api/config.ts` gains a `billing` block; `api/me.ts` reports `subscriptionStatus` and `canManage`.
+- Client: `src/lib/account.ts` gains `startUpgrade`, `openSubscriptionPage`, `takeBillingResultFromUrl`, `clearBillingReturn`, `confirmUpgrade` (polls 6 times, 2 s apart, because Stripe returns the user before it tells our server). `src/components/PlanSection.tsx` is new and rendered by `AccountSection`. `App.tsx` handles the return from Stripe and opens Settings.
+
+### Tests
+
+**96 unit** (12 files) and **40 Playwright** at iPhone size, both passing twice in a row, build clean.
+
+- `tests/unit/billing.test.ts` (18 tests): T6.1 signature accepted, wrong secret, tampered body, missing header, rubbish, stale timestamp, the fake `v0` scheme, the route's 400 and 405. T6.2 plan flips both ways, `past_due` versus `unpaid`, ignored event types, a one-off payment, an account that no longer exists. T6.3 repeat delivery. T6.4 100 on Pro and 10 on Free. T6.5 checkout needs a sign-in, and the pretend upgrade is refused when `VERCEL_ENV=production`.
+- `tests/e2e/plan.spec.ts` (5 tests): T6.6 no offer signed out, upgrade raises the limit, the plan survives clearing the app, cancelling returns to Free with achievements untouched, and nothing but `/api/stripe/*` ever POSTs about a plan.
+- **The signature check was mutation-tested:** making `verifyStripeSignature` always return true fails 4 tests. The test bites.
+- The new handlers were compiled with `--module nodenext` and run as plain Node ESM with fake req/res, the way Vercel runs them. All four answered correctly. Gotcha 1 below stays clear.
+
+### Left to do for Phase 6
+
+1. **Ari**: `npm install` on the Mac (no new dependency, but the version moved), then `npm test` and `npm run test:e2e`, then `git push Trophy-Case main`.
+2. **Vishal**: create the Stripe account and its sandbox, make the `Trophy Case Pro` $10/month price, and set `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID` and `STRIPE_WEBHOOK_SECRET` in Vercel. Steps are written out in README.md. Webhook endpoint: `https://trophy-case-trophy-case.vercel.app/api/stripe/webhook`, events `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`.
+3. **Phone check** on the live site: upgrade with test card `4242 4242 4242 4242`, Settings shows Pro and 100 uses, Manage subscription opens Stripe, cancelling returns to Free, achievements untouched throughout.
+4. Tick the Phase 6 checkboxes in REQUIREMENTS.md on the phone.
+5. **Before a real person pays:** activate the Stripe account, move Vercel off Hobby, publish terms and a privacy policy read by a lawyer. Written as 6.a to 6.c in REQUIREMENTS.md.
 
 ## Phase 7: the assistant (Pro only, planned)
 
