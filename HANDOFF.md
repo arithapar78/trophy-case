@@ -1,6 +1,6 @@
 # Trophy Case: handoff for the next Claude chat
 
-Read this first, then [CLAUDE.md](CLAUDE.md) (the rules), then [REQUIREMENTS.md](REQUIREMENTS.md) (the contract). This file says where the project stands, how it is built and deployed, what is half-done, and exactly what comes next. Last updated 2026-09-22.
+Read this first, then [CLAUDE.md](CLAUDE.md) (the rules), then [REQUIREMENTS.md](REQUIREMENTS.md) (the contract). This file says where the project stands, how it is built and deployed, what is half-done, and exactly what comes next. Last updated 2026-09-22 (Phase 7).
 
 ## What it is, in one paragraph
 
@@ -48,8 +48,8 @@ Trophy Case is a phone-first web app. A student (13 to 18) or a parent photograp
 | 4. Goal, Ranked view, recommendations, export as PDF (hand-built) and text | Done, phone-checked | `b05a89a` |
 | 5. Accounts (identity only), server-side limit | Done and live | `82cdf4c`, docs `23a0f3b` |
 | 5b. Close buttons, design pass, Node 22 pin | Done | `1d1edfa`, `b129f2c`, `52f2370` |
-| 6. Pro plan, $10/month via Stripe, 100 uses per 5 h | Built and tested, **not pushed, not phone-checked, Stripe keys not set** | `ad3d9f3` (requirements), `83ae645` (code) |
-| 7. Assistant (Pro only): chat and confirm-before-edit bulk edits | Planned | |
+| 6. Pro plan, $10/month via Stripe | Built and tested, **switched off in Phase 7**, not phone-checked, Stripe keys not set | `ad3d9f3` (requirements), `83ae645` (code) |
+| 7. No AI limit, and Scout the goal chatbot | Built and tested, **not pushed, not phone-checked** | `522774d` |
 | 8. Extra categories (Volunteering, Work, Clubs, Awards) | Planned, needs Ari's yes | |
 | 9. Store wrappers: Amazon Appstore, Apple App Store | Planned | |
 
@@ -153,10 +153,43 @@ Requirements agreed first and written into REQUIREMENTS.md (Features 12 and 13, 
 4. Tick the Phase 6 checkboxes in REQUIREMENTS.md on the phone.
 5. **Before a real person pays:** activate the Stripe account, move Vercel off Hobby, publish terms and a privacy policy read by a lawyer. Written as 6.a to 6.c in REQUIREMENTS.md.
 
-## Phase 7: the assistant (Pro only, planned)
+## Phase 7: no AI limit, and Scout. Built, needs push and phone check
 
-- A chat sheet. Text of the achievements plus the goal goes to a function (`api/assistant.ts`); the model answers questions, and for edit requests returns a **proposed change list** (which achievements, which fields, old and new values) that the app shows and applies to the device database only after the user taps Confirm. Never edits on its own. One AI use per message. Uses the same `runAiRoute` with a `plan === 'pro'` check.
-- Drafting help: turn an achievement into a résumé bullet or a 150-character Common App activity line.
+Commit `522774d`, version 2.6.0. Requirements are Features 14 to 16 and tests T7.1 to T7.8 in REQUIREMENTS.md.
+
+### Decisions (Vishal, in chat)
+
+- **The visible limit is gone.** A counter that runs out reads as a paywall and sends away people who have not seen the app work yet. No use count appears anywhere.
+- **A ceiling still exists, invisibly.** `OPEN_CEILING = 300` per rolling 5 hours in `server/usage.ts`, the same for every plan. It is a circuit breaker, not a product limit: the AI functions are reachable by anyone with a browser, and without a ceiling one script could run up the whole Anthropic bill. Vishal chose this over truly unlimited. **A spending cap in the Anthropic console is still the second net and should be set.**
+- **Selling is switched off, not deleted.** `proEnabled()` in `server/billing.ts` reads `ENABLE_PRO`. Off, `api/config` reports billing unavailable and `PlanSection` renders nothing. Every line of Phase 6 still works and is still tested.
+- **The chatbot is called Scout** (Vishal picked it from Casey / Coach / Curator / Scout).
+- **An attached file is read, then offered**: if Scout finds an achievement in it, the app shows a card with a Save button. Nothing is saved until that is tapped.
+
+### What was written
+
+- `server/scout.ts`: the system prompt (goal, every achievement's words, today's date, instructions to stay on subject and never claim to have saved anything), `buildTurns` (history plus this message and its one file, as image / document / text blocks), `parseScoutReply` (splits the answer from a `<save>{...}</save>` block, dropping a malformed or future-dated one), `attachmentProblem`, and MOCK mode. Model is `claude-haiku-4-5`, same as everything else.
+- `api/scout.ts` through the existing `runAiRoute`, so the sign-in and ceiling rules are shared. Mounted in `vite.config.ts`.
+- `src/lib/scout.ts`: the saved conversation (Dexie v3 `scoutMessages`), `prepareAttachment` (pictures shrunk to 1024 px and re-encoded, which strips EXIF; PDFs and text passed through, all capped at about 3 MB), `checkAttachmentFile`, `toHistory` (last 12 turns, so a long chat does not keep getting dearer), `pendingProposal` / `resolveProposal`.
+- `src/components/ScoutView.tsx`: the third tab. Message list, composer with the browser's own file input (`accept` set so an iPhone offers Photo Library, Take Photo and Browse), the Save / No thanks card, and Clear this conversation with a confirmation.
+- Counters removed from `AccountSection`, `AiPhotoPanel` and `RankedView`. At the ceiling the wording is "The AI is resting for a moment, back in ..." and never mentions paying.
+
+### Tests
+
+**125 unit** (29 new) and **50 Playwright** (13 new), both passing twice, build clean.
+
+- `tests/unit/scout.test.ts`: T7.1 the ceiling, T7.2 the `ENABLE_PRO` switch (including that the pretend upgrade is still refused in production), T7.3 what goes into the prompt and that no saved photo travels, T7.4 MOCK, parsing, and six kinds of malformed offer, T7.5 which files are accepted and that an oversized one never reaches the model.
+- `tests/e2e/scout.spec.ts`: the tab, a message and its answer, the conversation surviving a reload, clearing it, signed-out behaviour, the empty timeline, attaching and removing a file, the offer not being saved until Save, saving it, and a refused file type.
+- **Playwright now has two projects.** `iphone` tests the app as it ships; `iphone-pro` runs `plan.spec.ts` against a second preview server started with `ENABLE_PRO=1` (its own `dist-pro` folder, so the two builds never race). Phase 6 lost no coverage.
+- Existing tests that asserted "10 of 10 AI uses left" now assert against `USES_PER_WINDOW`, so they stay true whatever the ceiling is. Nothing was deleted or skipped.
+- **A real bug was caught by an e2e test:** the proposal card lived in React state, so switching to the Timeline tab and back lost the offer. It is now stored with the conversation.
+- **A real Vercel bug was caught by the Node compile check, not the tests:** `src/lib/types.ts` imported `./aiTypes` without the `.js` extension, and the server pulls that file in. That is gotcha 1 and it would have been a 500 on the live site. Always run that check after touching anything under `src/lib` that the server imports.
+
+### Left to do for Phase 7
+
+1. **Ari**: `npm install`, `npm test`, `npm run test:e2e`, `git checkout -- package-lock.json` if npm install changed it, then `git push Trophy-Case main`.
+2. **Phone check**: the Scout tab, sending a message, attaching a photo from the photo library and a PDF from Files, the Save card, clearing the conversation, and that no use counter appears anywhere.
+3. **Vishal**: set a monthly spending cap in the Anthropic console. The ceiling protects against a runaway script; the cap protects against everything else.
+4. Tick the Phase 7 checkboxes in REQUIREMENTS.md on the phone.
 
 ## Phases 8 and 9
 
