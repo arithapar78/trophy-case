@@ -17,7 +17,7 @@ export const MODEL = 'claude-haiku-4-5'
 
 // Asks the model a text question and returns its text answer. Injected so
 // tests can fake it and MOCK mode never touches the network.
-export type CallText = (prompt: string) => Promise<string>
+export type CallText = (prompt: string, maxTokens?: number) => Promise<string>
 
 export interface AdviceOptions {
   apiKey?: string
@@ -47,20 +47,27 @@ function describe(a: AchievementSummary): string {
   const extras = [a.organisation && `at ${a.organisation}`, a.role && `role: ${a.role}`, a.result && `result: ${a.result}`, a.note]
     .filter(Boolean)
     .join('; ')
-  return `- id ${a.id}: "${a.title}" (${a.category}, ${a.date})${extras ? ` ${extras}` : ''}`
+  return `"${a.title}" (${a.category}, ${a.date})${extras ? ` ${extras}` : ''}`
 }
 
 // ---- Ranking ----
 
-function rankPrompt(req: GoalRequest): string {
+// The achievements are numbered 1, 2, 3 in the prompt and the model answers
+// with those numbers. It used to be asked for the achievement's id, but
+// those are 36-character random ids, and a small model copying one back with
+// a single character wrong meant that achievement silently came back as
+// "the AI did not rank this one". A short number is much harder to get
+// wrong, and costs fewer tokens too.
+export function rankPrompt(req: GoalRequest): string {
+  const numbered = req.achievements.map((a, i) => `${i + 1}. ${describe(a)}`).join('\n')
   return `A student's goal: "${req.goal}"
 
-Their achievements:
-${req.achievements.map(describe).join('\n')}
+Their achievements, numbered:
+${numbered}
 
 Rank every achievement by how much it helps this goal (1 = helps most). Give each a one-sentence reason a student would find useful and honest.
-Reply with JSON only, no other text: {"ranks": [{"id": string, "rank": number, "reason": string}, ...]}
-Include every id exactly once. Do not invent achievements.`
+Reply with JSON only, no other text: {"ranks": [{"n": number, "rank": number, "reason": string}, ...]}
+"n" is the achievement's number from the list above. Include every number from 1 to ${req.achievements.length} exactly once. Do not invent achievements. Keep each reason under 25 words.`
 }
 
 export function mockRanks(achievements: AchievementSummary[]): RankItem[] {
@@ -73,30 +80,60 @@ export function mockRanks(achievements: AchievementSummary[]): RankItem[] {
 
 // Keeps only ids that were sent, fills in any the model forgot, and
 // renumbers 1..n so the list is always complete and in order.
-export function parseRanks(text: string, achievements: AchievementSummary[]): RankItem[] {
-  let raw: { ranks?: unknown } = {}
-  const start = text.indexOf('{')
-  const end = text.lastIndexOf('}')
-  if (start !== -1 && end > start) {
-    try {
-      raw = JSON.parse(text.slice(start, end + 1)) as { ranks?: unknown }
-    } catch {
-      raw = {}
+// Pulls every complete {...} out of the text, whatever depth it sits at and
+// even if the answer was cut off before the end. An answer that runs out of
+// room used to lose every achievement, because one failed JSON.parse threw
+// the whole thing away; now the entries that did arrive are kept.
+export function salvageObjects(text: string): Record<string, unknown>[] {
+  const found: Record<string, unknown>[] = []
+  const starts: number[] = []
+  let inString = false
+  let escaped = false
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i]
+    if (inString) {
+      if (escaped) escaped = false
+      else if (ch === '\\') escaped = true
+      else if (ch === '"') inString = false
+      continue
+    }
+    if (ch === '"') inString = true
+    else if (ch === '{') starts.push(i)
+    else if (ch === '}') {
+      const start = starts.pop()
+      if (start === undefined) continue
+      try {
+        const value: unknown = JSON.parse(text.slice(start, i + 1))
+        if (value && typeof value === 'object' && !Array.isArray(value)) found.push(value as Record<string, unknown>)
+      } catch {
+        // Not valid on its own; the objects inside it were already collected.
+      }
     }
   }
+  return found
+}
+
+export function parseRanks(text: string, achievements: AchievementSummary[]): RankItem[] {
   const known = new Map(achievements.map((a) => [a.id, a]))
   const seen = new Set<string>()
   const items: RankItem[] = []
-  if (Array.isArray(raw.ranks)) {
-    for (const entry of raw.ranks as Partial<RankItem>[]) {
-      if (!entry || typeof entry.id !== 'string' || !known.has(entry.id) || seen.has(entry.id)) continue
-      seen.add(entry.id)
-      items.push({
-        id: entry.id,
-        rank: typeof entry.rank === 'number' ? entry.rank : Number.MAX_SAFE_INTEGER,
-        reason: typeof entry.reason === 'string' ? entry.reason.trim().slice(0, 300) : '',
-      })
+
+  for (const entry of salvageObjects(text)) {
+    // "n" is the number from the prompt. An id is still accepted, in case a
+    // model answers with one anyway.
+    let id: string | undefined
+    if (typeof entry.n === 'number' && Number.isInteger(entry.n) && entry.n >= 1 && entry.n <= achievements.length) {
+      id = achievements[entry.n - 1].id
+    } else if (typeof entry.id === 'string' && known.has(entry.id)) {
+      id = entry.id
     }
+    if (!id || seen.has(id)) continue
+    seen.add(id)
+    items.push({
+      id,
+      rank: typeof entry.rank === 'number' ? entry.rank : Number.MAX_SAFE_INTEGER,
+      reason: typeof entry.reason === 'string' ? entry.reason.trim().slice(0, 300) : '',
+    })
   }
   items.sort((a, b) => a.rank - b.rank)
   for (const a of achievements) {
@@ -112,7 +149,10 @@ export async function rankAchievements(body: unknown, options: AdviceOptions = {
 
   const callText = options.callText ?? (await realCallText(options.apiKey))
   try {
-    const answer = await callText(rankPrompt(body))
+    // Ranking's answer grows with the timeline, unlike recommendations,
+    // which are always three. Too small a budget cuts the answer off.
+    const room = Math.min(8000, 800 + body.achievements.length * 80)
+    const answer = await callText(rankPrompt(body), room)
     return { ok: true, ranks: parseRanks(answer, body.achievements), mock: false }
   } catch {
     return { ok: false, message: "The AI couldn't rank right now. Try again in a minute." }
@@ -184,10 +224,10 @@ export async function recommendNext(body: unknown, options: AdviceOptions = {}):
 async function realCallText(apiKey: string): Promise<CallText> {
   const { default: Anthropic } = await import('@anthropic-ai/sdk')
   const client = new Anthropic({ apiKey })
-  return async (prompt) => {
+  return async (prompt, maxTokens = 1500) => {
     const response = await client.messages.create({
       model: MODEL,
-      max_tokens: 1500,
+      max_tokens: maxTokens,
       messages: [{ role: 'user', content: prompt }],
     })
     return response.content.map((block) => (block.type === 'text' ? block.text : '')).join('')
