@@ -32,6 +32,19 @@ export interface ListOptions {
   search?: string
 }
 
+// The timeline shows the newest first, and two achievements saved on the
+// same day are ordered by when they were created. Date.now() only counts
+// whole milliseconds, so saving two in quick succession can give them the
+// same number, and then there is nothing to order them by: the list comes
+// back in whatever order the database felt like. This nudges each new
+// stamp past the last one so creation order is always recoverable.
+let lastCreatedAt = 0
+
+function createdNow(): number {
+  lastCreatedAt = Math.max(Date.now(), lastCreatedAt + 1)
+  return lastCreatedAt
+}
+
 export async function createAchievement(
   input: AchievementInput,
   photos: PreparedPhoto[] = [],
@@ -39,7 +52,7 @@ export async function createAchievement(
   const checked = validateAchievement(input, photos.length)
   if (!checked.ok) throw new ValidationError(checked.errors)
 
-  const now = Date.now()
+  const now = createdNow()
   const achievement: Achievement = {
     id: newId(),
     ...checked.value,

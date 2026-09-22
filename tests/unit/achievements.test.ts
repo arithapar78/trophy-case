@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../src/lib/db'
 import {
   createAchievement,
@@ -132,5 +132,22 @@ describe('list', () => {
     const rows = await listAchievementsWithPhotos({ search: 'with photo' })
     expect(rows[0].achievement.id).toBe(saved.id)
     expect(rows[0].photos).toHaveLength(1)
+  })
+})
+
+describe('creation order', () => {
+  it('keeps two achievements saved in the same millisecond in order', async () => {
+    // Freeze the clock so both saves really do land on the same millisecond.
+    const frozen = Date.now()
+    const spy = vi.spyOn(Date, 'now').mockReturnValue(frozen)
+    try {
+      for (const title of ['One', 'Two', 'Three']) {
+        await createAchievement({ title, date: '2026-05-01', category: 'Other' })
+      }
+    } finally {
+      spy.mockRestore()
+    }
+    const titles = (await listAchievements({ search: '' })).map((a) => a.title)
+    expect(titles.slice(0, 3)).toEqual(['Three', 'Two', 'One'])
   })
 })
