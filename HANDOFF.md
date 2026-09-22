@@ -45,7 +45,7 @@ Trophy Case is a phone-first web app. A student (13 to 18) or a parent photograp
 | 2. Install from a URL (PWA), offline, backup zip and restore, delete everything, storage meter | Done, phone-checked | `cee56a6`, Vercel hosting `43f4bd3` |
 | 3. AI photo read, off by default, per-photo button plus Settings switch, MOCK mode, 10 per 5 h counted on the device | Done, phone-checked | `9adc340`, fix `4df0d83` |
 | 4. Goal, Ranked view, recommendations, export as PDF (hand-built) and text | Done, phone-checked | `b05a89a` |
-| 5. Accounts (identity only), server-side limit | **In progress**, see below | branch `wip/phase-5-accounts` |
+| 5. Accounts (identity only), server-side limit | Built and tested, **not yet pushed or phone-checked** | `82cdf4c` on `main` |
 | 6. Pro plan, $10/month via Stripe, 100 uses per 5 h | Planned | |
 | 7. Assistant (Pro only): chat and confirm-before-edit bulk edits | Planned | |
 | 8. Extra categories (Volunteering, Work, Clubs, Awards) | Planned, needs Ari's yes | |
@@ -88,15 +88,29 @@ Client, partly done:
 - `src/components/AchievementSheet.tsx`: takes `onOpenSettings`, no longer counts uses, auto-run only when signed in.
 - `src/components/RankedView.tsx`: reads `useAccount()`; signed out shows a sign-in box (`data-testid="ranked-signin"`); limit text from server numbers.
 
-### Left to do for Phase 5 (in this order)
+### Finished (commit `82cdf4c` on `main`, version 2.4.0)
 
-1. `src/components/SettingsSheet.tsx`: remove the old `getUsage`/`aiUsage` import and the on-device meter. Add an **Account** section at the top: on open, `fetchConfig()`. Signed out: if `googleClientId`, load `https://accounts.google.com/gsi/client` once and render the Google button in redirect mode (`google.accounts.id.initialize({ client_id, ux_mode: 'redirect', login_uri: location.origin + '/api/auth/google' })`, then `renderButton`); redirect mode is used because popups do not return in an iPhone Home Screen app. If `devLogin`, show a clearly labelled "Test-mode sign-in" email field and button calling `signInTestMode`. If `!accountsReady`, say accounts are not set up on the server yet. Signed in: email, plan (Free/Pro), "N of M AI uses left" from `useAccount().usage` (`data-testid="ai-usage"`), Sign out, and Delete my account (confirmation; achievements untouched). Keep the goal, AI switch, backup, export and delete-everything sections.
-2. `src/App.tsx`: on mount call `takeTokenFromUrl()` then `refreshAccount()`; pass `onOpenSettings` to `AchievementSheet` (close the sheet, open Settings). Nothing else changes.
-3. `npm run build` until green.
-4. Unit tests (T5.1 to T5.4) in `tests/unit/`: store (memory), auth (`signIn`, `authenticate`, `verifyGoogleIdToken` with a fake fetch), usage (`useOne` free 10 / pro 100, frees after 5 h), `runAiRoute` (401 without token, counts one use on success, none on 429). `api/config.ts`'s `devLoginAllowed()` and `api/auth/dev.ts` guard.
-5. E2E: add a helper that signs in through the test-mode form (or POSTs `/api/auth/dev` and sets `localStorage['trophy-case.session']`, then reloads). Update `tests/e2e/ai.spec.ts` and `goal.spec.ts` to sign in first; replace the old "at the limit" test (it seeded localStorage) with one that makes 10 MOCK calls then expects the 11th refused with "frees up in". New `tests/e2e/account.spec.ts` (T5.5, T5.6): signed out, the AI panel shows the sign-in message and no `/api/read-photo` request happens; sign in, AI works, `ai-usage` shows "9 of 10"; sign out keeps the achievements; sign-in survives a reload.
-6. README (Account section, Google and Upstash setup, what the server stores), PRIVACY.md (the account data list, "no achievements on the server"), bump `package.json` to 2.4.0, run everything, commit on `main`, Ari pushes, phone check: sign in with Google on the live site, AI works, sign out keeps data.
-7. Tell Ari plainly if `GOOGLE_CLIENT_ID` or Redis are missing on Vercel (the Settings sheet will say so).
+Everything listed above, plus the client half that was missing:
+
+- `src/components/AccountSection.tsx` (new): the Account block at the top of Settings. Signed out it loads `/api/config` and shows the Google button (redirect mode, because a popup does not come back inside a Home Screen app), or the labelled test-mode email field when there is no client id, or a plain message when Redis is missing. Signed in it shows the email, the plan, "N of M AI uses left", Sign out, and Delete my account with a confirmation.
+- `SettingsSheet.tsx`: renders `<AccountSection />` first; the old on-device usage meter is gone.
+- `App.tsx`: on mount, `takeTokenFromUrl()` then `refreshAccount()`; passes `onOpenSettings` to the achievement sheet.
+- README (Account section with the Google and Upstash setup steps), PRIVACY.md (the exact list of what the server stores, and the COPPA note rewritten now that an email is stored), `.env.example`.
+
+Tests: **77 unit** (11 files) and **30 Playwright** at iPhone size, all passing three runs, plus `npm run build` clean and every `api/`/`server/` import checked for the `.js` extension rule.
+
+- `tests/unit/accounts.test.ts` (new): T5.1 sessions and the Google token check, T5.2 the 10/100 limit and the 5-hour release, T5.3 the route guard (401 with no token, one use on success, none on a refusal, 405 on GET), T5.4 account deletion, plus the `devLoginAllowed()` guard.
+- `tests/e2e/account.spec.ts` (new): T5.5 and T5.6 — signed out the panel asks for a sign-in and no AI request is made; the panel's button opens Settings and test-mode sign-in works there; signed in the count comes from the server and survives clearing the app's own storage; sign out and account deletion both keep the achievements.
+- `tests/e2e/helpers/account.ts` (new): a unique email per test, so tests never share a usage count. `openFreshApp` now clears localStorage too.
+- `ai.spec.ts` and `goal.spec.ts` sign in first; the old "at the limit" test that seeded localStorage now spends ten real uses against the server.
+
+### Left to do for Phase 5
+
+1. **Ari**: `npm install` on the Mac (Phase 5 added `@upstash/redis`), then `npm test` and `npm run test:e2e` to see them pass locally, then `git push Trophy-Case main`.
+2. **Ari**: connect Upstash Redis in the Vercel project's Storage tab, and set `GOOGLE_CLIENT_ID` (both are written out in README.md). Until Redis is connected the live site refuses sign-in and says so; until the client id is set, the live Settings sheet says Google sign-in is not set up.
+3. **Phone check** on https://trophy-case-trophy-case.vercel.app: Continue with Google, AI works, the count goes down, sign out keeps the achievements, sign-in survives closing and reopening the app.
+4. Tick the Phase 5 checkboxes in REQUIREMENTS.md on the phone.
+5. **CLAUDE.md is now out of date**: it still says "No server database, no accounts, no photo bucket". Achievements really do still stay on the device, but there is an account now. Agree the new wording with Ari and fix that line.
 
 ## Phase 6: Pro plan (planned)
 
