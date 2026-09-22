@@ -8,7 +8,7 @@ Trophy Case: a phone-first app where a student (or a parent) photographs an achi
 
 **This is a fresh start.** An earlier version of this app lives in git history (a Next.js server with a SQLite file). None of that code is used. Do not copy it back. The ideas carried over; the code did not.
 
-**Everything the user saves stays on their device.** No server database, no accounts, no photo bucket. The app is a static web page that runs on the phone and keeps its data in the phone's browser storage. The only thing that ever leaves the phone is what the user sends to the AI, and only when they turn AI on.
+**Everything the user saves stays on their device.** No server database of achievements, no photo bucket. Signing in creates an account that holds only who you are, your plan, and your AI usage count. The app is a static web page that runs on the phone and keeps its data in the phone's browser storage. The only thing that ever leaves the phone is what the user sends to the AI, and only when they turn AI on.
 
 **It is built for a phone screen first.** Every screen and control has to work with a thumb on an iPhone before it works anywhere else.
 

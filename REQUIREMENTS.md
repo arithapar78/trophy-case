@@ -2,7 +2,7 @@
 
 This is the contract. If a feature is not in this file, it does not get built. Phases are built in order, one at a time, and each phase is done only when its tests pass and it has been tried on a phone.
 
-**The rule under everything:** the user's data stays on the device they are using. No server database, no accounts, no uploads. The app is a static web page that runs on the phone.
+**The rule under everything:** the user's data stays on the device they are using. No server database of achievements, no uploads. Signing in creates an account that holds only who you are, your plan, and your AI usage count. The app is a static web page that runs on the phone.
 
 Every acceptance criterion is written so it can be tested by hand on a phone and marked pass or fail.
 
@@ -25,7 +25,7 @@ Every acceptance criterion is written so it can be tested by hand on a phone and
 
 **Photo, not "attachment".** This is a camera app. To save a certificate, take a picture of it.
 
-**AI use**: one call to the AI. A photo read, a ranking refresh, or a recommendations refresh. Free allows 10 per rolling 5 hours, counted on the device.
+**AI use**: one call to the AI. A photo read, a ranking refresh, or a recommendations refresh. Free allows 10 per rolling 5 hours, counted on the server, against your account.
 
 **Goal**: one sentence the user sets, up to 200 characters, that the AI ranks against. Example: "get into a top engineering school".
 
@@ -177,7 +177,7 @@ Every acceptance criterion is written so it can be tested by hand on a phone and
 - [ ] 7.7 The API key lives only in a serverless function on the host. The app the phone downloads contains no key.
 - [ ] 7.8 With no key set on the function, it returns a clearly labelled MOCK draft, and the sheet says so.
 - [ ] 7.9 If the call fails (no signal, bad key), the sheet shows a plain-English message and the user can still fill it in by hand.
-- [ ] 7.10 Each AI use counts against a limit of 10 per rolling 5 hours, counted on the device. Settings and the sheet show how many are left and when the next one frees up.
+- [ ] 7.10 Each AI use counts against a limit of 10 per rolling 5 hours, counted on the server. Settings and the sheet show how many are left and when the next one frees up.
 - [ ] 7.11 At the limit, the AI button is disabled with a message saying when it comes back. Saving by hand still works.
 
 ### Phase 3 tests
@@ -278,3 +278,48 @@ Also parked: sharing, reels and video, LinkedIn posts, cloud backup beyond the s
 - [ ] T5.4 Unit: deleting an account removes the user, their sessions and their usage.
 - [ ] T5.5 E2E: signed out, the AI panel says to sign in and makes no AI request. Test-mode sign-in, then the AI works and the remaining count comes from the server.
 - [ ] T5.6 E2E: sign out keeps the achievements; sign-in survives a reload.
+
+---
+
+## Phase 6: Pro plan
+
+**The rule still holds:** achievements and photos stay on the device. Paying adds a Stripe customer id and a plan to the account, nothing else. Card details never touch this app: the payment happens on Stripe's own page.
+
+**Who pays.** The Stripe account belongs to an adult. A student on a family phone is expected to have a parent do the upgrade.
+
+### Feature 12: Upgrade to Pro
+
+> **As a parent, I want to** pay $10 a month, **so that** my child is not stopped by the AI limit in the middle of an application.
+
+- [ ] 12.1 Signed in on Free, Settings shows a Pro block: $10 a month, 100 AI uses per rolling 5 hours instead of 10, cancel any time. It has an "Upgrade to Pro" button.
+- [ ] 12.2 Tapping it opens Stripe's own payment page. The app never sees or stores a card number.
+- [ ] 12.3 After paying, Stripe returns to the app and Settings shows Pro and the new limit. If the plan has not arrived yet, Settings says it is still confirming rather than showing the wrong plan.
+- [ ] 12.4 If the payment is abandoned or fails, returning to the app leaves the account on Free with no error shouted at the user.
+- [ ] 12.5 Signed out, there is no upgrade offer. Settings asks for a sign-in first.
+- [ ] 12.6 On Pro, Settings replaces the upgrade button with "Manage subscription", which opens Stripe's own portal to change the card or cancel.
+- [ ] 12.7 After cancelling, the account stays Pro until the paid period ends, then returns to Free and the limit returns to 10.
+- [ ] 12.8 With no Stripe keys configured (local development), Settings shows a clearly labelled MOCK upgrade that flips the plan with no payment. It is refused on the live site.
+
+### Feature 13: The plan decides the limit
+
+- [ ] 13.1 Free allows 10 AI uses per rolling 5 hours, Pro allows 100. The server decides, from the plan on the account.
+- [ ] 13.2 The plan lives on the server. Clearing the app, or signing in on a different phone, keeps Pro.
+- [ ] 13.3 Only a verified message from Stripe changes a plan. The app can never set its own plan, and no request from a phone can.
+- [ ] 13.4 A message claiming to be from Stripe with a missing, wrong or stale signature is refused and changes nothing.
+- [ ] 13.5 The same Stripe message arriving twice changes the account once.
+- [ ] 13.6 On top of what Phase 5 stores, the server keeps only the Stripe customer id and the subscription status. No card number, no expiry, no billing address.
+
+### Phase 6 tests
+
+- [ ] T6.1 Unit: a webhook with a correct signature is accepted; a wrong signature, a missing header, and a timestamp older than the tolerance are each refused with a 400 and no plan change.
+- [ ] T6.2 Unit: `checkout.session.completed` sets the plan to pro and stores the Stripe customer id; `customer.subscription.deleted` sets it back to free.
+- [ ] T6.3 Unit: the same event id delivered twice leaves the account in the same state as delivering it once.
+- [ ] T6.4 Unit: on Pro the server allows 100 uses in a 5-hour window and refuses the 101st.
+- [ ] T6.5 Unit: a checkout request with no sign-in token is refused.
+- [ ] T6.6 E2E: signed out there is no upgrade offer; signed in on Free the offer appears, the MOCK upgrade flips Settings to Pro with the higher limit, and the achievements on the device are untouched by upgrading.
+
+### Not code, but required before charging real money
+
+- [ ] 6.a The Stripe account is activated (bank, legal name, tax details). Until then only test cards work.
+- [ ] 6.b Vercel is on a paid plan. Hobby is for non-commercial use only.
+- [ ] 6.c Terms and a privacy policy are published and linked from Settings, and a lawyer has read them. The customers are parents and the users are minors.
