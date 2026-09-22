@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import AccountSection from './AccountSection'
 import { getAlwaysReadPhotos, setAlwaysReadPhotos } from '../lib/aiSettings'
-import { formatWait, getUsage } from '../lib/aiUsage'
 import { listAchievements } from '../lib/achievements'
 import { BadBackupError, backupFileName, buildBackup, deleteEverything, restoreBackup } from '../lib/backup'
 import { buildTextExport, exportFileName } from '../lib/exportText'
@@ -30,7 +30,6 @@ export default function SettingsSheet({ achievementCount, goal: savedGoal, onClo
   const [alwaysAi, setAlwaysAi] = useState(() => getAlwaysReadPhotos())
   const [goal, setGoal] = useState(savedGoal)
   const [goalSaved, setGoalSaved] = useState(false)
-  const aiUsage = getUsage()
   const restoreRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -117,7 +116,9 @@ export default function SettingsSheet({ achievementCount, goal: savedGoal, onClo
         <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-ink/20" />
         <h2 className="text-xl font-bold">Settings</h2>
 
-        <section className="mt-4">
+        <AccountSection />
+
+        <section className="mt-5">
           <h3 className="text-sm font-medium opacity-70">Your data</h3>
           <p className="mt-1 text-sm">
             {achievementCount} achievement{achievementCount === 1 ? '' : 's'} saved on this device
@@ -165,9 +166,8 @@ export default function SettingsSheet({ achievementCount, goal: savedGoal, onClo
               className="h-6 w-6 shrink-0 accent-accent"
             />
           </label>
-          <p className="mt-2 text-sm opacity-70" data-testid="ai-usage">
-            {aiUsage.remaining} of 10 AI uses left for the next 5 hours
-            {aiUsage.nextFreeAt ? `. Next one frees up in ${formatWait(aiUsage.nextFreeAt)}` : ''}.
+          <p className="mt-2 text-sm opacity-70">
+            AI needs a sign-in, and each use is counted against your account. The count is in the Account section above.
           </p>
         </section>
 

@@ -7,6 +7,7 @@ import PhotoViewer from './components/PhotoViewer'
 import RankedView from './components/RankedView'
 import SettingsSheet from './components/SettingsSheet'
 import TimelineFilters from './components/TimelineFilters'
+import { refreshAccount, takeTokenFromUrl } from './lib/account'
 import { deleteAchievement, listAchievementsWithPhotos } from './lib/achievements'
 import { getGoal } from './lib/goal'
 import { askForPersistentStorage } from './lib/storage'
@@ -46,6 +47,13 @@ export default function App() {
   useEffect(() => {
     void reload()
   }, [reload])
+
+  // On start: pick up a session token Google's redirect left in the
+  // address bar, then ask the server who is signed in.
+  useEffect(() => {
+    takeTokenFromUrl()
+    void refreshAccount()
+  }, [])
 
   async function confirmDelete() {
     if (!toDelete) return
@@ -132,6 +140,10 @@ export default function App() {
         <AchievementSheet
           mode={sheet}
           onClose={closeSheet}
+          onOpenSettings={() => {
+            setSheet(undefined)
+            setSettingsOpen(true)
+          }}
           onSaved={() => {
             setSheet(undefined)
             // Ask the phone to keep our storage. Only matters once there is

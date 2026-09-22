@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { signInForTest } from './helpers/account'
 import { openFreshApp } from './helpers/app'
 
 async function addQuick(page: import('@playwright/test').Page, title: string, category: string) {
@@ -12,6 +13,7 @@ async function addQuick(page: import('@playwright/test').Page, title: string, ca
 
 test.beforeEach(async ({ page }) => {
   await openFreshApp(page)
+  await signInForTest(page, 'goal')
 })
 
 test('the Ranked view asks for a goal first, then ranks against MOCK with reasons', async ({ page }) => {

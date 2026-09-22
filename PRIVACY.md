@@ -7,10 +7,12 @@ This app holds a child's personal information: photos of them, their school, the
 Everything the user saves lives in the browser storage of the phone (or computer) they are using:
 
 - **Achievements** and **photos** are in IndexedDB, managed by Dexie
-- **There is no server database, no account, and no cloud sync**
+- **There is no server database of achievements and no cloud sync.** Nothing a user writes or photographs is stored anywhere but their own device
 - The website that serves the app only serves code. It never sees what anyone saves
 
-Because no server holds anyone's data, there is no database of children's records to protect or to be breached. That is the whole point of the design.
+From Phase 5 there is an account, but it holds no achievements. See below.
+
+Because no server holds anyone's achievements or photos, there is no store of children's records to protect or to be breached. That is the whole point of the design.
 
 ## The one exception: AI
 
@@ -35,9 +37,28 @@ The backup file is a zip of the user's records and photos. It is theirs to keep 
 - **If a key is ever committed by accident,** treat it as compromised: delete it in the Anthropic console and make a new one. Removing it in a later commit is not enough, git keeps history
 - Set a monthly spending cap in the Anthropic console so a bug can never run up a bill
 
-## If accounts are ever added
+## Accounts (Phase 5): identity only
 
-The current design collects nothing, so COPPA (the US law about collecting data from children under 13) does not apply in the usual way. That changes the moment a server stores data for users. Before adding accounts, read up on COPPA, the UK Age Appropriate Design Code and GDPR-K, and get real legal advice. Do not host children's data without it.
+Signing in is needed for the AI features, so the API key cannot be run up by strangers and so the usage limit follows the person rather than the phone. Everything else in the app works signed out.
+
+The server stores exactly this, and nothing else:
+
+- a random user id
+- the email address Google confirmed (or, in local development only, a typed one)
+- the plan: `free` or `pro`
+- when the account was made
+- the sign-in tokens for that account, which expire after 90 days
+- the times of the AI uses in the last 5 hours, which expire on their own
+
+That is the whole list. **No achievements, no photos, no goal, no rankings, no IP addresses, no analytics.** The records live in Upstash Redis, reached only by the serverless functions.
+
+"Delete my account" in Settings removes the user, their sign-ins and their usage count from the server immediately. The achievements and photos on the device are not touched by it.
+
+Sign-in uses Google Identity Services, which means Google sees that someone signed in to this app. Nothing about the achievements goes to Google.
+
+### The law, still
+
+Storing an email address for a user under 13 is collecting a child's personal information, which is what COPPA (the US law), the UK Age Appropriate Design Code and GDPR-K are about. The app is meant for ages 13 and up and this is a family project, not a public service. **Before it is opened to strangers or charged for, read those rules properly and get real legal advice.** Adding sync, which would put achievements themselves on a server, is a much bigger step again and has not been agreed.
 
 ## Things to never add
 

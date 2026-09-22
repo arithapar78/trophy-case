@@ -117,6 +117,31 @@ git push Trophy-Case main
 The same Vercel project also runs the small AI functions in `api/`: one reads a
 photo, one ranks achievements against the goal, one suggests what to do next.
 
+### Accounts and the AI limit (Phase 5)
+
+The AI features need a sign-in. Everything else, saving, editing, backup and
+export, works signed out. The server keeps only who you are: a user id, your
+email, your plan, when the account was made, your sign-in tokens, and the times
+of your AI uses in the last 5 hours. Your achievements never leave the device.
+
+Two one-time setup jobs in Vercel:
+
+1. **The database for accounts.** Vercel project, **Storage**, **Create
+   Database**, choose **Upstash for Redis**, connect it to the project. It adds
+   its own settings (`UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`);
+   nothing needs copying by hand. Without it, the live site says accounts are
+   not set up and sign-in is refused rather than silently forgetting people.
+2. **Google sign-in.** At https://console.cloud.google.com make a project, fill
+   in the OAuth consent screen (External, app name Trophy Case), then
+   **Credentials**, **Create Credentials**, **OAuth client ID**, **Web
+   application**. Authorized JavaScript origins: the live site address,
+   `http://localhost:5173` and `http://localhost:4173`. Authorized redirect
+   URIs: the live site address plus `/api/auth/google`. Copy the Client ID into
+   Vercel as `GOOGLE_CLIENT_ID`. It is public, not a secret.
+
+Locally, with no `GOOGLE_CLIENT_ID` set, Settings shows a clearly labelled
+test-mode sign-in that takes any email. It is refused on the live site.
+
 ### The AI key
 
 The AI reads photos through Claude Haiku. The key lives in Vercel only:
@@ -173,13 +198,21 @@ achievement-tracker/
 ├── PRIVACY.md             How we keep a kid's data safe
 ├── .env.example           Template for settings (safe to commit)
 ├── vercel.json            Tells Vercel how to build
-├── api/                   The server functions: hold the key, ask the AI, store nothing
+├── api/                   The server functions: hold the key, ask the AI, store no achievements
 │   ├── read-photo.ts      A photo in, a draft out
 │   ├── rank.ts            Goal + achievements in, ranks with reasons out
-│   └── recommend.ts       Goal + achievements in, three next steps out
+│   ├── recommend.ts       Goal + achievements in, three next steps out
+│   ├── config.ts          What the app needs to know before signing in
+│   ├── me.ts              Who is signed in; also deletes the account
+│   └── auth/              google.ts, dev.ts (test mode), signout.ts
 ├── server/
 │   ├── photoRead.ts       What read-photo does, testable without a server
-│   └── goalAdvice.ts      What rank and recommend do
+│   ├── goalAdvice.ts      What rank and recommend do
+│   ├── store.ts           The account records: memory for tests, Redis live
+│   ├── storeInstance.ts   Which of those two this server is using
+│   ├── auth.ts            Signing in, checking a token, checking Google's
+│   ├── usage.ts           The AI limit, counted on the server
+│   └── aiRoute.ts         The sign-in and limit check every AI function runs
 ├── index.html             The one HTML page
 ├── vite.config.ts         Build settings (Vite + Tailwind)
 ├── vitest.config.ts       Unit test settings
@@ -199,7 +232,8 @@ achievement-tracker/
 │       ├── photos.ts        Checking, resizing and EXIF stripping
 │       ├── backup.ts        Backup zip in and out
 │       ├── aiClient.ts      Sends a small copy of a photo to the function
-│       ├── aiUsage.ts       The 10-per-5-hours counter
+│       ├── account.ts       Who is signed in on this device
+│       ├── aiUsage.ts       The shape of the 10-per-5-hours window
 │       ├── aiSettings.ts    The "always let AI read my photos" switch
 │       ├── goal.ts          The goal, rankings and recommendations, stored on the device
 │       ├── goalClient.ts    Sends the goal and the achievements' text to the functions

@@ -4,10 +4,13 @@ import { makePng } from './png'
 export async function openFreshApp(page: Page) {
   await page.goto('/')
   // Each test starts with an empty timeline.
-  await page.evaluate(() => new Promise<void>((resolve) => {
-    const req = indexedDB.deleteDatabase('trophy-case')
-    req.onsuccess = req.onerror = req.onblocked = () => resolve()
-  }))
+  await page.evaluate(() => {
+    localStorage.clear()
+    return new Promise<void>((resolve) => {
+      const req = indexedDB.deleteDatabase('trophy-case')
+      req.onsuccess = req.onerror = req.onblocked = () => resolve()
+    })
+  })
   await page.reload()
 }
 
