@@ -19,24 +19,24 @@ export default function ConfirmDialog({ title, message, confirmLabel, onConfirm,
   }, [onCancel])
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 p-6" onClick={onCancel}>
+    <div className="animate-fade fixed inset-0 z-40 flex items-center justify-center bg-ink/40 p-6 backdrop-blur-sm" onClick={onCancel}>
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirm-title"
-        className="w-full max-w-sm rounded-2xl bg-surface p-5 text-ink shadow-xl"
+        className="w-full max-w-sm rounded-3xl bg-surface p-5 text-ink shadow-float ring-1 ring-ink/5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3">
           <h2 id="confirm-title" className="text-lg font-semibold">{title}</h2>
           <CloseButton onClose={onCancel} />
         </div>
-        <p className="mt-2 opacity-80">{message}</p>
+        <p className="mt-2 text-sm leading-relaxed text-ink/70">{message}</p>
         <div className="mt-5 flex gap-3">
-          <button type="button" onClick={onCancel} className="flex-1 rounded-xl border border-ink/20 py-3">
+          <button type="button" onClick={onCancel} className="min-h-12 flex-1 rounded-2xl font-medium ring-1 ring-ink/15 transition-colors active:bg-ink/5">
             Cancel
           </button>
-          <button type="button" onClick={onConfirm} className="flex-1 rounded-xl bg-red-600 py-3 text-white">
+          <button type="button" onClick={onConfirm} className="min-h-12 flex-1 rounded-2xl bg-red-600 font-semibold text-white transition-transform active:scale-[0.98]">
             {confirmLabel}
           </button>
         </div>

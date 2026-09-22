@@ -5,7 +5,11 @@
     <!-- viewport-fit=cover lets the app draw behind the notch; the layout
          then uses safe-area padding so nothing hides under it. -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#0f172a" />
+    <!-- The colour iOS and Android paint behind the status bar. Matches the
+         app's page background in each mode, so the top of the screen does
+         not look like a different app. -->
+    <meta name="theme-color" content="#f4f5f7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0a0f1c" media="(prefers-color-scheme: dark)" />
     <!-- iPhone: run full screen from the Home Screen, with our icon. -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />

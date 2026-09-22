@@ -108,11 +108,11 @@ export default function AccountSection() {
     }
   }
 
-  const button = 'min-h-12 w-full rounded-xl border border-ink/20 px-4 text-left disabled:opacity-50'
+  const button = 'min-h-12 w-full rounded-2xl px-4 py-3 text-left ring-1 ring-ink/10 transition-colors active:bg-ink/5 disabled:opacity-40'
 
   return (
     <section className="mt-4" data-testid="account-section">
-      <h3 className="text-sm font-medium opacity-70">Account</h3>
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-ink/45">Account</h3>
 
       {user === undefined && <p className="mt-1 text-sm opacity-70">Checking…</p>}
 
@@ -126,7 +126,7 @@ export default function AccountSection() {
           {config?.googleClientId && <div ref={googleSlot} className="mt-3" data-testid="google-button" />}
 
           {config?.devLogin && (
-            <div className="mt-3 rounded-xl border border-ink/15 p-3">
+            <div className="mt-3 rounded-2xl bg-ink/[0.03] p-4 ring-1 ring-ink/10">
               <p className="text-sm font-medium">Test-mode sign-in</p>
               <p className="text-sm opacity-70">For development only. Any email works, and this is off on the live site.</p>
               <input
@@ -136,14 +136,14 @@ export default function AccountSection() {
                 type="email"
                 placeholder="you@example.com"
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent px-4 py-3"
+                className="mt-2 w-full rounded-2xl bg-surface px-4 py-3 ring-1 ring-ink/10"
               />
               <button
                 type="button"
                 data-testid="dev-signin"
                 disabled={busy || !email.includes('@')}
                 onClick={() => void run(() => signInTestMode(email))}
-                className="mt-2 min-h-11 w-full rounded-xl bg-accent text-sm font-semibold text-white disabled:opacity-50"
+                className="mt-2 min-h-11 w-full rounded-2xl bg-accent text-sm font-semibold text-white shadow-card transition-transform active:scale-[0.98] disabled:bg-ink/10 disabled:text-ink/40 disabled:shadow-none"
               >
                 Sign in for testing
               </button>
@@ -151,14 +151,14 @@ export default function AccountSection() {
           )}
 
           {config && !config.accountsReady && (
-            <p className="mt-3 rounded-xl bg-red-600/10 p-3 text-sm text-red-600">
+            <p className="mt-3 rounded-2xl bg-red-600/10 p-3 text-sm text-red-600">
               Accounts are not set up on the server yet, so signing in won't work. The server needs its Upstash Redis database
               connected in Vercel.
             </p>
           )}
 
           {config && !config.googleClientId && !config.devLogin && config.accountsReady && (
-            <p className="mt-3 rounded-xl bg-red-600/10 p-3 text-sm text-red-600">
+            <p className="mt-3 rounded-2xl bg-red-600/10 p-3 text-sm text-red-600">
               Google sign-in is not set up on the server yet. It needs GOOGLE_CLIENT_ID in Vercel.
             </p>
           )}
@@ -193,7 +193,7 @@ export default function AccountSection() {
                 <span className="block text-sm opacity-70">Removes your email and usage count from the server</span>
               </button>
             ) : (
-              <div className="rounded-xl border border-red-600/40 p-4">
+              <div className="rounded-2xl p-4 ring-1 ring-red-600/30">
                 <p className="text-sm">
                   This removes your email, your sign-ins and your usage count from the server. Your achievements and photos on
                   this device are not touched.
@@ -201,14 +201,14 @@ export default function AccountSection() {
                 <div className="mt-3 flex gap-3">
                   <button
                     type="button"
-                    className="min-h-12 flex-1 rounded-xl border border-ink/20"
+                    className="min-h-12 flex-1 rounded-2xl font-medium ring-1 ring-ink/15 transition-colors active:bg-ink/5"
                     onClick={() => setConfirmingDelete(false)}
                   >
                     Keep my account
                   </button>
                   <button
                     type="button"
-                    className="min-h-12 flex-1 rounded-xl bg-red-600 text-white disabled:opacity-50"
+                    className="min-h-12 flex-1 rounded-2xl bg-red-600 font-semibold text-white disabled:opacity-40"
                     data-testid="delete-account-confirm"
                     disabled={busy}
                     onClick={() =>
@@ -228,7 +228,7 @@ export default function AccountSection() {
       )}
 
       {error && (
-        <p className="mt-3 rounded-xl bg-red-600/10 p-3 text-sm text-red-600" role="alert">
+        <p className="mt-3 rounded-2xl bg-red-600/10 p-3 text-sm text-red-600" role="alert">
           {error}
         </p>
       )}

@@ -61,9 +61,9 @@ export default function RankedView({ achievements, goal, onOpenSettings }: Props
 
   if (!goal) {
     return (
-      <div className="mt-10 text-center opacity-80">
+      <div className="mt-12 text-center text-ink/70">
         <p>Set a goal first, like "get into a top engineering school" or "summer job at a vet clinic".</p>
-        <button type="button" onClick={onOpenSettings} className="mt-3 min-h-11 rounded-xl bg-accent px-4 font-semibold text-white">
+        <button type="button" onClick={onOpenSettings} className="mt-4 min-h-11 rounded-2xl bg-accent px-5 font-semibold text-white shadow-card transition-transform active:scale-[0.98]">
           Set my goal
         </button>
       </div>
@@ -71,20 +71,20 @@ export default function RankedView({ achievements, goal, onOpenSettings }: Props
   }
 
   const atLimit = usage?.remaining === 0
-  const button = 'min-h-12 flex-1 rounded-xl border border-accent bg-accent/10 px-3 text-sm font-semibold disabled:opacity-50'
+  const button = 'min-h-12 flex-1 rounded-2xl bg-accent/10 px-3 text-sm font-semibold text-accent-ink ring-1 ring-accent/30 transition-colors active:bg-accent/20 disabled:opacity-40'
   const unranked = rows.filter((r) => !r.ranking).length
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm opacity-80" data-testid="goal-line">
+      <p className="text-sm text-ink/70" data-testid="goal-line">
         Goal: <strong>{goal}</strong>{' '}
-        <button type="button" onClick={onOpenSettings} className="underline underline-offset-4">change</button>
+        <button type="button" onClick={onOpenSettings} className="font-medium text-accent-ink underline underline-offset-4">change</button>
       </p>
 
       {user === null ? (
-        <div className="rounded-2xl border border-accent/40 bg-accent/10 p-3" data-testid="ranked-signin">
+        <div className="rounded-2xl bg-accent/10 p-4 ring-1 ring-accent/25" data-testid="ranked-signin">
           <p className="text-sm">Ranking and suggestions use AI, which needs a sign-in so your limit follows you.</p>
-          <button type="button" onClick={onOpenSettings} className="mt-2 min-h-11 w-full rounded-xl border border-accent px-4 text-sm font-semibold">
+          <button type="button" onClick={onOpenSettings} className="mt-3 min-h-11 w-full rounded-2xl px-4 text-sm font-semibold text-accent-ink ring-1 ring-accent/50 transition-colors active:bg-accent/15">
             Sign in to use AI
           </button>
         </div>
@@ -98,7 +98,7 @@ export default function RankedView({ achievements, goal, onOpenSettings }: Props
               {busy === 'recommend' ? 'Thinking…' : 'What should I do next?'}
             </button>
           </div>
-          <p className="-mt-2 text-xs opacity-60">
+          <p className="-mt-1 text-xs leading-relaxed text-ink/55">
             {atLimit && usage?.nextFreeAt
               ? `All ${usage.limit} AI uses are used up for now. The next one frees up in ${formatWait(usage.nextFreeAt)}.`
               : `Each button is one AI use.${usage ? ` ${usage.remaining} of ${usage.limit} left for the next 5 hours.` : ''} Only the words are sent, never photos.`}
@@ -106,18 +106,18 @@ export default function RankedView({ achievements, goal, onOpenSettings }: Props
         </>
       )}
 
-      {achievements.length === 0 && <p className="opacity-70">Nothing to rank yet. Add an achievement first.</p>}
+      {achievements.length === 0 && <p className="text-ink/60">Nothing to rank yet. Add an achievement first.</p>}
       {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
-      {mock && <p className="rounded-xl bg-accent/15 p-3 text-sm" role="status"><strong>MOCK results.</strong> The AI function has no key yet, so these are samples.</p>}
+      {mock && <p className="rounded-2xl bg-accent/15 p-3 text-sm" role="status"><strong>MOCK results.</strong> The AI function has no key yet, so these are samples.</p>}
 
       {recs && (
-        <section className="rounded-2xl border border-ink/10 p-4" data-testid="recommendations">
+        <section className="rounded-3xl bg-surface p-4 shadow-card ring-1 ring-ink/5" data-testid="recommendations">
           <h2 className="font-semibold">What to do next</h2>
           <ol className="mt-2 flex list-decimal flex-col gap-2 pl-5">
             {recs.items.map((item, i) => (
               <li key={i}>
                 <p className="font-medium">{item.title}</p>
-                <p className="text-sm opacity-70">{item.why}</p>
+                <p className="text-sm text-ink/60">{item.why}</p>
               </li>
             ))}
           </ol>
@@ -128,18 +128,18 @@ export default function RankedView({ achievements, goal, onOpenSettings }: Props
         <section data-testid="ranked-list">
           <h2 className="font-semibold">
             Your achievements, ranked
-            {unranked > 0 && rows.length !== unranked && <span className="ml-2 text-sm font-normal opacity-60">({unranked} not ranked yet)</span>}
+            {unranked > 0 && rows.length !== unranked && <span className="ml-2 text-sm font-normal text-ink/55">({unranked} not ranked yet)</span>}
           </h2>
           <ol className="mt-2 flex flex-col gap-2">
             {rows.map(({ achievement, ranking }) => (
-              <li key={achievement.id} className="flex gap-3 rounded-2xl border border-ink/10 p-3" data-testid="ranked-row">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/15 text-sm font-bold">
+              <li key={achievement.id} className="flex gap-3 rounded-2xl bg-surface p-3.5 shadow-card ring-1 ring-ink/5" data-testid="ranked-row">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/15 text-sm font-bold text-accent-ink">
                   {ranking ? ranking.rank : '–'}
                 </span>
                 <div>
                   <p className="font-medium leading-tight">{achievement.title}</p>
-                  <p className="text-xs opacity-60">{formatDate(achievement.date)} · {achievement.category}</p>
-                  <p className="mt-1 text-sm opacity-80">{ranking ? ranking.reason : 'Not ranked yet. Tap "Rank my achievements" to include it.'}</p>
+                  <p className="text-xs text-ink/55">{formatDate(achievement.date)} · {achievement.category}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-ink/75">{ranking ? ranking.reason : 'Not ranked yet. Tap "Rank my achievements" to include it.'}</p>
                 </div>
               </li>
             ))}

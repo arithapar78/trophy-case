@@ -103,15 +103,15 @@ export default function SettingsSheet({ achievementCount, goal: savedGoal, onClo
       return 'Everything has been deleted.'
     })
 
-  const button = 'min-h-12 w-full rounded-xl border border-ink/20 px-4 text-left disabled:opacity-50'
+  const button = 'min-h-12 w-full rounded-2xl px-4 py-3 text-left ring-1 ring-ink/10 transition-colors active:bg-ink/5 disabled:opacity-40'
 
   return (
-    <div className="fixed inset-0 z-30 flex items-end bg-black/50" onClick={onClose}>
+    <div className="animate-fade fixed inset-0 z-30 flex items-end bg-ink/40 backdrop-blur-sm" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Settings"
-        className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-ink"
+        className="animate-sheet max-h-[92vh] w-full overflow-y-auto rounded-t-sheet bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-ink shadow-float"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-ink/20" />
@@ -125,7 +125,7 @@ export default function SettingsSheet({ achievementCount, goal: savedGoal, onClo
         <AccountSection />
 
         <section className="mt-5">
-          <h3 className="text-sm font-medium opacity-70">Your data</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-ink/45">Your data</h3>
           <p className="mt-1 text-sm">
             {achievementCount} achievement{achievementCount === 1 ? '' : 's'} saved on this device
             {usage && `, using ${formatBytes(usage.usedBytes)}`}
@@ -137,7 +137,7 @@ export default function SettingsSheet({ achievementCount, goal: savedGoal, onClo
         </section>
 
         <section className="mt-5">
-          <h3 className="text-sm font-medium opacity-70">Your goal</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-ink/45">Your goal</h3>
           <p className="mt-1 text-sm opacity-70">One sentence. The Ranked view uses it to sort your achievements and suggest what to do next.</p>
           <input
             aria-label="Goal"
@@ -145,15 +145,15 @@ export default function SettingsSheet({ achievementCount, goal: savedGoal, onClo
             maxLength={MAX_GOAL_LENGTH}
             placeholder="get into a top engineering school"
             onChange={(e) => { setGoal(e.target.value); setGoalSaved(false) }}
-            className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent px-4 py-3"
+            className="mt-2 w-full rounded-2xl bg-ink/[0.04] px-4 py-3 ring-1 ring-ink/10"
           />
-          <button type="button" onClick={() => void saveGoal()} className="mt-2 min-h-11 rounded-xl bg-accent px-4 text-sm font-semibold text-white">
+          <button type="button" onClick={() => void saveGoal()} className="mt-2 min-h-11 rounded-2xl bg-accent px-5 text-sm font-semibold text-white shadow-card transition-transform active:scale-[0.98]">
             {goalSaved ? 'Goal saved' : 'Save goal'}
           </button>
         </section>
 
         <section className="mt-5">
-          <h3 className="text-sm font-medium opacity-70">AI</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-ink/45">AI</h3>
           <label className="mt-2 flex min-h-12 items-center justify-between gap-4">
             <span>
               <span className="font-medium">Always let AI read my photos</span>
@@ -208,8 +208,8 @@ export default function SettingsSheet({ achievementCount, goal: savedGoal, onClo
           />
         </section>
 
-        {message && <p className="mt-4 rounded-xl bg-accent/15 p-3 text-sm" role="status">{message}</p>}
-        {error && <p className="mt-4 rounded-xl bg-red-600/10 p-3 text-sm text-red-600" role="alert">{error}</p>}
+        {message && <p className="mt-4 rounded-2xl bg-accent/15 p-3 text-sm" role="status">{message}</p>}
+        {error && <p className="mt-4 rounded-2xl bg-red-600/10 p-3 text-sm text-red-600" role="alert">{error}</p>}
 
         <section className="mt-6">
           {!confirmingDelete ? (
@@ -223,7 +223,7 @@ export default function SettingsSheet({ achievementCount, goal: savedGoal, onClo
               <span className="block text-sm opacity-70">Removes every achievement and photo from this device</span>
             </button>
           ) : (
-            <div className="rounded-xl border border-red-600/40 p-4">
+            <div className="rounded-2xl p-4 ring-1 ring-red-600/30">
               <p className="text-sm">
                 This removes every achievement and photo from this device and can't be undone. Type <strong>DELETE</strong> to confirm.
               </p>
@@ -231,16 +231,16 @@ export default function SettingsSheet({ achievementCount, goal: savedGoal, onClo
                 aria-label="Type DELETE to confirm"
                 value={deleteWord}
                 onChange={(e) => setDeleteWord(e.target.value)}
-                className="mt-3 w-full rounded-xl border border-ink/15 bg-transparent px-4 py-3"
+                className="mt-3 w-full rounded-2xl bg-ink/[0.04] px-4 py-3 ring-1 ring-ink/10"
                 autoCapitalize="characters"
               />
               <div className="mt-3 flex gap-3">
-                <button type="button" className="min-h-12 flex-1 rounded-xl border border-ink/20" onClick={() => { setConfirmingDelete(false); setDeleteWord('') }}>
+                <button type="button" className="min-h-12 flex-1 rounded-2xl font-medium ring-1 ring-ink/15 transition-colors active:bg-ink/5" onClick={() => { setConfirmingDelete(false); setDeleteWord('') }}>
                   Keep my data
                 </button>
                 <button
                   type="button"
-                  className="min-h-12 flex-1 rounded-xl bg-red-600 text-white disabled:opacity-50"
+                  className="min-h-12 flex-1 rounded-2xl bg-red-600 font-semibold text-white disabled:opacity-40"
                   disabled={deleteWord !== 'DELETE' || busy}
                   onClick={() => void wipe()}
                 >
@@ -251,9 +251,9 @@ export default function SettingsSheet({ achievementCount, goal: savedGoal, onClo
           )}
         </section>
 
-        <p className="mt-6 text-center text-xs opacity-50">Trophy Case {__APP_VERSION__}</p>
+        <p className="mt-8 text-center text-xs text-ink/40">Trophy Case {__APP_VERSION__}</p>
 
-        <button type="button" onClick={onClose} className="mt-4 min-h-12 w-full rounded-xl bg-accent font-semibold text-white">
+        <button type="button" onClick={onClose} className="mt-5 min-h-12 w-full rounded-2xl bg-accent font-semibold text-white shadow-card transition-transform active:scale-[0.98]">
           Done
         </button>
       </div>

@@ -72,13 +72,22 @@ export default function App() {
 
   return (
     <div className="mx-auto min-h-full max-w-lg px-4 pt-4">
-      <header className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Trophy Case</h1>
+      <header className="sticky top-0 z-20 -mx-4 mb-4 flex items-center justify-between bg-page/85 px-4 py-3 backdrop-blur-md">
+        <div className="flex items-center gap-2.5">
+          <span aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent text-white shadow-card">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M7 4h10v5a5 5 0 0 1-10 0z" />
+              <path d="M7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3" />
+              <path d="M12 14v4M9 21h6" />
+            </svg>
+          </span>
+          <h1 className="text-2xl font-bold tracking-tight">Trophy Case</h1>
+        </div>
         <button
           type="button"
           onClick={() => setSettingsOpen(true)}
           aria-label="Settings"
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-ink/15"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink/70 shadow-card ring-1 ring-ink/10 transition-colors active:bg-ink/5"
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="3" />
@@ -87,7 +96,7 @@ export default function App() {
         </button>
       </header>
 
-      <div className="mb-4 flex rounded-xl border border-ink/15 p-1" role="tablist" aria-label="View">
+      <div className="mb-4 flex rounded-2xl bg-ink/5 p-1" role="tablist" aria-label="View">
         {(['timeline', 'ranked'] as const).map((v) => (
           <button
             key={v}
@@ -95,7 +104,9 @@ export default function App() {
             role="tab"
             aria-selected={view === v}
             onClick={() => setView(v)}
-            className={`min-h-10 flex-1 rounded-lg text-sm font-medium ${view === v ? 'bg-accent text-white' : ''}`}
+            className={`min-h-10 flex-1 rounded-xl text-sm font-semibold transition-colors ${
+              view === v ? 'bg-surface text-ink shadow-card' : 'text-ink/55'
+            }`}
           >
             {v === 'timeline' ? 'Timeline' : 'Ranked'}
           </button>
@@ -107,18 +118,28 @@ export default function App() {
       )}
 
       {/* Bottom padding keeps the camera button off the last card. */}
-      <main className="mt-4 flex flex-col gap-4 pb-40">
+      <main className="mt-4 flex flex-col gap-4 pb-48">
         {loadError && <p className="text-red-600">{loadError}</p>}
         {view === 'ranked' && (
           <RankedView achievements={allRows.map((r) => r.achievement)} goal={goal} onOpenSettings={() => setSettingsOpen(true)} />
         )}
         {view === 'timeline' && rows && rows.length === 0 && total === 0 && (
-          <p className="mt-10 text-center opacity-70">
-            Nothing here yet. Tap the camera to save your first win, or add one without a photo.
-          </p>
+          <div className="mt-12 flex flex-col items-center px-6 text-center">
+            <span aria-hidden="true" className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-accent/10 text-accent-ink">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M7 4h10v5a5 5 0 0 1-10 0z" />
+                <path d="M7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3" />
+                <path d="M12 14v4M9 21h6" />
+              </svg>
+            </span>
+            <p className="text-lg font-semibold">Nothing here yet</p>
+            <p className="mt-1 text-sm text-ink/60">
+              Tap the camera to save your first win, or add one without a photo.
+            </p>
+          </div>
         )}
         {view === 'timeline' && rows && rows.length === 0 && total > 0 && (
-          <p className="mt-10 text-center opacity-70">Nothing matches. Try a different search or category.</p>
+          <p className="mt-12 text-center text-sm text-ink/60">Nothing matches. Try a different search or category.</p>
         )}
         {view === 'timeline' && rows?.map((row) => (
           <AchievementCard

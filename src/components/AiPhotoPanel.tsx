@@ -22,11 +22,11 @@ export default function AiPhotoPanel({ state, onRun, onOpenSettings }: Props) {
   const atLimit = usage?.remaining === 0
 
   return (
-    <div className="mb-4 rounded-2xl border border-accent/40 bg-accent/10 p-3" data-testid="ai-panel">
+    <div className="mb-4 rounded-2xl bg-accent/10 p-4 ring-1 ring-accent/25" data-testid="ai-panel">
       {user === null && (
         <>
           <p className="text-sm">Sign in to let AI fill this in from the photo. You can still fill it in yourself.</p>
-          <button type="button" onClick={onOpenSettings} className="mt-2 min-h-11 w-full rounded-xl border border-accent px-4 text-sm font-semibold">
+          <button type="button" onClick={onOpenSettings} className="mt-3 min-h-11 w-full rounded-2xl px-4 text-sm font-semibold text-accent-ink ring-1 ring-accent/50 transition-colors active:bg-accent/15">
             Sign in to use AI
           </button>
         </>
@@ -61,11 +61,11 @@ export default function AiPhotoPanel({ state, onRun, onOpenSettings }: Props) {
             type="button"
             onClick={onRun}
             disabled={atLimit}
-            className="min-h-11 w-full rounded-xl bg-accent px-4 font-semibold text-white disabled:opacity-50"
+            className="min-h-11 w-full rounded-2xl bg-accent px-4 font-semibold text-white shadow-card transition-transform active:scale-[0.98] disabled:bg-ink/10 disabled:text-ink/40 disabled:shadow-none"
           >
             Let AI fill this in
           </button>
-          <p className="mt-2 text-xs opacity-70">
+          <p className="mt-2 text-xs leading-relaxed text-ink/60">
             {atLimit && usage?.nextFreeAt
               ? `You've used all ${usage.limit} AI uses for now. The next one frees up in ${formatWait(usage.nextFreeAt)}. You can still fill it in yourself.`
               : `Sends a small copy of this photo to Anthropic's AI, which is not stored there.${usage ? ` ${usage.remaining} of ${usage.limit} AI uses left for the next 5 hours.` : ''}`}

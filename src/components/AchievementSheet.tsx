@@ -175,16 +175,16 @@ export default function AchievementSheet({ mode, onClose, onSaved, onOpenSetting
     }
   }
 
-  const fieldClass = 'w-full rounded-xl border border-ink/15 bg-transparent px-4 py-3'
+  const fieldClass = 'w-full rounded-2xl bg-ink/[0.04] px-4 py-3 ring-1 ring-ink/10'
   const labelClass = 'mb-1 block text-sm font-medium'
 
   return (
-    <div className="fixed inset-0 z-30 flex items-end bg-black/50" onClick={onClose}>
+    <div className="animate-fade fixed inset-0 z-30 flex items-end bg-ink/40 backdrop-blur-sm" onClick={onClose}>
       <form
         role="dialog"
         aria-modal="true"
         aria-label={mode.kind === 'add' ? 'New achievement' : 'Edit achievement'}
-        className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-ink"
+        className="animate-sheet max-h-[92vh] w-full overflow-y-auto rounded-t-sheet bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-ink shadow-float"
         onClick={(e) => e.stopPropagation()}
         onSubmit={(e) => {
           e.preventDefault()
@@ -254,8 +254,10 @@ export default function AchievementSheet({ mode, onClose, onSaved, onOpenSetting
               type="button"
               aria-pressed={fields.category === c}
               onClick={() => set('category')(c)}
-              className={`shrink-0 rounded-full border px-4 py-2 text-sm ${
-                fields.category === c ? 'border-accent bg-accent text-white' : 'border-ink/20'
+              className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                fields.category === c
+                  ? 'bg-accent text-white shadow-card'
+                  : 'bg-ink/[0.04] text-ink/70 ring-1 ring-ink/10 active:bg-ink/10'
               }`}
             >
               {c}
@@ -309,13 +311,13 @@ export default function AchievementSheet({ mode, onClose, onSaved, onOpenSetting
           </div>
         )}
 
-        {saveError && <p className="mt-3 text-sm text-red-600">{saveError}</p>}
+        {saveError && <p className="mt-3 rounded-2xl bg-red-600/10 p-3 text-sm text-red-600">{saveError}</p>}
 
         <div className="mt-5 flex gap-3">
-          <button type="button" onClick={onClose} className="min-h-12 flex-1 rounded-xl border border-ink/20">
+          <button type="button" onClick={onClose} className="min-h-12 flex-1 rounded-2xl font-medium ring-1 ring-ink/15 transition-colors active:bg-ink/5">
             Cancel
           </button>
-          <button type="submit" disabled={saving || stillPreparing} className="min-h-12 flex-1 rounded-xl bg-accent font-semibold text-white disabled:opacity-60">
+          <button type="submit" disabled={saving || stillPreparing} className="min-h-12 flex-1 rounded-2xl bg-accent font-semibold text-white shadow-card transition-transform active:scale-[0.98] disabled:bg-ink/10 disabled:text-ink/40 disabled:shadow-none">
             {saving ? 'Saving…' : stillPreparing ? 'Preparing photo…' : 'Save'}
           </button>
         </div>
