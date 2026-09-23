@@ -9,6 +9,7 @@ import {
   FALLBACK_CATEGORY,
   MAX_CATEGORY_LENGTH,
   MAX_CUSTOM_CATEGORIES,
+  MAX_NAME_LENGTH,
   MAX_PHOTOS,
   STARTER_CATEGORIES,
   type Achievement,
@@ -144,4 +145,12 @@ export function categoryListFromRequest(raw: unknown): string[] {
 // For anything the AI names: a category on the list, or Other.
 export function categoryOrFallback(value: unknown, categories: readonly string[]): string {
   return typeof value === 'string' && categories.includes(value) ? value : FALLBACK_CATEGORY
+}
+
+// ---- The name used to say hello (Phase 12) ----
+
+// Trims, squashes runs of spaces and cuts to the limit. An empty result
+// is fine: it just means "Hi there".
+export function cleanName(name: string): string {
+  return name.trim().replace(/\s+/g, ' ').slice(0, MAX_NAME_LENGTH).trim()
 }

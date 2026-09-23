@@ -1,7 +1,9 @@
 import type { Page } from '@playwright/test'
 import { makePng } from './png'
 
-export async function openFreshApp(page: Page) {
+// A fresh device shows the hello card first (Phase 12). Most tests are
+// about something else, so close it unless the test asks to keep it.
+export async function openFreshApp(page: Page, { keepHello = false } = {}) {
   await page.goto('/')
   // Each test starts with an empty timeline.
   await page.evaluate(() => {
@@ -12,6 +14,12 @@ export async function openFreshApp(page: Page) {
     })
   })
   await page.reload()
+  if (!keepHello) await closeHello(page)
+}
+
+export async function closeHello(page: Page) {
+  await page.getByTestId('hello-done').click()
+  await page.getByTestId('hello-card').waitFor({ state: 'hidden' })
 }
 
 export function photoFile(name = 'win.png', width = 400, height = 300) {

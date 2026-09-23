@@ -245,6 +245,8 @@ Written down so they are not forgotten, in this order:
 
 Also parked: sharing, reels and video, LinkedIn posts, cloud backup beyond the share sheet.
 
+Ideas raised 2026-09-23, not agreed: public portfolios anyone can see, and an Explore page of other people's portfolios. Both would put a child's achievements on a server for strangers, which breaks the core rule in PRIVACY.md and needs legal advice (COPPA) and a plan for moderation first. A smaller version to think about: a private link to one portfolio, sent only to chosen people and switchable off.
+
 ---
 
 ## Phase 5: Accounts (identity only)
@@ -491,3 +493,30 @@ Also parked: sharing, reels and video, LinkedIn posts, cloud backup beyond the s
 - [ ] T11.1 Unit: a reply with a change list is parsed; unknown numbers, unknown fields, invalid values, more than 50 changes and malformed blocks are each dropped without crashing.
 - [ ] T11.2 Unit: applying changes updates only the ticked ones, skips any whose old value no longer matches, and Undo restores exactly the old values.
 - [ ] T11.3 E2E: a MOCK edit proposal changes nothing until Confirm; Cancel changes nothing; Confirm changes the timeline; Undo reverses it.
+
+---
+
+## Phase 12: A welcome, and what's new
+
+Built before Phase 11, at Vishal's request.
+
+### Feature 23: Hello when you open the app
+
+> **As a student, I want to** be greeted by name and told what's new when I open the app, **so that** it feels like mine and I find the new things without hunting.
+
+- [ ] 23.1 The first time the app opens on a device, a welcome card appears: "Hi there", one line on what Trophy Case is, and a few short steps on how it works (snap a photo, it lands on your timeline, set a goal, ask Scout).
+- [ ] 23.2 The welcome asks "What should we call you?". It is optional. Up to 30 characters. The name is kept on the device only: it is never sent to the AI or the server and is not in backups. It is used only for the greeting.
+- [ ] 23.3 After an update that has something new, the next open shows "Hi (name), here's what's new" with a short list of what changed. The how-it-works steps are still there, folded under "How it works".
+- [ ] 23.4 It shows once per update. "Let's go" (or "Got it"), the X, or Escape closes it and it does not come back until the next update with something new.
+- [ ] 23.5 Settings has "What's new and how it works", which opens the same card at any time. The name can be changed there.
+- [ ] 23.6 Works signed out and offline, and makes no network request.
+- [ ] 23.7 Fits an iPhone screen with the main button in thumb reach; scrolls if the list is long. It looks designed, not like a form.
+
+**Technical note.** The list of what's new lives in `src/lib/welcome.ts` with an id. Changing the id is what makes the card show again, so each update that adds something visible gets a new id and a new list. What was last seen and the name live in the settings table (`whatsNewSeen`, `name`). "Delete everything" clears both, so the welcome shows again after it.
+
+### Phase 12 tests
+
+- [ ] T12.1 Unit: a brand new device gets the welcome; a device that saw an older list gets what's new; a device that saw this list gets nothing. A device with achievements but nothing seen (people who had the app before Phase 12) gets what's new, not the first-time welcome.
+- [ ] T12.2 Unit: the name is trimmed, extra spaces are squeezed, it is cut to 30 characters, and an empty name means "Hi there".
+- [ ] T12.3 E2E: a fresh device shows the welcome; typing a name and tapping Let's go closes it; after a reload it does not come back; Settings reopens it greeting by name; no network request is made.
+- [ ] T12.4 E2E: a device that saw an older list shows what's new, greeted by name, and the X closes it for good.

@@ -23,9 +23,11 @@ interface Props {
   customCategories: string[]
   onClose: () => void
   onDataChanged: () => void
+  // Opens the hello card again (Phase 12).
+  onOpenHello: () => void
 }
 
-export default function SettingsSheet({ achievementCount, goal: savedGoal, customCategories, onClose, onDataChanged }: Props) {
+export default function SettingsSheet({ achievementCount, goal: savedGoal, customCategories, onClose, onDataChanged, onOpenHello }: Props) {
   const [usage, setUsage] = useState<StorageUsage>()
   const [message, setMessage] = useState<string>()
   const [error, setError] = useState<string>()
@@ -127,6 +129,13 @@ export default function SettingsSheet({ achievementCount, goal: savedGoal, custo
         </div>
 
         <AccountSection />
+
+        <section className="mt-5">
+          <button type="button" className={button} onClick={onOpenHello} data-testid="open-hello">
+            <span className="font-medium">What's new and how it works</span>
+            <span className="block text-sm opacity-70">The hello card, and where you can change your name</span>
+          </button>
+        </section>
 
         <section className="mt-5">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-ink/45">Your data</h3>

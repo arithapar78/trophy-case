@@ -1,6 +1,6 @@
 # Trophy Case: handoff for the next Claude chat
 
-Read this first, then [CLAUDE.md](CLAUDE.md) (the rules), then [REQUIREMENTS.md](REQUIREMENTS.md) (the contract). This file says where the project stands, how it is built and deployed, what is half-done, and exactly what comes next. Last updated 2026-09-23 (Phase 10).
+Read this first, then [CLAUDE.md](CLAUDE.md) (the rules), then [REQUIREMENTS.md](REQUIREMENTS.md) (the contract). This file says where the project stands, how it is built and deployed, what is half-done, and exactly what comes next. Last updated 2026-09-23 (Phase 12).
 
 ## What it is, in one paragraph
 
@@ -54,7 +54,8 @@ Trophy Case is a phone-first web app. A student (13 to 18) or a parent photograp
 | 8. Privacy policy page, 13+ age check | Pushed, Google sign-in being published, **not phone-checked** | `83ef870` |
 | 9. Categories: broad starter list plus your own | Pushed, **not phone-checked** | `95ed9c0` |
 | 10. The Me tab: AI summary, profile card, save as image, everything on one page | Built and tested, **not pushed, not phone-checked** | see Phase 10 below |
-| 11. Scout suggests edits, confirm before anything changes, Undo | Requirements agreed | |
+| 11. Scout suggests edits, confirm before anything changes, Undo | Requirements agreed, **not built yet** (Phase 12 went first) | |
+| 12. Hello card: welcome with optional name, what's new after an update, reopen from Settings | Built and tested, **not pushed, not phone-checked** | see git log |
 | Later. Store wrappers: Amazon Appstore, Apple App Store | Planned | |
 
 Every phase gets a numbered section in REQUIREMENTS.md before the code (Phases 0 to 5 are there). Checkboxes are for Ari to tick on the phone.
@@ -241,3 +242,10 @@ Version 2.9.0. Requirements are Feature 21 (21.8 and 21.9 added when Vishal chos
 ## Open questions still unanswered by Ari
 
 Backup file-only (assumed yes); one goal at a time (assumed yes); extra categories; final name and domain; minimum age (assumed 13+).
+
+## Phase 12 notes
+
+- Built before Phase 11 at Vishal's request. Phase 11 is still next.
+- To announce a future update: edit `WHATS_NEW` in `src/lib/welcome.ts` and **give it a new id**. The new id is what makes the card appear again on every device. Same id means nobody sees the change.
+- The e2e helper `openFreshApp` closes the card by default; pass `{ keepHello: true }` to test it.
+- Ideas raised and parked (see "Later" in REQUIREMENTS.md): public portfolios and an Explore page. Not agreed; privacy and legal questions first.

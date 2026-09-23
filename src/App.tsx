@@ -3,6 +3,7 @@ import AchievementCard from './components/AchievementCard'
 import AchievementSheet, { type SheetMode } from './components/AchievementSheet'
 import CameraButton from './components/CameraButton'
 import ConfirmDialog from './components/ConfirmDialog'
+import HelloCard from './components/HelloCard'
 import PhotoViewer from './components/PhotoViewer'
 import MeView from './components/MeView'
 import RankedView from './components/RankedView'
@@ -14,6 +15,7 @@ import { deleteAchievement, listAchievementsWithPhotos } from './lib/achievement
 import { categoriesInUse, getCategories } from './lib/categories'
 import { getGoal } from './lib/goal'
 import { askForPersistentStorage } from './lib/storage'
+import { getName, loadHello, markWhatsNewSeen, setName, type HelloKind } from './lib/welcome'
 import { STARTER_CATEGORIES, type AchievementWithPhotos } from './lib/types'
 
 const STARTER = new Set<string>(STARTER_CATEGORIES)
@@ -33,6 +35,7 @@ export default function App() {
   const [goal, setGoal] = useState('')
   const [categories, setCategories] = useState<string[]>([])
   const [usedCategories, setUsedCategories] = useState<string[]>([])
+  const [hello, setHello] = useState<{ kind: HelloKind; name: string; askName: boolean }>()
 
   const reload = useCallback(async () => {
     try {
@@ -81,6 +84,39 @@ export default function App() {
       void refreshAccount()
     }
   }, [])
+
+  // On start: say hello if this device has not seen the latest card.
+  useEffect(() => {
+    loadHello()
+      .then(({ kind, name }) => {
+        if (kind) setHello({ kind, name, askName: kind === 'welcome' || !name })
+      })
+      .catch(() => {
+        // If storage cannot be read, skip the card. The app still works.
+      })
+  }, [])
+
+  const closeHello = useCallback(
+    (typedName: string) => {
+      const askedName = hello?.askName
+      setHello(undefined)
+      void (async () => {
+        try {
+          if (askedName) await setName(typedName)
+          await markWhatsNewSeen()
+        } catch {
+          // Not saved: the card will just show again next time.
+        }
+      })()
+    },
+    [hello?.askName],
+  )
+
+  async function openHelloFromSettings() {
+    setSettingsOpen(false)
+    const name = await getName().catch(() => '')
+    setHello({ kind: 'whatsNew', name, askName: true })
+  }
 
   async function confirmDelete() {
     if (!toDelete) return
@@ -244,8 +280,11 @@ export default function App() {
           customCategories={categories.filter((c) => !STARTER.has(c))}
           onClose={closeSettings}
           onDataChanged={() => void reload()}
+          onOpenHello={() => void openHelloFromSettings()}
         />
       )}
+
+      {hello && <HelloCard kind={hello.kind} name={hello.name} askName={hello.askName} onDone={closeHello} />}
 
       {viewer && <PhotoViewer photos={viewer.row.photos} startIndex={viewer.index} onClose={closeViewer} />}
     </div>

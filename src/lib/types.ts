@@ -83,6 +83,9 @@ export const MAX_PHOTOS = 5
 // One sentence the user is aiming at, like "get into a top engineering school".
 export const MAX_GOAL_LENGTH = 200
 
+// The name used to say hello (Phase 12). Kept on the device only.
+export const MAX_NAME_LENGTH = 30
+
 // How one achievement ranks against the goal. Kept until the user ranks again.
 export interface Ranking {
   achievementId: string
@@ -103,10 +106,11 @@ export interface RecommendationSet {
   createdAt: number
 }
 
-// Small key/value rows: the goal, the last recommendations, and the
-// categories the user made (Phase 9).
+// Small key/value rows: the goal, the last recommendations, the
+// categories the user made (Phase 9), and the name and the last "what's
+// new" list seen (Phase 12).
 export interface Setting {
-  key: 'goal' | 'recommendations' | 'customCategories' | 'profileSummary'
+  key: 'goal' | 'recommendations' | 'customCategories' | 'profileSummary' | 'name' | 'whatsNewSeen'
   value: unknown
 }
 
