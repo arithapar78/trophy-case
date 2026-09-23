@@ -1,6 +1,6 @@
 # Trophy Case: handoff for the next Claude chat
 
-Read this first, then [CLAUDE.md](CLAUDE.md) (the rules), then [REQUIREMENTS.md](REQUIREMENTS.md) (the contract). This file says where the project stands, how it is built and deployed, what is half-done, and exactly what comes next. Last updated 2026-09-22 (Phase 7).
+Read this first, then [CLAUDE.md](CLAUDE.md) (the rules), then [REQUIREMENTS.md](REQUIREMENTS.md) (the contract). This file says where the project stands, how it is built and deployed, what is half-done, and exactly what comes next. Last updated 2026-09-23 (Phase 8).
 
 ## What it is, in one paragraph
 
@@ -49,9 +49,12 @@ Trophy Case is a phone-first web app. A student (13 to 18) or a parent photograp
 | 5. Accounts (identity only), server-side limit | Done and live | `82cdf4c`, docs `23a0f3b` |
 | 5b. Close buttons, design pass, Node 22 pin | Done | `1d1edfa`, `b129f2c`, `52f2370` |
 | 6. Pro plan, $10/month via Stripe | Built and tested, **switched off in Phase 7**, not phone-checked, Stripe keys not set | `ad3d9f3` (requirements), `83ae645` (code) |
-| 7. No AI limit, and Scout the goal chatbot | Built and tested, **not pushed, not phone-checked** | `522774d` |
-| 8. Extra categories (Volunteering, Work, Clubs, Awards) | Planned, needs Ari's yes | |
-| 9. Store wrappers: Amazon Appstore, Apple App Store | Planned | |
+| 7. No AI limit, and Scout the goal chatbot | Pushed, **not phone-checked** | `522774d`, ranking fix `4fefbb3` |
+| 8. Privacy policy page, 13+ age check | Built and tested, **not pushed, not phone-checked** | `83ef870` |
+| 9. Categories: broad starter list plus your own | Requirements agreed (REQUIREMENTS.md Phase 9) | |
+| 10. The Me tab: AI summary of who you are, every achievement on one page | Requirements agreed | |
+| 11. Scout suggests edits, confirm before anything changes, Undo | Requirements agreed | |
+| Later. Store wrappers: Amazon Appstore, Apple App Store | Planned | |
 
 Every phase gets a numbered section in REQUIREMENTS.md before the code (Phases 0 to 5 are there). Checkboxes are for Ari to tick on the phone.
 
@@ -191,10 +194,23 @@ Commit `522774d`, version 2.6.0. Requirements are Features 14 to 16 and tests T7
 3. **Vishal**: set a monthly spending cap in the Anthropic console. The ceiling protects against a runaway script; the cap protects against everything else.
 4. Tick the Phase 7 checkboxes in REQUIREMENTS.md on the phone.
 
-## Phases 8 and 9
+## Phase 8: privacy page and age check. Built, needs push and phone check
 
-- Categories: add Volunteering, Work, Clubs, Awards to `CATEGORIES` in `src/lib/types.ts` once Ari says yes; validation, filters and the AI prompts pick it up automatically; backup restore already accepts any listed category.
-- Store wrappers: Amazon Appstore (free developer account) and Apple App Store ($99/year, needs a Mac build of a WebView wrapper, e.g. Capacitor, which would be a new library to ask about). Not started; the PWA is the product until then.
+Commit `83ef870`, version 2.7.0. Requirements are Features 17 and 18, tests T8.1 to T8.4.
+
+- `privacy.html` at the repo root is a second Vite page (`build.rollupOptions.input` in `vite.config.ts`), plain HTML styled by `src/index.css`, precached so it opens offline. Contact: ariquery@gmail.com (Vishal's choice). **Keep it and PRIVACY.md saying the same thing.**
+- `src/lib/ageGate.ts` + `src/components/AgeCheck.tsx`: birth month and year, asked before any sign-in button, only when signed out. Neutral wording (Vishal agreed, following FTC guidance, instead of a 13+ checkbox). Counts as 13 from the start of the birth month. The date is dropped; localStorage keeps `trophy-case.age-check` = `passed` / `under13`. Under 13 blocks sign-in only.
+- `src/components/PrivacyLink.tsx`: opens in a new tab, because a Home Screen app has no back button.
+- 138 unit, 55 e2e, both green twice.
+
+Left: Ari pushes; phone check (Settings while signed out shows the age question; privacy link opens; after passing, Google button appears); then Vishal publishes the Google project (README, "Opening Google sign-in to everyone"). Caveat: Google's Branding page wants the home page and privacy links on an authorized domain; a `*.vercel.app` address may or may not be accepted there, and a custom domain removes the question.
+
+## Phases 9 to 11 (agreed 2026-09-23, build in this order)
+
+- **9 Categories:** starter list School, Sports, Arts, Community Service, Work, Clubs & Leadership, Awards, Other, plus user-made categories (from the details sheet and Settings; rename, delete to Other). A Dexie upgrade turns Debate and Cooking into custom categories. AI picks from the user's list. `CATEGORIES` in `src/lib/types.ts` stops being the only source; validation, backup, filters, photoRead and scout prompts all read the user's list.
+- **10 Me tab:** fourth tab. AI summary in the second person plus 3 to 5 strengths, written only on tap, stored on the device with its date and a "changed since" note. Below: every achievement grouped by category with counts and totals.
+- **11 Scout edits:** a `<changes>` block of proposed field changes referring to achievements by prompt number (not id; see the ranking fix), a confirm card with per-change ticks, Undo, max 50, validation, skip if edited since.
+- **Later:** store wrappers (Apple needs Capacitor, a new library to ask about). Drafting help (résumé bullet, Common App line) was in the old plan; not asked for this time.
 
 ## Open questions still unanswered by Ari
 
