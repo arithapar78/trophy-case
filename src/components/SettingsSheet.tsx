@@ -11,6 +11,7 @@ import { MAX_GOAL_LENGTH } from '../lib/types'
 import { shareOrDownload } from '../lib/share'
 import { formatBytes, getStorageUsage, type StorageUsage } from '../lib/storage'
 import PrivacyLink from './PrivacyLink'
+import CategoriesSection from './CategoriesSection'
 
 interface Props {
   achievementCount: number
@@ -18,11 +19,13 @@ interface Props {
   // first frame. Loading it here instead could overwrite what the user
   // had already started typing.
   goal: string
+  // The categories the user made (Phase 9).
+  customCategories: string[]
   onClose: () => void
   onDataChanged: () => void
 }
 
-export default function SettingsSheet({ achievementCount, goal: savedGoal, onClose, onDataChanged }: Props) {
+export default function SettingsSheet({ achievementCount, goal: savedGoal, customCategories, onClose, onDataChanged }: Props) {
   const [usage, setUsage] = useState<StorageUsage>()
   const [message, setMessage] = useState<string>()
   const [error, setError] = useState<string>()
@@ -152,6 +155,8 @@ export default function SettingsSheet({ achievementCount, goal: savedGoal, onClo
             {goalSaved ? 'Goal saved' : 'Save goal'}
           </button>
         </section>
+
+        <CategoriesSection custom={customCategories} onChanged={onDataChanged} />
 
         <section className="mt-5">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-ink/45">AI</h3>

@@ -1,6 +1,7 @@
 // Create, edit, delete and list achievements. All logic lives here so it can
 // be unit-tested without a browser. Components call these and render the result.
 
+import { getCategories } from './categories'
 import { db } from './db'
 import { newId } from './ids'
 import { validateAchievement, type FieldErrors } from './validation'
@@ -49,7 +50,7 @@ export async function createAchievement(
   input: AchievementInput,
   photos: PreparedPhoto[] = [],
 ): Promise<Achievement> {
-  const checked = validateAchievement(input, photos.length)
+  const checked = validateAchievement(input, photos.length, undefined, await getCategories())
   if (!checked.ok) throw new ValidationError(checked.errors)
 
   const now = createdNow()
@@ -88,7 +89,7 @@ export async function updateAchievement(
 
   const currentPhotos = await db.photos.where('achievementId').equals(id).toArray()
   const photoCount = plan ? plan.length : currentPhotos.length
-  const checked = validateAchievement(input, photoCount)
+  const checked = validateAchievement(input, photoCount, undefined, await getCategories())
   if (!checked.ok) throw new ValidationError(checked.errors)
 
   const updated: Achievement = {

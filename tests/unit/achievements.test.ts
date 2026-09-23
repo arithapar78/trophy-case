@@ -99,10 +99,10 @@ describe('delete', () => {
 
 describe('list', () => {
   beforeEach(async () => {
-    await createAchievement({ title: 'Old regional final', date: '2025-03-01', category: 'Debate', note: 'Boston' })
+    await createAchievement({ title: 'Old regional final', date: '2025-03-01', category: 'Clubs & Leadership', note: 'Boston' })
     await createAchievement({ title: 'Basketball MVP', date: '2026-01-15', category: 'Sports', organisation: 'Middlesex Magic' })
     await createAchievement({ title: 'First on same day', date: '2026-04-02', category: 'Arts' })
-    await createAchievement({ title: 'Second on same day', date: '2026-04-02', category: 'Cooking', role: 'Sous chef' })
+    await createAchievement({ title: 'Second on same day', date: '2026-04-02', category: 'Community Service', role: 'Sous chef' })
   })
 
   it('returns newest first, most recently created first on a tie', async () => {

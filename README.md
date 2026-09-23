@@ -34,7 +34,8 @@ This is a fresh build. Each phase below is built, tested and tried on a phone be
 | 6. Pro plan (built, switched off) | $10 a month through Stripe. All there and tested, but nothing is for sale until there are users |
 | 7. Scout (done) | A chat that knows your goal and your record, with file upload. No AI limit to worry about |
 | 8. Privacy and age (done) | A public privacy policy page, and a birth month and year check so only people 13 and up can make an account |
-| 9 to 11 (next) | Categories that fit everyone plus your own, the Me tab (who you are, on one page), Scout suggesting edits |
+| 9. Categories (done) | A broad starter list for everyone (School, Sports, Arts, Community Service, Work, Clubs & Leadership, Awards, Other) plus up to 20 of your own, made from the details sheet or Settings |
+| 10 and 11 (next) | The Me tab (who you are, on one page), Scout suggesting edits |
 | Later | App store listings |
 
 ## Tech stack

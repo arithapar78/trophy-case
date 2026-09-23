@@ -4,7 +4,8 @@
 // Never create another Dexie instance elsewhere. Import `db` from here.
 
 import Dexie, { type EntityTable } from 'dexie'
-import type { Achievement, Photo, Ranking, ScoutMessage, Setting } from './types'
+import { STARTER_CATEGORIES, type Achievement, type Photo, type Ranking, type ScoutMessage, type Setting } from './types'
+import { cleanCustomCategories } from './validation'
 
 export class TrophyCaseDB extends Dexie {
   achievements!: EntityTable<Achievement, 'id'>
@@ -38,6 +39,27 @@ export class TrophyCaseDB extends Dexie {
       settings: 'key',
       scoutMessages: 'id, at',
     })
+    // Version 4 (Phase 9) keeps the same tables. The categories changed from
+    // a fixed list to a starter list plus the user's own, so any category
+    // already in use that is not on the new starter list (Debate, Cooking)
+    // becomes one of the user's own. No achievement changes category.
+    this.version(4)
+      .stores({
+        achievements: 'id, date, category, createdAt',
+        photos: 'id, achievementId, [achievementId+order]',
+        rankings: 'achievementId',
+        settings: 'key',
+        scoutMessages: 'id, at',
+      })
+      .upgrade(async (tx) => {
+        const starters = new Set<string>(STARTER_CATEGORIES)
+        const inUse = new Set<string>()
+        await tx.table('achievements').each((a: Achievement) => {
+          if (!starters.has(a.category)) inUse.add(a.category)
+        })
+        const custom = cleanCustomCategories([...inUse].sort())
+        if (custom.length > 0) await tx.table('settings').put({ key: 'customCategories', value: custom })
+      })
   }
 }
 

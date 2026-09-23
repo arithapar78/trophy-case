@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { validateAchievement } from '../../src/lib/validation'
 
 const today = '2026-09-21'
-const good = { title: 'Won the regional debate', date: '2026-09-20', category: 'Debate' }
+const good = { title: 'Won the regional debate', date: '2026-09-20', category: 'Clubs & Leadership' }
 
 describe('validateAchievement', () => {
   it('accepts valid data and trims text', () => {

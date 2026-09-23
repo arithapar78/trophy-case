@@ -19,6 +19,7 @@ import { db } from './db'
 import { newId } from './ids'
 import { prepareForStorage } from './photos'
 import type { Achievement, ScoutMessage } from './types'
+import { getCategories } from './categories'
 
 const SEND_SIDE = 1024
 const JPEG_QUALITY = 0.8
@@ -154,6 +155,7 @@ export async function askScout(options: {
     history: toHistory(options.history),
     today: todayISO(),
     attachment: options.attachment,
+    categories: await getCategories(),
   }
   const result = await postAi<ScoutResponse>('/api/scout', body)
   if (!result.ok) throw new AiUnavailableError(result.message)

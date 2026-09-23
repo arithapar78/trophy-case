@@ -9,7 +9,7 @@ test('back up, delete everything, restore: the achievements come back', async ({
   await page.getByTestId('camera-input').setInputFiles(photoFile())
   const sheet = page.getByRole('dialog', { name: 'New achievement' })
   await sheet.getByLabel('Title').fill('Backed up win')
-  await sheet.getByRole('button', { name: 'Cooking', exact: true }).click()
+  await sheet.getByRole('button', { name: 'Community Service', exact: true }).click()
   await sheet.getByRole('button', { name: 'Save' }).click()
   await expect(sheet).toBeHidden()
 

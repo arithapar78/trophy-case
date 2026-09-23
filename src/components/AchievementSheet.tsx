@@ -8,13 +8,17 @@ import { getToken } from '../lib/account'
 import AiPhotoPanel, { type AiState } from './AiPhotoPanel'
 import { todayISO } from '../lib/dates'
 import { checkPhotoFile, prepareForStorage } from '../lib/photos'
-import { CATEGORIES, MAX_PHOTOS, type AchievementWithPhotos, type Photo, type PhotoPlanItem, type PreparedPhoto } from '../lib/types'
+import { MAX_PHOTOS, type AchievementWithPhotos, type Photo, type PhotoPlanItem, type PreparedPhoto } from '../lib/types'
 import { LIMITS, type FieldErrors } from '../lib/validation'
+import CategoryPicker from './CategoryPicker'
 
 export type SheetMode = { kind: 'add'; firstPhoto?: File } | { kind: 'edit'; row: AchievementWithPhotos }
 
 interface Props {
   mode: SheetMode
+  // The user's full category list (starter plus their own).
+  categories: string[]
+  onCategoriesChanged: () => void
   onClose: () => void
   onSaved: () => void
   onOpenSettings: () => void
@@ -73,7 +77,7 @@ function Thumb({ item, onRemove }: { item: SheetPhoto; onRemove: () => void }) {
   )
 }
 
-export default function AchievementSheet({ mode, onClose, onSaved, onOpenSettings }: Props) {
+export default function AchievementSheet({ mode, categories, onCategoriesChanged, onClose, onSaved, onOpenSettings }: Props) {
   const [fields, setFields] = useState<Fields>(() => initialFields(mode))
   const [photos, setPhotos] = useState<SheetPhoto[]>(() => initialPhotos(mode))
   const [errors, setErrors] = useState<FieldErrors>({})
@@ -247,23 +251,12 @@ export default function AchievementSheet({ mode, onClose, onSaved, onOpenSetting
         {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
 
         <p className={`${labelClass} mt-4`}>Category</p>
-        <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1" role="group" aria-label="Category">
-          {CATEGORIES.map((c) => (
-            <button
-              key={c}
-              type="button"
-              aria-pressed={fields.category === c}
-              onClick={() => set('category')(c)}
-              className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                fields.category === c
-                  ? 'bg-accent text-white shadow-card'
-                  : 'bg-ink/[0.04] text-ink/70 ring-1 ring-ink/10 active:bg-ink/10'
-              }`}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
+        <CategoryPicker
+          categories={categories}
+          value={fields.category}
+          onChange={set('category')}
+          onCategoryAdded={onCategoriesChanged}
+        />
         {errors.category && <p className="mt-1 text-sm text-red-600">{errors.category}</p>}
 
         <label className={`${labelClass} mt-4`} htmlFor="date">Date</label>

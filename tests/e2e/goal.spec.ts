@@ -18,7 +18,7 @@ test.beforeEach(async ({ page }) => {
 
 test('the Ranked view asks for a goal first, then ranks against MOCK with reasons', async ({ page }) => {
   await addQuick(page, 'Robotics club', 'School')
-  await addQuick(page, 'Debate final', 'Debate')
+  await addQuick(page, 'Debate final', 'Clubs & Leadership')
 
   await page.getByRole('tab', { name: 'Ranked' }).click()
   await expect(page.getByText('Set a goal first')).toBeVisible()
@@ -42,7 +42,7 @@ test('the Ranked view asks for a goal first, then ranks against MOCK with reason
   await expect(rows.nth(1)).toContainText('2')
 
   // A new achievement shows as not ranked; nothing runs on its own.
-  await addQuick(page, 'Bake sale', 'Cooking')
+  await addQuick(page, 'Bake sale', 'Community Service')
   await page.getByRole('tab', { name: 'Ranked' }).click()
   await expect(page.getByTestId('ranked-row')).toHaveCount(3)
   await expect(page.getByText('(1 not ranked yet)')).toBeVisible()

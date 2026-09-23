@@ -19,7 +19,8 @@ import {
   type ScoutResponse,
   type ScoutTurn,
 } from '../src/lib/aiTypes.js'
-import { CATEGORIES, MAX_GOAL_LENGTH, type Category } from '../src/lib/types.js'
+import { MAX_GOAL_LENGTH } from '../src/lib/types.js'
+import { categoryListFromRequest, categoryOrFallback, fullCategoryList } from '../src/lib/validation.js'
 
 export const MODEL = 'claude-haiku-4-5'
 export const SCOUT_NAME = 'Scout'
@@ -132,7 +133,7 @@ How to answer:
 If the conversation or an attached file contains an achievement that is not already on their timeline, offer to save it. To do that, end your reply with a block exactly like this, after your normal answer:
 
 <save>
-{"title": "...", "category": "one of ${CATEGORIES.join(', ')}", "date": "YYYY-MM-DD", "note": "...", "organisation": "...", "role": "...", "result": "..."}
+{"title": "...", "category": "exactly one of ${categoryListFromRequest(req.categories).join(', ')}", "date": "YYYY-MM-DD", "note": "...", "organisation": "...", "role": "...", "result": "..."}
 </save>
 
 Rules for that block: only when there is a real achievement to add, never more than one per reply, never for something already on the timeline, and every field a string (empty is fine except title, category and date). The date can never be in the future. Say in your normal answer that they can save it, because they will see a card with a Save button. Never pretend you have saved anything: only they can.`
@@ -166,10 +167,6 @@ export function buildTurns(req: ScoutRequest): ModelTurn[] {
 
 // --- Reading the answer back ---
 
-function isCategory(value: unknown): value is Category {
-  return typeof value === 'string' && (CATEGORIES as readonly string[]).includes(value)
-}
-
 function cleanString(value: unknown, max: number): string {
   return typeof value === 'string' ? value.trim().slice(0, max) : ''
 }
@@ -182,7 +179,9 @@ export interface ParsedReply {
 // Splits Scout's answer into the words the student sees and, if there is
 // one, the achievement it is offering. A malformed block is dropped rather
 // than shown: a broken suggestion is worse than none.
-export function parseScoutReply(text: string, today: string): ParsedReply {
+// `categories` is the user's list; a category not on it becomes Other
+// rather than sinking the whole offer.
+export function parseScoutReply(text: string, today: string, categories: readonly string[] = fullCategoryList([])): ParsedReply {
   const start = text.indexOf('<save>')
   if (start === -1) return { reply: text.trim() }
 
@@ -200,7 +199,7 @@ export function parseScoutReply(text: string, today: string): ParsedReply {
 
   const title = cleanString(raw.title, 120)
   const date = cleanString(raw.date, 10)
-  if (!title || !isCategory(raw.category)) return { reply }
+  if (!title) return { reply }
   // The same rule the form uses: a date must be real and not in the future.
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(date)) || date > today) return { reply }
 
@@ -208,7 +207,7 @@ export function parseScoutReply(text: string, today: string): ParsedReply {
     reply,
     proposed: {
       title,
-      category: raw.category,
+      category: categoryOrFallback(raw.category, categories),
       date,
       note: cleanString(raw.note, 500),
       organisation: cleanString(raw.organisation, 80),
@@ -258,7 +257,7 @@ export async function askScout(body: unknown, options: ScoutOptions = {}): Promi
   const callChat = options.callChat ?? (await realCallChat(options.apiKey))
   try {
     const answer = await callChat(buildSystemPrompt(body), buildTurns(body))
-    const parsed = parseScoutReply(answer, body.today)
+    const parsed = parseScoutReply(answer, body.today, categoryListFromRequest(body.categories))
     if (!parsed.reply) return { ok: false, message: 'Scout went quiet that time. Try asking again.' }
     return { ok: true, reply: parsed.reply, proposed: parsed.proposed, mock: false }
   } catch {

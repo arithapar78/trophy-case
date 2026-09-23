@@ -1,15 +1,15 @@
-import { CATEGORIES } from '../lib/types'
-
 interface Props {
   search: string
   category: string
+  // Only the categories that have something in them, so the row does not
+  // fill up with empty ones.
+  categoriesInUse: string[]
   onSearch: (value: string) => void
   onCategory: (value: string) => void
 }
 
-const OPTIONS = ['All', ...CATEGORIES]
-
-export default function TimelineFilters({ search, category, onSearch, onCategory }: Props) {
+export default function TimelineFilters({ search, category, categoriesInUse, onSearch, onCategory }: Props) {
+  const options = ['All', ...categoriesInUse]
   return (
     <div className="flex flex-col gap-3">
       <div className="relative">
@@ -32,7 +32,7 @@ export default function TimelineFilters({ search, category, onSearch, onCategory
       </div>
       {/* Scrolls sideways so the chips never wrap and push the list down. */}
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" role="group" aria-label="Category filter">
-        {OPTIONS.map((option) => (
+        {options.map((option) => (
           <button
             key={option}
             type="button"

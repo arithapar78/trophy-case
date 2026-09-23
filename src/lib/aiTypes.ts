@@ -15,6 +15,9 @@ export interface ReadPhotoRequest {
   imageBase64: string
   // The phone's date, so a "recently" guess lands on the right day.
   today: string
+  // The user's categories (Phase 9), so the AI picks from their list. The
+  // server checks it and falls back to the starter list if it is missing.
+  categories?: string[]
 }
 
 export type ReadPhotoResponse =
@@ -97,6 +100,8 @@ export interface ScoutRequest {
   history: ScoutTurn[]
   today: string
   attachment?: ScoutAttachment
+  // The user's categories (Phase 9), so an offered achievement uses one.
+  categories?: string[]
 }
 
 // When Scout spots an achievement worth saving it offers one of these. It is

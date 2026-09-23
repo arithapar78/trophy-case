@@ -7,6 +7,7 @@ import type { PhotoDraft, ReadPhotoRequest, ReadPhotoResponse } from './aiTypes'
 import type { UsageStatus } from './aiUsage'
 import { todayISO } from './dates'
 import { prepareForStorage } from './photos'
+import { getCategories } from './categories'
 
 const SEND_SIDE = 1024
 const JPEG_QUALITY = 0.8
@@ -54,7 +55,12 @@ export async function postAi<T extends { ok: boolean }>(path: string, body: unkn
 export async function readPhotoWithAi(photo: Blob): Promise<{ draft: PhotoDraft; mock: boolean }> {
   // Most of a photo call's cost is pixels, so send a small copy.
   const small = await prepareForStorage(photo, SEND_SIDE, JPEG_QUALITY)
-  const body: ReadPhotoRequest = { imageBase64: await toBase64(small.blob), today: todayISO() }
+  const body: ReadPhotoRequest = {
+    imageBase64: await toBase64(small.blob),
+    today: todayISO(),
+    // The user's own list, so the AI picks one of their categories.
+    categories: await getCategories(),
+  }
   const result = await postAi<ReadPhotoResponse>('/api/read-photo', body)
   if (!result.ok) throw new AiUnavailableError(result.message)
   return { draft: result.draft, mock: result.mock }

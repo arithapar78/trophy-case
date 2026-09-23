@@ -15,7 +15,7 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('edit an achievement, then delete it with confirmation; it stays gone after a reload', async ({ page }) => {
-  await addQuick(page, 'Debate semifinal', 'Debate')
+  await addQuick(page, 'Debate semifinal', 'Clubs & Leadership')
 
   await page.getByRole('button', { name: 'Edit' }).click()
   const sheet = page.getByRole('dialog', { name: 'Edit achievement' })
@@ -47,7 +47,7 @@ test('cancelling an edit keeps a removed photo', async ({ page }) => {
   await page.getByTestId('camera-input').setInputFiles(photoFile())
   const add = page.getByRole('dialog', { name: 'New achievement' })
   await add.getByLabel('Title').fill('Keep my photo')
-  await add.getByRole('button', { name: 'Cooking', exact: true }).click()
+  await add.getByRole('button', { name: 'Community Service', exact: true }).click()
   await add.getByRole('button', { name: 'Save' }).click()
   await expect(add).toBeHidden()
 
@@ -61,9 +61,9 @@ test('cancelling an edit keeps a removed photo', async ({ page }) => {
 })
 
 test('search and the category filter narrow the timeline together', async ({ page }) => {
-  await addQuick(page, 'Regional debate final', 'Debate')
+  await addQuick(page, 'Regional debate final', 'Clubs & Leadership')
   await addQuick(page, 'Regional swim meet', 'Sports')
-  await addQuick(page, 'Bake sale', 'Cooking')
+  await addQuick(page, 'Bake sale', 'Community Service')
   await expect(page.getByTestId('achievement-card')).toHaveCount(3)
 
   await page.getByLabel('Search achievements').fill('REGIONAL')

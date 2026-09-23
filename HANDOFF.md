@@ -1,6 +1,6 @@
 # Trophy Case: handoff for the next Claude chat
 
-Read this first, then [CLAUDE.md](CLAUDE.md) (the rules), then [REQUIREMENTS.md](REQUIREMENTS.md) (the contract). This file says where the project stands, how it is built and deployed, what is half-done, and exactly what comes next. Last updated 2026-09-23 (Phase 8).
+Read this first, then [CLAUDE.md](CLAUDE.md) (the rules), then [REQUIREMENTS.md](REQUIREMENTS.md) (the contract). This file says where the project stands, how it is built and deployed, what is half-done, and exactly what comes next. Last updated 2026-09-23 (Phase 9).
 
 ## What it is, in one paragraph
 
@@ -50,8 +50,8 @@ Trophy Case is a phone-first web app. A student (13 to 18) or a parent photograp
 | 5b. Close buttons, design pass, Node 22 pin | Done | `1d1edfa`, `b129f2c`, `52f2370` |
 | 6. Pro plan, $10/month via Stripe | Built and tested, **switched off in Phase 7**, not phone-checked, Stripe keys not set | `ad3d9f3` (requirements), `83ae645` (code) |
 | 7. No AI limit, and Scout the goal chatbot | Pushed, **not phone-checked** | `522774d`, ranking fix `4fefbb3` |
-| 8. Privacy policy page, 13+ age check | Built and tested, **not pushed, not phone-checked** | `83ef870` |
-| 9. Categories: broad starter list plus your own | Requirements agreed (REQUIREMENTS.md Phase 9) | |
+| 8. Privacy policy page, 13+ age check | Pushed, Google sign-in being published, **not phone-checked** | `83ef870` |
+| 9. Categories: broad starter list plus your own | Built and tested, **not pushed, not phone-checked** | see Phase 9 below |
 | 10. The Me tab: AI summary of who you are, every achievement on one page | Requirements agreed | |
 | 11. Scout suggests edits, confirm before anything changes, Undo | Requirements agreed | |
 | Later. Store wrappers: Amazon Appstore, Apple App Store | Planned | |
@@ -205,9 +205,23 @@ Commit `83ef870`, version 2.7.0. Requirements are Features 17 and 18, tests T8.1
 
 Left: Ari pushes; phone check (Settings while signed out shows the age question; privacy link opens; after passing, Google button appears); then Vishal publishes the Google project (README, "Opening Google sign-in to everyone"). Caveat: Google's Branding page wants the home page and privacy links on an authorized domain; a `*.vercel.app` address may or may not be accepted there, and a custom domain removes the question.
 
-## Phases 9 to 11 (agreed 2026-09-23, build in this order)
+## Phase 9: categories. Built, needs push and phone check
 
-- **9 Categories:** starter list School, Sports, Arts, Community Service, Work, Clubs & Leadership, Awards, Other, plus user-made categories (from the details sheet and Settings; rename, delete to Other). A Dexie upgrade turns Debate and Cooking into custom categories. AI picks from the user's list. `CATEGORIES` in `src/lib/types.ts` stops being the only source; validation, backup, filters, photoRead and scout prompts all read the user's list.
+Version 2.8.0. Requirements are Features 19 and 20, tests T9.1 to T9.6.
+
+- `STARTER_CATEGORIES` in `src/lib/types.ts` (School, Sports, Arts, Community Service, Work, Clubs & Leadership, Awards, Other; Other always last and undeletable). `Category` is now just `string`; the old fixed `CATEGORIES` is gone.
+- The user's own live in the settings table under `customCategories` (max 20, 1 to 30 characters, no repeats ignoring capitals, "All" refused). All rules are in `src/lib/validation.ts` (`validateCategoryName`, `cleanCustomCategories`, `fullCategoryList`, `categoryListFromRequest`, `categoryOrFallback`). `validateAchievement` takes the list as a 4th argument, defaulting to the starter list.
+- `src/lib/categories.ts`: get, add, rename (moves achievements, one transaction), delete (moves to Other), `categoriesInUse` for the filter row, `ensureCategories` for restore.
+- Dexie v4 upgrade turns any in-use category not on the starter list (Debate, Cooking) into a custom one. Nothing changes category.
+- Backup format 3 carries `customCategories`; restore adds missing ones and puts anything that cannot be added into Other. Old format 1 and 2 backups still restore.
+- Photo read and Scout send `categories`; the server checks the list and falls back to the starter list; any answer off the list becomes Other. **`validation.ts` is now imported by the server, so its imports use `.js` (gotcha 1). Checked with the Node ESM compile.**
+- UI: `CategoryPicker.tsx` (chips now wrap so "+ New category" is always visible), `CategoriesSection.tsx` in Settings (add, rename, delete with a count), filter row shows only categories in use.
+- Existing tests that used Debate or Cooking as a category now use Clubs & Leadership / Community Service, and the Scout "Nonsense category drops the offer" case became "falls back to Other", because the requirement changed. Nothing deleted or skipped.
+- 160 unit, 59 e2e.
+- Noticed, not fixed: the Settings AI section still says "each use is counted against your account. The count is in the Account section", which Phase 7 made untrue.
+
+## Phases 10 and 11 (agreed 2026-09-23, build in this order)
+
 - **10 Me tab:** fourth tab. AI summary in the second person plus 3 to 5 strengths, written only on tap, stored on the device with its date and a "changed since" note. Below: every achievement grouped by category with counts and totals.
 - **11 Scout edits:** a `<changes>` block of proposed field changes referring to achievements by prompt number (not id; see the ranking fix), a confirm card with per-change ticks, Undo, max 50, validation, skip if edited since.
 - **Later:** store wrappers (Apple needs Capacitor, a new library to ask about). Drafting help (résumé bullet, Common App line) was in the old plan; not asked for this time.

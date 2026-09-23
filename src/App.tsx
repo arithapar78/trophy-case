@@ -10,9 +10,12 @@ import SettingsSheet from './components/SettingsSheet'
 import TimelineFilters from './components/TimelineFilters'
 import { confirmUpgrade, refreshAccount, takeBillingResultFromUrl, takeTokenFromUrl } from './lib/account'
 import { deleteAchievement, listAchievementsWithPhotos } from './lib/achievements'
+import { categoriesInUse, getCategories } from './lib/categories'
 import { getGoal } from './lib/goal'
 import { askForPersistentStorage } from './lib/storage'
-import type { AchievementWithPhotos } from './lib/types'
+import { STARTER_CATEGORIES, type AchievementWithPhotos } from './lib/types'
+
+const STARTER = new Set<string>(STARTER_CATEGORIES)
 
 export default function App() {
   const [rows, setRows] = useState<AchievementWithPhotos[]>()
@@ -27,14 +30,26 @@ export default function App() {
   const [view, setView] = useState<'timeline' | 'ranked' | 'scout'>('timeline')
   const [allRows, setAllRows] = useState<AchievementWithPhotos[]>([])
   const [goal, setGoal] = useState('')
+  const [categories, setCategories] = useState<string[]>([])
+  const [usedCategories, setUsedCategories] = useState<string[]>([])
 
   const reload = useCallback(async () => {
     try {
-      const [filtered, all, savedGoal] = await Promise.all([
+      const [filtered, all, savedGoal, allCategories, inUse] = await Promise.all([
         listAchievementsWithPhotos({ search, category }),
         listAchievementsWithPhotos(),
         getGoal(),
+        getCategories(),
+        categoriesInUse(),
       ])
+      // If the chosen filter's category was renamed, deleted or emptied,
+      // go back to All rather than showing an empty list with no chip lit.
+      if (category !== 'All' && !inUse.includes(category)) {
+        setCategory('All')
+        return
+      }
+      setCategories(allCategories)
+      setUsedCategories(inUse)
       setRows(filtered)
       setAllRows(all)
       setGoal(savedGoal)
@@ -125,7 +140,13 @@ export default function App() {
       </div>
 
       {view === 'timeline' && (
-        <TimelineFilters search={search} category={category} onSearch={setSearch} onCategory={setCategory} />
+        <TimelineFilters
+          search={search}
+          category={category}
+          categoriesInUse={usedCategories}
+          onSearch={setSearch}
+          onCategory={setCategory}
+        />
       )}
 
       {/* Bottom padding keeps the camera button off the last card. */}
@@ -179,6 +200,8 @@ export default function App() {
       {sheet && (
         <AchievementSheet
           mode={sheet}
+          categories={categories}
+          onCategoriesChanged={() => void reload()}
           onClose={closeSheet}
           onOpenSettings={() => {
             setSheet(undefined)
@@ -205,7 +228,13 @@ export default function App() {
       )}
 
       {settingsOpen && (
-        <SettingsSheet achievementCount={total} goal={goal} onClose={closeSettings} onDataChanged={() => void reload()} />
+        <SettingsSheet
+          achievementCount={total}
+          goal={goal}
+          customCategories={categories.filter((c) => !STARTER.has(c))}
+          onClose={closeSettings}
+          onDataChanged={() => void reload()}
+        />
       )}
 
       {viewer && <PhotoViewer photos={viewer.row.photos} startIndex={viewer.index} onClose={closeViewer} />}

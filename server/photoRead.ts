@@ -7,7 +7,7 @@
 // It stores nothing.
 
 import { MAX_IMAGE_BASE64_LENGTH, type PhotoDraft, type ReadPhotoRequest, type ReadPhotoResponse } from '../src/lib/aiTypes.js'
-import { CATEGORIES, type Category } from '../src/lib/types.js'
+import { categoryListFromRequest, categoryOrFallback, fullCategoryList } from '../src/lib/validation.js'
 import { isValidISODate } from '../src/lib/dates.js'
 
 export const MODEL = 'claude-haiku-4-5'
@@ -21,15 +21,18 @@ export interface ReadPhotoOptions {
   callModel?: CallModel
 }
 
-const PROMPT = `This photo shows a student's achievement: a certificate, medal, trophy, scoreboard, finished project, or similar.
+// The categories are the user's own list, so the prompt is built per call.
+export function buildPrompt(categories: readonly string[]): string {
+  return `This photo shows a student's achievement: a certificate, medal, trophy, scoreboard, finished project, or similar.
 Describe it as one saved achievement. Reply with JSON only, no other text, in exactly this shape:
 {"title": string, "category": string, "date": string | null, "note": string}
 Rules:
 - title: short and specific, under 100 characters, like "Regional Science Fair, 1st place"
-- category: one of School, Sports, Debate, Cooking, Arts, Other
+- category: exactly one of ${categories.join(', ')}. Pick the closest; use Other if none fits
 - date: the date shown in the photo as YYYY-MM-DD, or null if none is visible
 - note: one sentence with any useful detail visible (organisation, place, score). Empty string if nothing more.
 Do not invent names, scores or dates that are not visible.`
+}
 
 export function mockDraft(today: string): PhotoDraft {
   return {
@@ -40,13 +43,9 @@ export function mockDraft(today: string): PhotoDraft {
   }
 }
 
-function isCategory(value: unknown): value is Category {
-  return typeof value === 'string' && (CATEGORIES as readonly string[]).includes(value)
-}
-
 // Turns whatever the model said into a safe draft. Anything odd falls
 // back to something the user can fix by hand.
-export function parseModelAnswer(text: string, today: string): PhotoDraft {
+export function parseModelAnswer(text: string, today: string, categories: readonly string[] = fullCategoryList([])): PhotoDraft {
   const start = text.indexOf('{')
   const end = text.lastIndexOf('}')
   let raw: Record<string, unknown> = {}
@@ -62,7 +61,7 @@ export function parseModelAnswer(text: string, today: string): PhotoDraft {
   const date = typeof raw.date === 'string' && isValidISODate(raw.date) && raw.date <= today ? raw.date : today
   return {
     title: title || 'Achievement',
-    category: isCategory(raw.category) ? raw.category : 'Other',
+    category: categoryOrFallback(raw.category, categories),
     date,
     note,
   }
@@ -84,8 +83,9 @@ export async function readPhoto(body: unknown, options: ReadPhotoOptions = {}): 
 
   const callModel = options.callModel ?? (await realCallModel(options.apiKey))
   try {
-    const answer = await callModel(body.imageBase64, PROMPT)
-    return { ok: true, draft: parseModelAnswer(answer, body.today), mock: false }
+    const categories = categoryListFromRequest(body.categories)
+    const answer = await callModel(body.imageBase64, buildPrompt(categories))
+    return { ok: true, draft: parseModelAnswer(answer, body.today, categories), mock: false }
   } catch {
     return { ok: false, message: "The AI couldn't read that photo. Fill it in yourself this time." }
   }

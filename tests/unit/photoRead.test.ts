@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { MAX_IMAGE_BASE64_LENGTH } from '../../src/lib/aiTypes'
 import { checkRequest, mockDraft, parseModelAnswer, readPhoto } from '../../server/photoRead'
-import { CATEGORIES } from '../../src/lib/types'
+import { STARTER_CATEGORIES } from '../../src/lib/types'
 
 const today = '2026-09-21'
 const request = { imageBase64: 'aGVsbG8=', today }
@@ -14,7 +14,7 @@ describe('readPhoto in MOCK mode (no key)', () => {
     if (result.ok) {
       expect(result.mock).toBe(true)
       expect(result.draft.title).toMatch(/^MOCK/)
-      expect(CATEGORIES).toContain(result.draft.category)
+      expect(STARTER_CATEGORIES).toContain(result.draft.category)
       expect(result.draft.date).toBe(today)
       expect(typeof result.draft.note).toBe('string')
     }

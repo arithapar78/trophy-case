@@ -2,8 +2,27 @@
 
 import type { ProposedAchievement } from './aiTypes.js'
 
-export const CATEGORIES = ['School', 'Sports', 'Debate', 'Cooking', 'Arts', 'Other'] as const
-export type Category = (typeof CATEGORIES)[number]
+// Everyone starts with these. Broad on purpose, so they fit most students;
+// anything more specific (Debate, Robotics, Chess) is a category the user
+// makes themselves. "Other" is always last and can never be removed, because
+// it is where achievements go when their category is deleted.
+export const STARTER_CATEGORIES = [
+  'School',
+  'Sports',
+  'Arts',
+  'Community Service',
+  'Work',
+  'Clubs & Leadership',
+  'Awards',
+  'Other',
+] as const
+export const FALLBACK_CATEGORY = 'Other'
+export const MAX_CUSTOM_CATEGORIES = 20
+export const MAX_CATEGORY_LENGTH = 30
+
+// A category is now any name on the user's list: a starter one or one they
+// made. Which names are allowed is checked in validation.ts.
+export type Category = string
 
 // One saved win. Dates are stored as "YYYY-MM-DD" text so they sort
 // correctly and never shift with the phone's timezone.
@@ -84,9 +103,10 @@ export interface RecommendationSet {
   createdAt: number
 }
 
-// Small key/value rows: the goal, the last recommendations.
+// Small key/value rows: the goal, the last recommendations, and the
+// categories the user made (Phase 9).
 export interface Setting {
-  key: 'goal' | 'recommendations'
+  key: 'goal' | 'recommendations' | 'customCategories'
   value: unknown
 }
 

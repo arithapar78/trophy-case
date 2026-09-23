@@ -7,11 +7,15 @@
 
 import { unzipSync, zipSync } from 'fflate'
 import { db } from './db'
-import { CATEGORIES, type Achievement, type Photo, type Ranking, type RecommendationSet } from './types'
+import { ensureCategories, getCustomCategories } from './categories'
+import { FALLBACK_CATEGORY, MAX_CATEGORY_LENGTH, type Achievement, type Photo, type Ranking, type RecommendationSet } from './types'
 import { getGoal, getRecommendations, setGoal, setRecommendations } from './goal'
 
 export const BACKUP_APP = 'trophy-case'
-export const BACKUP_FORMAT = 2
+// Format 3 (Phase 9) adds the user's own categories. An older app would
+// quietly drop achievements in a category it did not know, so it is told
+// the backup is from a newer version instead.
+export const BACKUP_FORMAT = 3
 
 interface PhotoEntry {
   id: string
@@ -32,6 +36,8 @@ interface Manifest {
   goal?: string
   rankings?: Ranking[]
   recommendations?: RecommendationSet
+  // Added in format 3.
+  customCategories?: string[]
 }
 
 export interface BackupSummary {
@@ -72,6 +78,7 @@ export async function buildBackup(): Promise<Blob> {
     goal: await getGoal(),
     rankings: await db.rankings.toArray(),
     recommendations: await getRecommendations(),
+    customCategories: await getCustomCategories(),
   }
   files['manifest.json'] = new TextEncoder().encode(JSON.stringify(manifest, null, 2))
 
@@ -96,7 +103,8 @@ function isAchievement(value: unknown): value is Achievement {
     typeof a.title === 'string' &&
     typeof a.date === 'string' &&
     typeof a.category === 'string' &&
-    (CATEGORIES as readonly string[]).includes(a.category)
+    a.category.trim().length > 0 &&
+    a.category.length <= MAX_CATEGORY_LENGTH
   )
 }
 
@@ -152,6 +160,14 @@ export async function restoreBackup(file: Blob): Promise<BackupSummary> {
   )
 
   await db.transaction('rw', db.achievements, db.photos, db.rankings, db.settings, async () => {
+    // Add the backup's own categories (and any an achievement uses) to this
+    // device. If one cannot be added, because it breaks the rules or the
+    // limit is reached, its achievements land in Other rather than being lost.
+    const wanted = [...(Array.isArray(manifest.customCategories) ? manifest.customCategories : []), ...achievements.map((a) => a.category)]
+    const available = new Set(await ensureCategories(wanted))
+    for (const a of achievements) {
+      if (!available.has(a.category)) a.category = FALLBACK_CATEGORY
+    }
     await db.achievements.bulkPut(achievements)
     await db.photos.bulkPut(photos)
     await db.rankings.bulkPut(rankings)

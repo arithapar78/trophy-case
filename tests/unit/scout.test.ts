@@ -16,6 +16,7 @@ import {
   type CallChat,
 } from '../../server/scout'
 import { OPEN_CEILING, USES_PER_WINDOW } from '../../server/usage'
+import { fullCategoryList } from '../../src/lib/validation'
 import {
   MAX_ATTACHMENT_BASE64_LENGTH,
   SCOUT_HISTORY_TURNS,
@@ -181,7 +182,8 @@ describe('T7.4 reading Scout back', () => {
 <save>
 {"title":"Debate regional final","category":"Debate","date":"2026-05-01","note":"Reached the final","organisation":"Arlington High","role":"speaker","result":"finalist"}
 </save>`
-    const parsed = parseScoutReply(answer, TODAY)
+    // Phase 9: Debate is one of this user's own categories.
+    const parsed = parseScoutReply(answer, TODAY, fullCategoryList(['Debate']))
     expect(parsed.reply).toBe('Lead with the science fair.')
     expect(parsed.reply).not.toContain('<save>')
     expect(parsed.proposed).toMatchObject({ title: 'Debate regional final', category: 'Debate', result: 'finalist' })
@@ -192,7 +194,6 @@ describe('T7.4 reading Scout back', () => {
       'Text only, no block.',
       'Hi <save>{not json}</save>',
       'Hi <save>{"title":"","category":"Debate","date":"2026-05-01"}</save>',
-      'Hi <save>{"title":"X","category":"Nonsense","date":"2026-05-01"}</save>',
       'Hi <save>{"title":"X","category":"Debate","date":"not-a-date"}</save>',
       'Hi <save>{"title":"X","category":"Debate","date":"2026-05-01"}',
     ]
@@ -201,6 +202,11 @@ describe('T7.4 reading Scout back', () => {
       expect(parsed.proposed).toBeUndefined()
       expect(parsed.reply).not.toContain('<save>')
     }
+  })
+
+  it('turns a category not on the list into Other rather than dropping the offer (Phase 9)', () => {
+    const parsed = parseScoutReply('Hi <save>{"title":"X","category":"Nonsense","date":"2026-05-01"}</save>', TODAY)
+    expect(parsed.proposed?.category).toBe('Other')
   })
 
   it('refuses an offer dated in the future, the same rule the form uses', () => {
