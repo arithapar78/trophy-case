@@ -35,6 +35,7 @@ Trophy Case is a phone-first web app. A student (13 to 18) or a parent photograp
 6. **iPhone:** the camera only opens over https; over plain http it offers the photo library. Home Wi-Fi often blocks phone-to-laptop; a Personal Hotspot with `npm run dev -- --host` works. The real test is the Vercel URL.
 7. **Vercel Hobby is for non-commercial use.** Before charging money, the project needs Vercel Pro ($20/month) or another host.
 8. **The Linux sandbox cannot delete anything in the Mac folder.** `rm` and git's own cleanup both fail with "Operation not permitted", which leaves `.git/*.lock` files behind and makes `git checkout`, `git merge` and `git reset` fail halfway. Working method: commit in the container, `git bundle` it across, `git fetch` the bundle, `git update-ref refs/heads/main <sha>`, then write every file from the commit across with `device_commit_files`. Move stale locks to `.git/tc-stale/` rather than trying to delete them. Ari should periodically `rm -rf .git/tc-stale _to_delete "Claude outputs"` on the Mac.
+10. **Vercel's free (Hobby) plan allows at most 12 serverless functions per deployment.** Every `.ts` file in `api/` is one. Phase 10 made 13 and the deployment failed silently: GitHub showed a red Vercel check and the live site kept the old version. The three sign-in routes are now one function, `api/auth/[action].ts` (logic in `server/authRoutes.ts`), which brings it to 11. A unit test in `tests/unit/authRoutes.test.ts` fails if `api/` ever goes over 12. New AI features should reuse an existing route or fold into one rather than add a file.
 9. **Do not put keys in chat or code.** They live in Vercel's Environment Variables (and a git-ignored `.env.local` locally). If one is ever exposed, rotate it in the Anthropic console.
 
 ## Phase status
@@ -230,7 +231,7 @@ Version 2.9.0. Requirements are Feature 21 (21.8 and 21.9 added when Vishal chos
 - `src/components/MeView.tsx`: the fourth tab. Card (header, totals, summary, strengths with the achievements that show them, category chart, Write/Refresh or Sign in, Save as image), then every achievement grouped by category; tapping one opens it.
 - The stale Settings sentence about counting AI uses is fixed.
 - Not in backups: the summary. It can be rewritten with one tap; say if it should travel.
-- 179 unit, 63 e2e, both passing twice.
+- 182 unit, 63 e2e. The first push failed on Vercel's 12-function limit (gotcha 10); fixed in the follow-up commit.
 
 ## Phase 11 (agreed 2026-09-23)
 

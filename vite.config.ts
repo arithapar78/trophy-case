@@ -3,10 +3,8 @@ import tailwindcss from '@tailwindcss/vite'
 import { readFileSync } from 'node:fs'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
-import devLoginHandler from './api/auth/dev.ts'
-import googleLoginHandler from './api/auth/google.ts'
-import signOutHandler from './api/auth/signout.ts'
 import configHandler from './api/config.ts'
+import { devSignIn, googleSignIn, signOutRoute } from './server/authRoutes.ts'
 import meHandler from './api/me.ts'
 import rankHandler from './api/rank.ts'
 import readPhotoHandler from './api/read-photo.ts'
@@ -39,9 +37,10 @@ function localApi(mode: string): Plugin {
     '/api/summary': summaryHandler,
     '/api/config': configHandler,
     '/api/me': meHandler,
-    '/api/auth/google': googleLoginHandler,
-    '/api/auth/dev': devLoginHandler,
-    '/api/auth/signout': signOutHandler,
+    // On Vercel these three are one function, api/auth/[action].ts.
+    '/api/auth/google': googleSignIn,
+    '/api/auth/dev': devSignIn,
+    '/api/auth/signout': signOutRoute,
     '/api/stripe/checkout': stripeCheckoutHandler,
     '/api/stripe/portal': stripePortalHandler,
     '/api/stripe/webhook': stripeWebhookHandler,

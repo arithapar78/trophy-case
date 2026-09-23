@@ -279,7 +279,7 @@ achievement-tracker/
 │   ├── recommend.ts       Goal + achievements in, three next steps out
 │   ├── config.ts          What the app needs to know before signing in
 │   ├── me.ts              Who is signed in; also deletes the account
-│   └── auth/              google.ts, dev.ts (test mode), signout.ts
+│   └── auth/              [action].ts: Google, test mode and sign out as one function
 ├── server/
 │   ├── photoRead.ts       What read-photo does, testable without a server
 │   ├── goalAdvice.ts      What rank and recommend do
