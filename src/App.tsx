@@ -4,6 +4,7 @@ import AchievementSheet, { type SheetMode } from './components/AchievementSheet'
 import CameraButton from './components/CameraButton'
 import ConfirmDialog from './components/ConfirmDialog'
 import PhotoViewer from './components/PhotoViewer'
+import MeView from './components/MeView'
 import RankedView from './components/RankedView'
 import ScoutView from './components/ScoutView'
 import SettingsSheet from './components/SettingsSheet'
@@ -27,7 +28,7 @@ export default function App() {
   const [viewer, setViewer] = useState<{ row: AchievementWithPhotos; index: number }>()
   const [loadError, setLoadError] = useState<string>()
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [view, setView] = useState<'timeline' | 'ranked' | 'scout'>('timeline')
+  const [view, setView] = useState<'timeline' | 'ranked' | 'scout' | 'me'>('timeline')
   const [allRows, setAllRows] = useState<AchievementWithPhotos[]>([])
   const [goal, setGoal] = useState('')
   const [categories, setCategories] = useState<string[]>([])
@@ -123,7 +124,7 @@ export default function App() {
       </header>
 
       <div className="mb-4 flex rounded-2xl bg-ink/5 p-1" role="tablist" aria-label="View">
-        {(['timeline', 'ranked', 'scout'] as const).map((v) => (
+        {(['timeline', 'ranked', 'scout', 'me'] as const).map((v) => (
           <button
             key={v}
             type="button"
@@ -134,7 +135,7 @@ export default function App() {
               view === v ? 'bg-surface text-ink shadow-card' : 'text-ink/55'
             }`}
           >
-            {v === 'timeline' ? 'Timeline' : v === 'ranked' ? 'Ranked' : 'Scout'}
+            {v === 'timeline' ? 'Timeline' : v === 'ranked' ? 'Ranked' : v === 'scout' ? 'Scout' : 'Me'}
           </button>
         ))}
       </div>
@@ -161,6 +162,15 @@ export default function App() {
             goal={goal}
             onOpenSettings={() => setSettingsOpen(true)}
             onSaved={() => void reload()}
+          />
+        )}
+        {view === 'me' && (
+          <MeView
+            rows={allRows}
+            categories={categories}
+            goal={goal}
+            onOpenSettings={() => setSettingsOpen(true)}
+            onOpen={(row) => setSheet({ kind: 'edit', row })}
           />
         )}
         {view === 'timeline' && rows && rows.length === 0 && total === 0 && (

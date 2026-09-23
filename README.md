@@ -35,7 +35,8 @@ This is a fresh build. Each phase below is built, tested and tried on a phone be
 | 7. Scout (done) | A chat that knows your goal and your record, with file upload. No AI limit to worry about |
 | 8. Privacy and age (done) | A public privacy policy page, and a birth month and year check so only people 13 and up can make an account |
 | 9. Categories (done) | A broad starter list for everyone (School, Sports, Arts, Community Service, Work, Clubs & Leadership, Awards, Other) plus up to 20 of your own, made from the details sheet or Settings |
-| 10 and 11 (next) | The Me tab (who you are, on one page), Scout suggesting edits |
+| 10. The Me tab (done) | A profile page: an AI summary of who you are and your strengths, totals, a chart of your categories, every achievement on one page, and "Save as image" to share it as a picture |
+| 11 (next) | Scout suggesting edits |
 | Later | App store listings |
 
 ## Tech stack

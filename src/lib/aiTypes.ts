@@ -132,3 +132,30 @@ export const MAX_SCOUT_MESSAGE_LENGTH = 2000
 // this is roughly a 3 MB file.
 export const MAX_ATTACHMENT_BASE64_LENGTH = 4_500_000
 export const MAX_ATTACHMENT_TEXT_LENGTH = 200_000
+
+// ---- The Me tab summary (Phase 10) ----
+//
+// Who the student is, written from their achievements (and goal, if set).
+// Text only, never photos.
+
+export interface SummaryRequest {
+  goal: string // may be empty
+  achievements: AchievementSummary[]
+}
+
+export interface Strength {
+  name: string // a few words, like "Stays with hard things"
+  why: string // one sentence
+  achievementIds: string[] // the achievements that show it
+}
+
+export interface ProfileSummary {
+  text: string // a short paragraph in the second person
+  strengths: Strength[] // 1 to 5
+}
+
+export type SummaryResponse =
+  | { ok: true; summary: ProfileSummary; mock: boolean }
+  | { ok: false; message: string }
+
+export const MAX_STRENGTHS = 5

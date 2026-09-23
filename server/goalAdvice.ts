@@ -221,7 +221,7 @@ export async function recommendNext(body: unknown, options: AdviceOptions = {}):
 }
 
 // Loaded only when there is a real key, so MOCK mode never imports the SDK.
-async function realCallText(apiKey: string): Promise<CallText> {
+export async function realCallText(apiKey: string): Promise<CallText> {
   const { default: Anthropic } = await import('@anthropic-ai/sdk')
   const client = new Anthropic({ apiKey })
   return async (prompt, maxTokens = 1500) => {

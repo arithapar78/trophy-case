@@ -83,6 +83,10 @@ The public privacy policy is `privacy.html`, a plain page that reads without the
 
 The categories a user makes (Debate, Robotics) are stored on the device with everything else, in the settings table, and travel in backups. The photo read and Scout also send the **names** of the user's categories, so the AI picks one of theirs instead of inventing its own. Nothing else about categories leaves the device.
 
+### The Me tab (Phase 10)
+
+"Write my summary" sends the goal and the **words** of every achievement to `api/summary.ts`, exactly like ranking: never photos, and only when tapped. The summary that comes back is kept on the device (settings table, `profileSummary`) and nothing is kept on the server. "Save as image" draws the profile card with the browser's own canvas on the phone; nothing is uploaded to make it, and it goes only where the user shares or saves it.
+
 ### The law, still
 
 Storing an email address for a user under 13 is collecting a child's personal information, which is what COPPA (the US law), the UK Age Appropriate Design Code and GDPR-K are about. The app is meant for ages 13 and up and this is a family project, not a public service. **Before it is opened to strangers or charged for, read those rules properly and get real legal advice.** Charging money raises this further: the payer would be a parent, the user a minor, and terms and a privacy policy would have to be published and accurate. Adding sync, which would put achievements themselves on a server, is a much bigger step again and has not been agreed.

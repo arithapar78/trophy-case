@@ -106,7 +106,7 @@ export interface RecommendationSet {
 // Small key/value rows: the goal, the last recommendations, and the
 // categories the user made (Phase 9).
 export interface Setting {
-  key: 'goal' | 'recommendations' | 'customCategories'
+  key: 'goal' | 'recommendations' | 'customCategories' | 'profileSummary'
   value: unknown
 }
 

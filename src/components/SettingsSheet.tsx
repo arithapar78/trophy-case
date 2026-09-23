@@ -179,7 +179,7 @@ export default function SettingsSheet({ achievementCount, goal: savedGoal, custo
             />
           </label>
           <p className="mt-2 text-sm opacity-70">
-            AI needs a sign-in, and each use is counted against your account. The count is in the Account section above.
+            AI needs a sign-in, so the AI features know it is you. Only what a feature needs is sent, and only when you ask.
           </p>
         </section>
 

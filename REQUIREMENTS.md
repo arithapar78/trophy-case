@@ -457,6 +457,8 @@ Also parked: sharing, reels and video, LinkedIn posts, cloud backup beyond the s
 - [ ] 21.5 A line of totals at the top of the list: how many achievements, how many categories, and the span of dates.
 - [ ] 21.6 The list works signed out and offline. Signed out, the summary area asks for a sign-in, like the other AI features.
 - [ ] 21.7 MOCK mode with no key, clearly labelled.
+- [ ] 21.8 The top of the Me tab is a **profile card**: the summary and strengths (once written), the totals, and a small chart of how many achievements are in each category. It looks designed, not like a form.
+- [ ] 21.9 "Save as image" turns the card into a picture (PNG, portrait, sized for a phone and for posting) and opens the share sheet, or downloads it on a computer. Drawn by the app itself with no new library. Nothing is uploaded to make it.
 
 ### Phase 10 tests
 
@@ -464,6 +466,7 @@ Also parked: sharing, reels and video, LinkedIn posts, cloud backup beyond the s
 - [ ] T10.2 Unit: grouping, counts, totals and "changed since the summary" are right, including with no achievements.
 - [ ] T10.3 E2E: the Me tab lists everything grouped, writes a MOCK summary on tap, keeps it after a reload, and offers Refresh after an achievement is added.
 - [ ] T10.4 E2E: signed out, the list shows and the summary asks for a sign-in; no AI request is made.
+- [ ] T10.5 E2E: "Save as image" produces a PNG of the card, with or without a summary, and makes no network request.
 
 ---
 

@@ -1,6 +1,6 @@
 # Trophy Case: handoff for the next Claude chat
 
-Read this first, then [CLAUDE.md](CLAUDE.md) (the rules), then [REQUIREMENTS.md](REQUIREMENTS.md) (the contract). This file says where the project stands, how it is built and deployed, what is half-done, and exactly what comes next. Last updated 2026-09-23 (Phase 9).
+Read this first, then [CLAUDE.md](CLAUDE.md) (the rules), then [REQUIREMENTS.md](REQUIREMENTS.md) (the contract). This file says where the project stands, how it is built and deployed, what is half-done, and exactly what comes next. Last updated 2026-09-23 (Phase 10).
 
 ## What it is, in one paragraph
 
@@ -51,8 +51,8 @@ Trophy Case is a phone-first web app. A student (13 to 18) or a parent photograp
 | 6. Pro plan, $10/month via Stripe | Built and tested, **switched off in Phase 7**, not phone-checked, Stripe keys not set | `ad3d9f3` (requirements), `83ae645` (code) |
 | 7. No AI limit, and Scout the goal chatbot | Pushed, **not phone-checked** | `522774d`, ranking fix `4fefbb3` |
 | 8. Privacy policy page, 13+ age check | Pushed, Google sign-in being published, **not phone-checked** | `83ef870` |
-| 9. Categories: broad starter list plus your own | Built and tested, **not pushed, not phone-checked** | see Phase 9 below |
-| 10. The Me tab: AI summary of who you are, every achievement on one page | Requirements agreed | |
+| 9. Categories: broad starter list plus your own | Pushed, **not phone-checked** | `95ed9c0` |
+| 10. The Me tab: AI summary, profile card, save as image, everything on one page | Built and tested, **not pushed, not phone-checked** | see Phase 10 below |
 | 11. Scout suggests edits, confirm before anything changes, Undo | Requirements agreed | |
 | Later. Store wrappers: Amazon Appstore, Apple App Store | Planned | |
 
@@ -220,9 +220,20 @@ Version 2.8.0. Requirements are Features 19 and 20, tests T9.1 to T9.6.
 - 160 unit, 59 e2e.
 - Noticed, not fixed: the Settings AI section still says "each use is counted against your account. The count is in the Account section", which Phase 7 made untrue.
 
-## Phases 10 and 11 (agreed 2026-09-23, build in this order)
+## Phase 10: the Me tab. Built, needs push and phone check
 
-- **10 Me tab:** fourth tab. AI summary in the second person plus 3 to 5 strengths, written only on tap, stored on the device with its date and a "changed since" note. Below: every achievement grouped by category with counts and totals.
+Version 2.9.0. Requirements are Feature 21 (21.8 and 21.9 added when Vishal chose "a visual card + save as picture"), tests T10.1 to T10.5.
+
+- `server/summary.ts` + `api/summary.ts` (through `runAiRoute`, so sign-in and the ceiling apply). Achievements are numbered in the prompt and strengths point back by number, like the ranking fix. A malformed answer is refused, never shown. MOCK with no key. `realCallText` is now exported from `server/goalAdvice.ts` and shared.
+- `src/lib/profile.ts`: saved summary in settings key `profileSummary` (with writtenAt, goal and the ids it was written from), `changesSince` / `describeChanges` for the "2 added since" note, `groupByCategory`, `profileTotals`, `categoryBars` (top 6, rest folded into "N more").
+- `src/lib/profileCard.ts`: draws a 1080x1350 PNG with the browser canvas, no library. `wrapLines` is pure and unit-tested. The picture is handed to `shareOrDownload`.
+- `src/components/MeView.tsx`: the fourth tab. Card (header, totals, summary, strengths with the achievements that show them, category chart, Write/Refresh or Sign in, Save as image), then every achievement grouped by category; tapping one opens it.
+- The stale Settings sentence about counting AI uses is fixed.
+- Not in backups: the summary. It can be rewritten with one tap; say if it should travel.
+- 179 unit, 63 e2e, both passing twice.
+
+## Phase 11 (agreed 2026-09-23)
+
 - **11 Scout edits:** a `<changes>` block of proposed field changes referring to achievements by prompt number (not id; see the ranking fix), a confirm card with per-change ticks, Undo, max 50, validation, skip if edited since.
 - **Later:** store wrappers (Apple needs Capacitor, a new library to ask about). Drafting help (résumé bullet, Common App line) was in the old plan; not asked for this time.
 
