@@ -10,6 +10,7 @@ import { buildPdf } from '../lib/pdf'
 import { MAX_GOAL_LENGTH } from '../lib/types'
 import { shareOrDownload } from '../lib/share'
 import { formatBytes, getStorageUsage, type StorageUsage } from '../lib/storage'
+import PrivacyLink from './PrivacyLink'
 
 interface Props {
   achievementCount: number
@@ -251,7 +252,10 @@ export default function SettingsSheet({ achievementCount, goal: savedGoal, onClo
           )}
         </section>
 
-        <p className="mt-8 text-center text-xs text-ink/40">Trophy Case {__APP_VERSION__}</p>
+        <p className="mt-8 text-center text-sm" data-testid="settings-privacy">
+          <PrivacyLink label="Privacy policy" />
+        </p>
+        <p className="mt-2 text-center text-xs text-ink/40">Trophy Case {__APP_VERSION__}</p>
 
         <button type="button" onClick={onClose} className="mt-5 min-h-12 w-full rounded-2xl bg-accent font-semibold text-white shadow-card transition-transform active:scale-[0.98]">
           Done

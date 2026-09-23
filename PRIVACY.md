@@ -52,7 +52,7 @@ The server stores exactly this, and nothing else:
 - from Phase 6, once someone has paid: the Stripe customer id and the
   subscription's status (`active`, `canceled` and so on)
 
-That is the whole list. **No achievements, no photos, no goal, no rankings, no IP addresses, no analytics.** The records live in Upstash Redis, reached only by the serverless functions.
+That is the whole list. **No achievements, no photos, no goal, no rankings, no IP addresses, no analytics.** The records live in Upstash Redis, reached only by the serverless functions. Vercel, the host, keeps its own ordinary short-lived request logs (time, address, path) like any web host; the app adds nothing to them.
 
 "Delete my account" in Settings removes the user, their sign-ins and their usage count from the server immediately. The achievements and photos on the device are not touched by it.
 
@@ -72,6 +72,12 @@ Scout is a chat that already knows the goal and the achievements. Every message 
 - Pictures are shrunk to about 1024 px and re-encoded before sending, which strips EXIF (where and when the photo was taken), exactly as elsewhere in the app
 - Scout can never change or add anything by itself. An achievement it suggests is a card with a Save button; nothing reaches the database until that is tapped
 - Attaching a transcript or a certificate means sending a real document to Anthropic. The app says what is sent, and nothing is sent unless the user attaches it
+
+### The age check and the privacy page (Phase 8)
+
+Accounts are for people 13 and older. Before the sign-in button appears on a device, the app asks for a birth month and year, in neutral wording that does not hint at the answer. The date is used once, in the browser, and dropped: **it is never stored or sent**. The device keeps only `passed` or `under13` in localStorage (`trophy-case.age-check`), so picking a different year afterwards does not change the answer. Under 13, sign-in is simply not offered; everything that stays on the device still works, since none of it needs an account.
+
+The public privacy policy is `privacy.html`, a plain page that reads without the app running (Google requires one before sign-in can be opened to everyone). It is linked from Settings and next to the sign-in button. **It must say nothing this file does not. Change both in the same commit.** Contact address on it: ariquery@gmail.com.
 
 ### The law, still
 

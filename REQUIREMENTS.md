@@ -377,3 +377,114 @@ Also parked: sharing, reels and video, LinkedIn posts, cloud backup beyond the s
 - [ ] T7.6 E2E: the Scout tab sends a message, shows the answer, and the conversation survives a reload.
 - [ ] T7.7 E2E: a proposed achievement is not saved until Save is tapped, and Discard leaves the timeline unchanged.
 - [ ] T7.8 E2E: no use counter appears anywhere, and Settings offers nothing to buy.
+
+---
+
+## Phase 8: A privacy policy, and 13 or older to sign in
+
+**Why now.** To let anyone sign in with Google (not just the test users added by hand), Google needs a public privacy policy link. And the account stores an email address, which for a child under 13 is exactly what COPPA is about. Both have to be in place before strangers can sign in.
+
+### Feature 17: The privacy policy page
+
+> **As a parent, I want to** read in plain words what this app keeps and sends, **so that** I can decide whether my kid should use it.
+
+- [ ] 17.1 A page at `/privacy.html` says in plain English: what stays on the device, the exact list of what the server stores, what goes to Anthropic (AI) and Google (sign-in) and when, how to delete everything, that accounts are for ages 13 and up, a contact email, and the date it was last changed.
+- [ ] 17.2 It opens from a plain link without signing in and without the app running, so a parent or Google's reviewers can read it.
+- [ ] 17.3 It is linked from Settings and next to the sign-in button.
+- [ ] 17.4 Once the app is installed it opens with no signal, like the rest of the app.
+- [ ] 17.5 It says nothing PRIVACY.md does not. When one changes, the other changes in the same commit.
+
+### Feature 18: 13 or older to make an account
+
+> **As the person running this app, I want** only people 13 and up to make an account, **so that** it does not collect a child's email address.
+
+- [ ] 18.1 The first time someone goes to sign in on a device, the app asks for their birth month and year. The question is neutral: it does not say what answer lets you in.
+- [ ] 18.2 13 or older: sign-in appears as normal, and the question is not asked again on that device.
+- [ ] 18.3 Under 13: sign-in is not offered. The message says the AI features need an account and accounts are for 13 and up, and that everything else in the app works. Going back and picking a different year does not change the answer on that device.
+- [ ] 18.4 The birth month and year are never stored or sent anywhere. The device keeps only "passed" or "under 13".
+- [ ] 18.5 Saving, editing, the timeline, backup and export all still work for everyone, signed in or not. Nothing leaves the device without an account, so they need no age check.
+
+### Phase 8 tests
+
+- [ ] T8.1 Unit: the age check passes someone who turned 13 last month, refuses someone who turns 13 next month, and treats a birth month and year that cannot be real (the future, over 120 years ago) as not answered.
+- [ ] T8.2 E2E: `/privacy.html` loads on its own, and the links from Settings and from the sign-in area open it.
+- [ ] T8.3 E2E: under 13, no sign-in is offered and that is still true after a reload; 13 and up, sign-in appears and the question is not asked again.
+- [ ] T8.4 E2E: the birth month and year appear in no request and nowhere in the device's storage.
+
+---
+
+## Phase 9: Categories that fit everyone
+
+**Why.** The categories were Ari's (Debate, Cooking). A broad starting list fits most students, and anyone can add the ones that are theirs.
+
+### Feature 19: A broad starting list
+
+- [ ] 19.1 Everyone starts with: School, Sports, Arts, Community Service, Work, Clubs & Leadership, Awards, Other.
+- [ ] 19.2 On a phone that already has achievements, any category in use that is not on the new list (Debate, Cooking) becomes one of that user's own categories automatically. No achievement changes category and nothing is lost.
+
+### Feature 20: Your own categories
+
+> **As a student, I want to** add a category that fits what I do, **so that** my timeline is organised my way.
+
+- [ ] 20.1 The category picker in the details sheet has "+ New category". Typing a name and saving adds it and picks it.
+- [ ] 20.2 Settings lists your own categories. Each can be renamed (every achievement in it follows) or deleted (its achievements move to Other, after a confirmation saying how many).
+- [ ] 20.3 A name is 1 to 30 characters and cannot repeat an existing one, ignoring capitals. Up to 20 of your own.
+- [ ] 20.4 The timeline filter shows All plus every category that has at least one achievement, so the row does not fill up with empty ones.
+- [ ] 20.5 The AI (photo read and Scout) picks from your full list, your own categories included, and never invents one.
+- [ ] 20.6 Backups carry your own categories; restoring adds any that are missing.
+
+### Phase 9 tests
+
+- [ ] T9.1 Unit: validation accepts starter and custom categories and refuses an unknown one; names are trimmed, length-checked and de-duplicated ignoring capitals.
+- [ ] T9.2 Unit: the database upgrade turns Debate and Cooking into custom categories and leaves every achievement's category as it was.
+- [ ] T9.3 Unit: renaming moves every achievement; deleting moves them to Other.
+- [ ] T9.4 Unit: the photo-read and Scout prompts list the user's categories, and an AI answer naming a category not on the list falls back to Other.
+- [ ] T9.5 E2E: add a category from the details sheet, save into it, filter by it, rename it, delete it.
+- [ ] T9.6 E2E: a backup with a custom category restores it on a fresh device.
+
+---
+
+## Phase 10: The Me tab
+
+### Feature 21: Who you are, on one page
+
+> **As a student, I want to** see everything I have done on one page, with a short honest read on who that makes me, **so that** I know where I stand.
+
+- [ ] 21.1 A fourth tab, **Me**, next to Timeline, Ranked and Scout.
+- [ ] 21.2 At the top, an AI summary: a short paragraph in the second person ("You're someone who...") and three to five strengths, each backed by the achievements that show it. It is written only from the achievements (and the goal, if there is one), and does not invent anything.
+- [ ] 21.3 The summary is written only when the user taps "Write my summary" (one AI use). It is kept on the device, shows the date it was written, and says when achievements have been added or changed since, with a "Refresh" button. Never written in the background.
+- [ ] 21.4 Below it, every achievement on one page, grouped by category with a count for each, newest first, compact: title, date, and result or role if there is one. Tapping one opens it.
+- [ ] 21.5 A line of totals at the top of the list: how many achievements, how many categories, and the span of dates.
+- [ ] 21.6 The list works signed out and offline. Signed out, the summary area asks for a sign-in, like the other AI features.
+- [ ] 21.7 MOCK mode with no key, clearly labelled.
+
+### Phase 10 tests
+
+- [ ] T10.1 Unit: the summary prompt holds the achievements' words and the goal and never a photo; a malformed answer is refused rather than shown.
+- [ ] T10.2 Unit: grouping, counts, totals and "changed since the summary" are right, including with no achievements.
+- [ ] T10.3 E2E: the Me tab lists everything grouped, writes a MOCK summary on tap, keeps it after a reload, and offers Refresh after an achievement is added.
+- [ ] T10.4 E2E: signed out, the list shows and the summary asks for a sign-in; no AI request is made.
+
+---
+
+## Phase 11: Scout can suggest edits
+
+### Feature 22: Change many achievements by asking
+
+> **As a student, I want to** say "add Middlesex Magic to all my basketball achievements" **so that** I do not have to open each one.
+
+- [ ] 22.1 Asked to change achievements, Scout answers with a list of proposed changes: which achievement, which field, the old value and the new one.
+- [ ] 22.2 The list shows as a card. Each change can be unticked. **Nothing changes until Confirm is tapped.** Cancel leaves everything as it was.
+- [ ] 22.3 After confirming, an Undo button puts back exactly what changed, until the next confirmed change.
+- [ ] 22.4 Scout can change the text fields and the category. It cannot delete an achievement, touch photos, or add more than 50 changes at once.
+- [ ] 22.5 Every new value goes through the same validation as the form. A change that would fail it is dropped and the card says so.
+- [ ] 22.6 If an achievement was edited between the suggestion and Confirm, that change is skipped rather than overwriting the newer text, and the card says so.
+- [ ] 22.7 MOCK mode proposes a sample change, so the flow can be tested without a key.
+
+**Technical note.** The model refers to achievements by their number in the prompt (1, 2, 3), not by their long ids, for the same reason as the ranking fix: a copied id with one wrong character silently drops that achievement.
+
+### Phase 11 tests
+
+- [ ] T11.1 Unit: a reply with a change list is parsed; unknown numbers, unknown fields, invalid values, more than 50 changes and malformed blocks are each dropped without crashing.
+- [ ] T11.2 Unit: applying changes updates only the ticked ones, skips any whose old value no longer matches, and Undo restores exactly the old values.
+- [ ] T11.3 E2E: a MOCK edit proposal changes nothing until Confirm; Cancel changes nothing; Confirm changes the timeline; Undo reverses it.

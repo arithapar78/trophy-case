@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f4f5f7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0a0f1c" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <!-- The app's own stylesheet, so this page looks like the app. The page
+         itself is plain HTML: it reads fine with no JavaScript at all, which
+         is what a parent or Google's reviewers opening a link need. -->
+    <link rel="stylesheet" href="/src/index.css" />
+    <title>Privacy policy · Trophy Case</title>
+  </head>
+  <!-- Keep this page and PRIVACY.md saying the same thing. When one changes,
+       change the other in the same commit. -->
+  <body>
+    <main class="mx-auto max-w-2xl px-4 pb-16 pt-6 leading-relaxed" data-testid="privacy-page">
+      <a href="/" class="text-sm font-medium text-accent-ink underline underline-offset-2">← Back to Trophy Case</a>
+
+      <h1 class="mt-4 text-3xl font-bold tracking-tight">Privacy policy</h1>
+      <p class="mt-1 text-sm text-ink/60">Last changed September 23, 2026</p>
+
+      <p class="mt-5">
+        Trophy Case is an app for saving your achievements and getting advice on them. It is a small independent project, and
+        it was built so that it knows as little about you as possible. This page says exactly what it keeps, where, and who
+        else sees anything.
+      </p>
+
+      <section class="mt-8 rounded-[var(--radius-sheet)] bg-surface p-5 shadow-card">
+        <h2 class="text-lg font-semibold">The short version</h2>
+        <ul class="mt-2 list-disc space-y-1 pl-5">
+          <li>Your achievements and photos stay on your own phone or computer. We never have a copy.</li>
+          <li>If you sign in, our server keeps your email address and a few details needed to run your account. Nothing about your achievements.</li>
+          <li>The AI only sees something when you ask it to. Then it goes to Anthropic, the company that makes the AI, to get the answer.</li>
+          <li>No ads, no tracking, no analytics. We never sell or share your information.</li>
+          <li>Accounts are for people 13 and older.</li>
+        </ul>
+      </section>
+
+      <h2 class="mt-8 text-xl font-semibold">What stays on your device</h2>
+      <p class="mt-2">
+        Every achievement, photo, goal, ranking and Scout conversation is stored in your browser's own storage on the
+        device you are using. It is not sent to our server and there is no cloud copy. That also means that if you delete the
+        app's data or lose the device without a backup, it is gone. Settings has "Back up everything", which makes a file you
+        keep wherever you like. We never see that file.
+      </p>
+      <p class="mt-2">
+        Phone photos usually contain hidden details such as where and when they were taken. The app removes those details from
+        every photo when you save it.
+      </p>
+
+      <h2 class="mt-8 text-xl font-semibold">What our server keeps if you sign in</h2>
+      <p class="mt-2">You only need an account for the AI features. If you make one, the server stores exactly this:</p>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li>a random id for your account</li>
+        <li>your email address, as confirmed by Google</li>
+        <li>your plan (every account is on the free plan today)</li>
+        <li>when you made the account</li>
+        <li>sign-in codes that keep you signed in, which expire after 90 days</li>
+        <li>the times you used the AI in the last 5 hours, which delete themselves. They are counted only to stop anyone abusing the service.</li>
+      </ul>
+      <p class="mt-2">
+        That is the whole list. No achievements, no photos, no goal, no conversations. Our host, Vercel, keeps ordinary
+        short-lived server logs (such as the time of a request and the address it came from), like every website.
+      </p>
+
+      <h2 class="mt-8 text-xl font-semibold">Who else sees anything</h2>
+      <h3 class="mt-3 font-semibold">Anthropic, for the AI</h3>
+      <p class="mt-1">
+        When you use an AI feature, the app sends what that feature needs to Anthropic through our server, and nothing is ever
+        sent in the background:
+      </p>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li>reading a photo: a smaller copy of that one photo, with its hidden details already removed</li>
+        <li>ranking, next steps and Scout: your goal and the words of your achievements, never their photos</li>
+        <li>Scout: your recent messages, and a file only if you attach one to a message</li>
+      </ul>
+      <p class="mt-2">
+        Our server passes it on and stores none of it. Anthropic processes it to write the answer. Under Anthropic's commercial
+        terms, what is sent through its API is not used to train its AI.
+      </p>
+      <h3 class="mt-4 font-semibold">Google, for signing in</h3>
+      <p class="mt-1">
+        "Continue with Google" means Google knows you signed in to Trophy Case, and tells us your email address. We keep only the
+        email. Nothing about your achievements goes to Google.
+      </p>
+
+      <h2 class="mt-8 text-xl font-semibold">Age</h2>
+      <p class="mt-2">
+        Accounts are for people 13 and older. Before signing in, the app asks for a birth month and year. It uses the answer
+        once to check the age and then forgets it: the date is never saved or sent. Anyone can use the rest of the app without
+        an account. If you are a parent and think your child under 13 has made an account, email us and we will delete it.
+      </p>
+
+      <h2 class="mt-8 text-xl font-semibold">Deleting your information</h2>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li>Your account: Settings, then "Delete my account". It is removed from our server straight away.</li>
+        <li>Everything on your device: Settings, then "Delete everything".</li>
+        <li>Or email us and we will delete your account for you. We cannot reach anything on your device.</li>
+      </ul>
+
+      <h2 class="mt-8 text-xl font-semibold">Changes and contact</h2>
+      <p class="mt-2">
+        If this policy changes, the date at the top changes too. If we ever start keeping something new, this page will say so
+        before it happens.
+      </p>
+      <p class="mt-2">
+        Questions or requests:
+        <a href="mailto:ariquery@gmail.com" class="font-medium text-accent-ink underline underline-offset-2">ariquery@gmail.com</a>
+      </p>
+    </main>
+  </body>
+</html>

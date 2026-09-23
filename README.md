@@ -33,7 +33,9 @@ This is a fresh build. Each phase below is built, tested and tried on a phone be
 | 5. Accounts (done) | Sign in with Google. The AI limit follows you, not the phone. Achievements still never leave the device |
 | 6. Pro plan (built, switched off) | $10 a month through Stripe. All there and tested, but nothing is for sale until there are users |
 | 7. Scout (done) | A chat that knows your goal and your record, with file upload. No AI limit to worry about |
-| Later | Extra categories, app store listings |
+| 8. Privacy and age (done) | A public privacy policy page, and a birth month and year check so only people 13 and up can make an account |
+| 9 to 11 (next) | Categories that fit everyone plus your own, the Me tab (who you are, on one page), Scout suggesting edits |
+| Later | App store listings |
 
 ## Tech stack
 
@@ -144,6 +146,14 @@ Two one-time setup jobs in Vercel:
 
 Locally, with no `GOOGLE_CLIENT_ID` set, Settings shows a clearly labelled
 test-mode sign-in that takes any email. It is refused on the live site.
+
+**Opening Google sign-in to everyone (Phase 8).** While the Google project is
+in "Testing", only the test users added by hand can sign in (100 at most). To
+open it up: in Google Auth Platform, **Branding**, fill in the app home page
+(the live site address) and the privacy policy link (the live site address
+plus `/privacy.html`), add the site's domain under Authorized domains, then
+**Audience**, **Publish app**. The app asks only for the basic scopes (email,
+name), so Google does not need a full review for that.
 
 ### Scout, and why there is no AI limit (Phase 7)
 

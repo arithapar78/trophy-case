@@ -8,7 +8,10 @@ import {
   useAccount,
   type ServerConfig,
 } from '../lib/account'
+import { readAgeCheck, type AgeCheckResult } from '../lib/ageGate'
+import AgeCheck from './AgeCheck'
 import PlanSection from './PlanSection'
+import PrivacyLink from './PrivacyLink'
 
 // Google's sign-in script puts this on the window once it has loaded. Only
 // the two calls we make are described here.
@@ -59,6 +62,8 @@ export default function AccountSection() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string>()
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  // The age question comes before any way to sign in. See src/lib/ageGate.ts.
+  const [ageCheck, setAgeCheck] = useState<AgeCheckResult | undefined>(readAgeCheck)
   const googleSlot = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -76,7 +81,7 @@ export default function AccountSection() {
   useEffect(() => {
     const clientId = config?.googleClientId
     const slot = googleSlot.current
-    if (!clientId || !slot || user !== null) return
+    if (!clientId || !slot || user !== null || ageCheck !== 'passed') return
     let cancelled = false
     loadGoogleScript()
       .then(() => {
@@ -94,7 +99,7 @@ export default function AccountSection() {
     return () => {
       cancelled = true
     }
-  }, [config?.googleClientId, user])
+  }, [config?.googleClientId, user, ageCheck])
 
   async function run(work: () => Promise<void>) {
     setBusy(true)
@@ -120,12 +125,21 @@ export default function AccountSection() {
         <>
           <p className="mt-1 text-sm">
             Sign in to use the AI features. Saving, editing, backup and export all work without one. Your achievements are never
-            sent to the server.
+            sent to the server. <PrivacyLink />
           </p>
 
-          {config?.googleClientId && <div ref={googleSlot} className="mt-3" data-testid="google-button" />}
+          {ageCheck === undefined && <AgeCheck onAnswered={setAgeCheck} />}
 
-          {config?.devLogin && (
+          {ageCheck === 'under13' && (
+            <p className="mt-3 rounded-2xl bg-ink/[0.04] p-4 text-sm ring-1 ring-ink/10" data-testid="age-too-young">
+              Accounts are for people 13 and older, so the AI features aren't available here. Everything else works: saving,
+              editing, your timeline, backup and export.
+            </p>
+          )}
+
+          {ageCheck === 'passed' && config?.googleClientId && <div ref={googleSlot} className="mt-3" data-testid="google-button" />}
+
+          {ageCheck === 'passed' && config?.devLogin && (
             <div className="mt-3 rounded-2xl bg-ink/[0.03] p-4 ring-1 ring-ink/10">
               <p className="text-sm font-medium">Test-mode sign-in</p>
               <p className="text-sm opacity-70">For development only. Any email works, and this is off on the live site.</p>

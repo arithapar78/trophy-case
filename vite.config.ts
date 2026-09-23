@@ -58,6 +58,13 @@ export default defineConfig(({ mode }) => ({
   base,
   // Shown in Settings so you can tell which version a phone is running.
   define: { __APP_VERSION__: JSON.stringify(version) },
+  // Two pages: the app itself, and the privacy policy, which is plain HTML
+  // so it can be read from a link without the app running.
+  build: {
+    rollupOptions: {
+      input: { main: 'index.html', privacy: 'privacy.html' },
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),

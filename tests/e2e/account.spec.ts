@@ -33,6 +33,10 @@ test('the sign-in button in the AI panel opens Settings, where test-mode sign-in
   await page.getByRole('button', { name: 'Sign in to use AI' }).click()
 
   const settings = page.getByRole('dialog', { name: 'Settings' })
+  // Phase 8: the age question comes first, then the ways to sign in.
+  await settings.getByTestId('birth-month').selectOption({ label: 'May' })
+  await settings.getByTestId('birth-year').selectOption(String(new Date().getFullYear() - 16))
+  await settings.getByTestId('age-continue').click()
   await expect(settings.getByTestId('account-section')).toContainText('Test-mode sign-in')
   await settings.getByTestId('dev-email').fill('panel-test@example.com')
   await settings.getByTestId('dev-signin').click()
