@@ -118,8 +118,26 @@ export interface ProposedAchievement {
 }
 
 export type ScoutResponse =
-  | { ok: true; reply: string; proposed?: ProposedAchievement; mock: boolean }
+  | { ok: true; reply: string; proposed?: ProposedAchievement; changes?: ProposedChange[]; mock: boolean }
   | { ok: false; message: string }
+
+// A single proposed edit (Phase 11): change one field of one achievement.
+// The model answers by the achievement's number in the prompt (1, 2, 3),
+// never its id — the same reason as the ranking fix — and the server turns
+// that number back into this id before the app sees it.
+export type EditField = 'title' | 'note' | 'organisation' | 'role' | 'result' | 'category'
+
+export interface ProposedChange {
+  achievementId: string
+  field: EditField
+  // The value on the timeline when the suggestion was made, so the app can
+  // tell whether the achievement was edited since (22.6).
+  old: string
+  new: string
+}
+
+// The most changes Scout may propose in one reply (22.4).
+export const MAX_SCOUT_CHANGES = 50
 
 // How much conversation travels with each message. Enough for Scout to
 // follow a thread, small enough that a long chat does not grow the cost

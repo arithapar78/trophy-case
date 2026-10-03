@@ -11,6 +11,7 @@ import {
   buildTurns,
   checkScoutRequest,
   MODEL,
+  parseScoutChanges,
   parseScoutReply,
   SCOUT_NAME,
   type CallChat,
@@ -279,6 +280,90 @@ describe('T7.5 which files Scout takes', () => {
     )
     expect(result.ok).toBe(false)
     expect(called).toBe(false)
+  })
+})
+
+describe('T11.1 reading Scout edit proposals back', () => {
+  const two = [
+    { id: 'a1', title: 'Science fair', category: 'School', date: '2026-03-04', note: '', organisation: 'Arlington High', role: '', result: '' },
+    { id: 'a2', title: 'Basketball', category: 'Sports', date: '2026-05-01', note: '', organisation: '', role: 'captain', result: '' },
+  ]
+
+  function parse(text: string) {
+    return parseScoutChanges(text, two, fullCategoryList([]))
+  }
+
+  it('turns the numbered changes into ids and hides the block from the reply', () => {
+    const { changes, clean } = parse(
+      `Here you go.
+
+<changes>
+[{"n": 2, "field": "organisation", "old": "", "new": "Middlesex Magic"}, {"n": 1, "field": "result", "old": "", "new": "Finalist"}]
+</changes>`,
+    )
+    expect(clean).toContain('Here you go.')
+    expect(clean).not.toContain('<changes>')
+    expect(changes).toEqual([
+      { achievementId: 'a2', field: 'organisation', old: '', new: 'Middlesex Magic' },
+      { achievementId: 'a1', field: 'result', old: '', new: 'Finalist' },
+    ])
+  })
+
+  it('drops a change that names an achievement that is not there', () => {
+    const { changes } = parse('<changes>[{"n": 9, "field": "title", "old": "x", "new": "y"}]</changes>')
+    expect(changes).toBeUndefined()
+  })
+
+  it('refuses a field it cannot change — including the date', () => {
+    // Allowed: the text fields and the category. The date is not among them.
+    const bad = ['date', 'id', 'photos', 'updatedAt']
+    for (const field of bad) {
+      const { changes } = parse(`<changes>[{"n": 1, "field": "${field}", "old": "x", "new": "y"}]</changes>`)
+      expect(changes).toBeUndefined()
+    }
+  })
+
+  it('drops a change whose new value breaks the form rules', () => {
+    const cases = [
+      { n: 1, field: 'title', old: '', new: 'x'.repeat(121) },
+      { n: 1, field: 'note', old: '', new: 'x'.repeat(501) },
+      { n: 1, field: 'organisation', old: '', new: 'x'.repeat(81) },
+      { n: 1, field: 'category', old: 'School', new: 'Made Up' },
+    ]
+    for (const c of cases) {
+      const { changes } = parse(`<changes>[${JSON.stringify(c)}]</changes>`)
+      expect(changes).toBeUndefined()
+    }
+  })
+
+  it('keeps at most 50 changes, the rest are dropped', () => {
+    const many = Array.from({ length: 60 }, (_, i) => ({ n: (i % 2) + 1, field: 'result', old: '', new: `change ${i}` }))
+    const { changes } = parse(`<changes>${JSON.stringify(many)}</changes>`)
+    expect(changes).toHaveLength(50)
+  })
+
+  it('survives a malformed block: no crash, no changes', () => {
+    for (const inner of ['not json', '{"a":1}', '42', '[{"n":1,"field":"title"}]']) {
+      const text = `Hi <changes>${inner}</changes>`
+      const { changes, clean } = parse(text)
+      expect(changes).toBeUndefined()
+      expect(clean).toEqual('Hi ')
+    }
+  })
+
+  it('returns the text untouched when there is no changes block', () => {
+    const { changes, clean } = parse('Just some advice.')
+    expect(changes).toBeUndefined()
+    expect(clean).toBe('Just some advice.')
+  })
+
+  it('MOCK mode proposes a sample change, keyed to the timeline', async () => {
+    const result = await askScout(request())
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.mock).toBe(true)
+    // The first change targets the only achievement, which is a1.
+    expect(result.changes?.[0]).toMatchObject({ achievementId: 'a1', field: 'organisation', new: 'Middlesex Magic' })
   })
 })
 

@@ -10,17 +10,19 @@ import {
   MAX_ACHIEVEMENTS_PER_REQUEST,
   MAX_ATTACHMENT_BASE64_LENGTH,
   MAX_ATTACHMENT_TEXT_LENGTH,
+  MAX_SCOUT_CHANGES,
   MAX_SCOUT_MESSAGE_LENGTH,
   SCOUT_HISTORY_TURNS,
   type AchievementSummary,
   type ProposedAchievement,
+  type ProposedChange,
   type ScoutAttachment,
   type ScoutRequest,
   type ScoutResponse,
   type ScoutTurn,
 } from '../src/lib/aiTypes.js'
 import { MAX_GOAL_LENGTH } from '../src/lib/types.js'
-import { categoryListFromRequest, categoryOrFallback, fullCategoryList } from '../src/lib/validation.js'
+import { categoryListFromRequest, categoryOrFallback, fullCategoryList, LIMITS } from '../src/lib/validation.js'
 
 export const MODEL = 'claude-haiku-4-5'
 export const SCOUT_NAME = 'Scout'
@@ -111,7 +113,7 @@ export function buildSystemPrompt(req: ScoutRequest): string {
     : 'They have not set a goal yet. Early on, mention once that setting one in Settings makes your advice much sharper. Do not nag about it again.'
 
   const achievementsBlock = req.achievements.length
-    ? `Everything on their timeline (${req.achievements.length}):\n${req.achievements.map(describe).join('\n')}`
+    ? `Everything on their timeline (${req.achievements.length}), numbered:\n${req.achievements.map((a, i) => `${i + 1}. ${describe(a)}`).join('\n')}`
     : 'Their timeline is empty. Encourage them to add their first achievement, and offer to help work out what counts.'
 
   return `You are ${SCOUT_NAME}, the guide inside an app called Trophy Case. The person you are talking to is a student, usually 13 to 18, keeping a record of their achievements so they can use it for college and job applications later.
@@ -136,7 +138,15 @@ If the conversation or an attached file contains an achievement that is not alre
 {"title": "...", "category": "exactly one of ${categoryListFromRequest(req.categories).join(', ')}", "date": "YYYY-MM-DD", "note": "...", "organisation": "...", "role": "...", "result": "..."}
 </save>
 
-Rules for that block: only when there is a real achievement to add, never more than one per reply, never for something already on the timeline, and every field a string (empty is fine except title, category and date). The date can never be in the future. Say in your normal answer that they can save it, because they will see a card with a Save button. Never pretend you have saved anything: only they can.`
+Rules for that block: only when there is a real achievement to add, never more than one per reply, never for something already on the timeline, and every field a string (empty is fine except title, category and date). The date can never be in the future. Say in your normal answer that they can save it, because they will see a card with a Save button. Never pretend you have saved anything: only they can.
+
+If they ask you to change achievements they already have (fix a typo, add a club or a result to several, change a category), answer with your advice and then a block of exact proposed changes:
+
+<changes>
+[{"n": 1, "field": "organisation", "old": "the value on their timeline now", "new": "the value it should become"}]
+</changes>
+
+Rules for that block: "n" is the achievement's number from the numbered list above (1, 2, 3), never its id. "field" is one of title, note, organisation, role, result, category — never the date, never a photo, and never delete an achievement. "old" must be exactly what is on their timeline right now, and "new" what it should become. Propose at most 50 changes. Leave out anything that would break the limits (title over 120 characters, note over 500, other text fields over 80, a category not on their list, an empty title). End your normal answer by telling them to review and confirm, because nothing is saved until they do. You cannot save anything yourself.`
 }
 
 // The conversation, plus this message and its file, in the shape the model
@@ -217,6 +227,66 @@ export function parseScoutReply(text: string, today: string, categories: readonl
   }
 }
 
+// --- Reading an edit proposal back (Phase 11) ---
+
+const EDIT_FIELDS = new Set(['title', 'note', 'organisation', 'role', 'result', 'category'])
+
+// The allowed text fields and the category are guarded by the same limits the
+// form uses. A category is checked against the user's list, not a length.
+function changeValueOk(field: string, value: string, categories: readonly string[]): boolean {
+  if (field === 'category') return categories.includes(value)
+  if (field === 'title' && value.trim().length === 0) return false
+  const max = field === 'title' ? LIMITS.title : field === 'note' ? LIMITS.note : LIMITS.organisation
+  return value.trim().length <= max
+}
+
+// Splits a <changes> block out of Scout's answer. The block is a JSON array
+// of {n, field, old, new}, where n is the achievement's number in the prompt
+// (1, 2, 3 — never its id, for the same reason as the ranking fix). Each is
+// checked; anything unknown, malformed, or over the limits is dropped rather
+// than shown, so a bad suggestion can never change the timeline. The block is
+// also taken out of the words the student sees.
+export function parseScoutChanges(
+  text: string,
+  achievements: AchievementSummary[],
+  categories: readonly string[] = fullCategoryList([]),
+): { changes?: ProposedChange[]; clean: string } {
+  const start = text.indexOf('<changes>')
+  if (start === -1) return { clean: text }
+
+  const end = text.indexOf('</changes>', start)
+  const clean = text.slice(0, start) + (end === -1 ? '' : text.slice(end + '</changes>'.length))
+  if (end === -1) return { clean }
+
+  const inner = text.slice(start + '<changes>'.length, end).trim()
+  let raw: unknown
+  try {
+    raw = JSON.parse(inner)
+  } catch {
+    return { clean }
+  }
+  if (!Array.isArray(raw)) return { clean }
+
+  const changes: ProposedChange[] = []
+  for (const entry of raw) {
+    if (changes.length >= MAX_SCOUT_CHANGES) break
+    if (typeof entry !== 'object' || entry === null) continue
+    const record = entry as Record<string, unknown>
+    const n = record.n
+    if (typeof n !== 'number' || !Number.isInteger(n) || n < 1 || n > achievements.length) continue
+    if (typeof record.field !== 'string' || !EDIT_FIELDS.has(record.field)) continue
+    if (typeof record.old !== 'string' || typeof record.new !== 'string') continue
+    if (!changeValueOk(record.field, record.new, categories)) continue
+    changes.push({
+      achievementId: achievements[n - 1].id,
+      field: record.field as ProposedChange['field'],
+      old: record.old,
+      new: record.new,
+    })
+  }
+  return { changes: changes.length > 0 ? changes : undefined, clean }
+}
+
 // --- MOCK mode ---
 
 // With a file attached, MOCK mode also offers a sample achievement, so the
@@ -232,6 +302,18 @@ function mockProposed(req: ScoutRequest): ProposedAchievement | undefined {
     role: '',
     result: '',
   }
+}
+
+// MOCK mode proposes a sample edit too (22.7), so the confirm / cancel /
+// undo flow can be tried without a key. It targets the newest achievement
+// and never touches anything outside the allowed text fields and category.
+function mockChanges(req: ScoutRequest): ProposedChange[] | undefined {
+  const first = req.achievements[0]
+  if (!first) return undefined
+  return [
+    { achievementId: first.id, field: 'organisation', old: first.organisation, new: 'Middlesex Magic' },
+    { achievementId: first.id, field: 'result', old: first.result, new: 'Regional final' },
+  ]
 }
 
 function mockReply(req: ScoutRequest): string {
@@ -252,14 +334,19 @@ export async function askScout(body: unknown, options: ScoutOptions = {}): Promi
   const problem = attachmentProblem(body.attachment)
   if (problem) return { ok: false, message: problem }
 
-  if (!options.apiKey) return { ok: true, reply: mockReply(body), proposed: mockProposed(body), mock: true }
+  if (!options.apiKey) return { ok: true, reply: mockReply(body), proposed: mockProposed(body), changes: mockChanges(body), mock: true }
 
   const callChat = options.callChat ?? (await realCallChat(options.apiKey))
   try {
     const answer = await callChat(buildSystemPrompt(body), buildTurns(body))
-    const parsed = parseScoutReply(answer, body.today, categoryListFromRequest(body.categories))
-    if (!parsed.reply) return { ok: false, message: 'Scout went quiet that time. Try asking again.' }
-    return { ok: true, reply: parsed.reply, proposed: parsed.proposed, mock: false }
+    const categories = categoryListFromRequest(body.categories)
+    const { changes, clean } = parseScoutChanges(answer, body.achievements, categories)
+    const parsed = parseScoutReply(clean, body.today, categories)
+    const reply = parsed.reply || (changes ? 'Here are the changes I would make.' : '')
+    if (!reply && !parsed.proposed && !changes) {
+      return { ok: false, message: 'Scout went quiet that time. Try asking again.' }
+    }
+    return { ok: true, reply, proposed: parsed.proposed, changes, mock: false }
   } catch {
     return { ok: false, message: "Scout couldn't answer just now. Check your signal and try again." }
   }

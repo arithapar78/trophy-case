@@ -8,6 +8,7 @@ import { AiUnavailableError, postAi } from './aiClient'
 import type {
   AchievementSummary,
   ProposedAchievement,
+  ProposedChange,
   ScoutAttachment,
   ScoutRequest,
   ScoutResponse,
@@ -107,6 +108,12 @@ export async function resolveProposal(messageId: string): Promise<void> {
   await db.scoutMessages.update(messageId, { proposedResolved: true })
 }
 
+// The same for a proposed edit: either the student confirms it or turns it
+// away, and in both cases the card stops being offered.
+export async function resolveChanges(messageId: string): Promise<void> {
+  await db.scoutMessages.update(messageId, { changesResolved: true })
+}
+
 // The offer still waiting for an answer, if there is one. Only the newest
 // counts: an older untouched offer is stale once the conversation moved on.
 export function pendingProposal(messages: ScoutMessage[]): ScoutMessage | undefined {
@@ -114,6 +121,17 @@ export function pendingProposal(messages: ScoutMessage[]): ScoutMessage | undefi
     const message = messages[i]
     if (message.proposed && !message.proposedResolved) return message
     if (message.proposed) return undefined
+  }
+  return undefined
+}
+
+// The edit proposal waiting for an answer, with the same "newest one wins
+// and older ones go stale" rule as the save offer.
+export function pendingChanges(messages: ScoutMessage[]): ScoutMessage | undefined {
+  for (let i = messages.length - 1; i >= 0; i -= 1) {
+    const message = messages[i]
+    if (message.changes && !message.changesResolved) return message
+    if (message.changes) return undefined
   }
   return undefined
 }
@@ -138,6 +156,7 @@ export function toHistory(messages: ScoutMessage[]): ScoutTurn[] {
 export interface ScoutAnswer {
   reply: string
   proposed?: ProposedAchievement
+  changes?: ProposedChange[]
   mock: boolean
 }
 
@@ -159,5 +178,5 @@ export async function askScout(options: {
   }
   const result = await postAi<ScoutResponse>('/api/scout', body)
   if (!result.ok) throw new AiUnavailableError(result.message)
-  return { reply: result.reply, proposed: result.proposed, mock: result.mock }
+  return { reply: result.reply, proposed: result.proposed, changes: result.changes, mock: result.mock }
 }

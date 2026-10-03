@@ -1,6 +1,6 @@
 // Shared shapes. Everything the app stores is described here.
 
-import type { ProposedAchievement } from './aiTypes.js'
+import type { ProposedAchievement, ProposedChange } from './aiTypes.js'
 
 // Everyone starts with these. Broad on purpose, so they fit most students;
 // anything more specific (Debate, Robotics, Chess) is a category the user
@@ -110,7 +110,7 @@ export interface RecommendationSet {
 // categories the user made (Phase 9), and the name and the last "what's
 // new" list seen (Phase 12).
 export interface Setting {
-  key: 'goal' | 'recommendations' | 'customCategories' | 'profileSummary' | 'name' | 'whatsNewSeen'
+  key: 'goal' | 'recommendations' | 'customCategories' | 'profileSummary' | 'name' | 'whatsNewSeen' | 'lastAppliedEdit'
   value: unknown
 }
 
@@ -128,6 +128,11 @@ export interface ScoutMessage {
   // it as already saved or turned down.
   proposed?: ProposedAchievement
   proposedResolved?: boolean
+  // A batch of edits Scout proposed for achievements already on the
+  // timeline (Phase 11). Same survival logic as `proposed`: kept with the
+  // conversation until confirmed or turned down.
+  changes?: ProposedChange[]
+  changesResolved?: boolean
   // The name of a file attached to this message, so the chat can show that
   // one was sent. The file itself is never stored.
   attachmentName?: string

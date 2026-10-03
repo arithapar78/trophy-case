@@ -7,13 +7,27 @@ import {
   askScout,
   clearScoutMessages,
   listScoutMessages,
+  pendingChanges,
   pendingProposal,
   prepareAttachment,
+  resolveChanges,
   resolveProposal,
   SCOUT_FILE_ACCEPT,
 } from '../lib/scout'
+import { applyChangeBatch, getUndoInfo, undoLastBatch, type EditUndo } from '../lib/edits'
+import type { EditField } from '../lib/aiTypes'
 import type { Achievement, ScoutMessage } from '../lib/types'
 import CloseButton from './CloseButton'
+
+// A readable name for each editable field, used in the changes card.
+export const FIELD_LABEL: Record<EditField, string> = {
+  title: 'title',
+  note: 'note',
+  organisation: 'club or organisation',
+  role: 'role',
+  result: 'result',
+  category: 'category',
+}
 
 // Scout: the third tab. A conversation that already knows the goal and the
 // timeline, so the student can ask in their own words. Everything shown here
@@ -36,6 +50,10 @@ export default function ScoutView({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string>()
   const [confirmingClear, setConfirmingClear] = useState(false)
+  // Which of the pending changes are ticked, by their position in the list.
+  const [ticks, setTicks] = useState<Record<number, boolean>>({})
+  // The last confirmed batch, so the student can put it back (22.3).
+  const [undoInfo, setUndoInfo] = useState<EditUndo>()
   const fileInput = useRef<HTMLInputElement>(null)
   const bottom = useRef<HTMLDivElement>(null)
 
@@ -43,11 +61,33 @@ export default function ScoutView({
     void listScoutMessages().then(setMessages)
   }, [])
 
+  // Pick up any change that is still waiting for its Undo, so it survives
+  // switching tabs (like the offer itself does).
+  useEffect(() => {
+    void getUndoInfo().then(setUndoInfo)
+  }, [])
+
   // The offer Scout is waiting on an answer for, taken from the saved
   // conversation rather than held in this screen's memory, so leaving the
   // tab and coming back does not lose it.
   const offer = pendingProposal(messages)
   const proposed = offer?.proposed
+  const editOffer = pendingChanges(messages)
+  // The achievements by id, so the changes card can show which one each edit
+  // is for.
+  const byId = new Map(achievements.map((a) => [a.id, a] as [string, Achievement]))
+
+  // A new edit proposal starts with every change ticked; changing cards
+  // resets the ticks so one card's choices never leak into the next.
+  useEffect(() => {
+    if (editOffer?.changes) {
+      const all: Record<number, boolean> = {}
+      editOffer.changes.forEach((_, i) => {
+        all[i] = true
+      })
+      setTicks(all)
+    }
+  }, [editOffer?.id])
 
   // Keep the newest message in view, the way a chat should.
   useEffect(() => {
@@ -72,7 +112,7 @@ export default function ScoutView({
 
       const attachment = chosen ? await prepareAttachment(chosen) : undefined
       const answer = await askScout({ message: text, goal, achievements, history: messages, attachment })
-      const reply = await addScoutMessage({ role: 'scout', text: answer.reply, proposed: answer.proposed })
+      const reply = await addScoutMessage({ role: 'scout', text: answer.reply, proposed: answer.proposed, changes: answer.changes })
       setMessages([...history, reply])
     } catch (err) {
       if (err instanceof AiSignInRequiredError) setError('Sign in to talk to Scout.')
@@ -87,6 +127,58 @@ export default function ScoutView({
   function chooseFile(chosen: File | undefined) {
     setError(undefined)
     setFile(chosen)
+  }
+
+  // Confirm applies only the ticked changes. It leaves the message in the
+  // conversation (marked answered), so the history still reads naturally.
+  async function confirmChanges() {
+    if (!editOffer?.changes) return
+    const chosen = editOffer.changes.filter((_, i) => ticks[i])
+    setBusy(true)
+    setError(undefined)
+    try {
+      const report = await applyChangeBatch(chosen)
+      await resolveChanges(editOffer.id)
+      const succeeded = report.applied.length
+      const text = succeeded
+        ? `Applied ${report.applied.length} change${report.applied.length === 1 ? '' : 's'}.${
+            report.skipped ? ` ${report.skipped} couldn't be applied because they were out of date or no longer valid.` : ''
+          }`
+        : 'None of those changes could be applied — they had been edited or were no longer valid.'
+      const note = await addScoutMessage({ role: 'scout', text })
+      const updated = messages.map((m) => (m.id === editOffer.id ? { ...m, changesResolved: true } : m))
+      setUndoInfo(report.applied.length ? { applied: report.applied, at: Date.now() } : undefined)
+      setMessages([...updated, note])
+      setTicks({})
+      onSaved()
+    } catch {
+      setError("That couldn't be applied. The changes were probably edited in the meantime — ask again.")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  // Cancel changes nothing: the message is only marked as answered.
+  async function cancelChanges() {
+    if (!editOffer) return
+    await resolveChanges(editOffer.id)
+    setMessages(messages.map((m) => (m.id === editOffer.id ? { ...m, changesResolved: true } : m)))
+    setTicks({})
+  }
+
+  // Puts back exactly what the last confirmed batch changed, and clears the
+  // undo so it cannot be done twice.
+  async function undo() {
+    setError(undefined)
+    try {
+      await undoLastBatch()
+      setUndoInfo(undefined)
+      const note = await addScoutMessage({ role: 'scout', text: 'Undid the last change.' })
+      setMessages([...messages, note])
+      onSaved()
+    } catch {
+      setError("That couldn't be undone. Try fixing it from the Timeline tab instead.")
+    }
   }
 
   async function answerOffer(save: boolean) {
@@ -192,6 +284,80 @@ export default function ScoutView({
               Save it
             </button>
           </div>
+        </div>
+      )}
+
+      {/* An edit proposal, not a change. Nothing touches the timeline until Confirm. */}
+      {editOffer?.changes && (
+        <div className="rounded-2xl bg-accent/10 p-4 ring-1 ring-accent/25" data-testid="scout-changes">
+          <p className="text-xs font-semibold uppercase tracking-wide text-accent-ink">Change these?</p>
+          <p className="mt-1 text-sm opacity-70">Nothing changes until you confirm. Untick any you don't want.</p>
+          <div className="mt-2 flex flex-col gap-1.5">
+            {editOffer.changes.map((change, i) => {
+              const title = byId.get(change.achievementId)?.title ?? 'an achievement'
+              return (
+                <label
+                  key={`${change.achievementId}-${change.field}-${i}`}
+                  className="flex items-start gap-2.5 rounded-xl bg-surface/80 p-2.5 text-sm shadow-sm ring-1 ring-ink/10"
+                >
+                  <input
+                    type="checkbox"
+                    checked={!!ticks[i]}
+                    onChange={() => setTicks((t) => ({ ...t, [i]: !t[i] }))}
+                    data-testid={`change-tick-${i}`}
+                    className="mt-0.5 h-4 w-4 accent-accent"
+                  />
+                  <span className="flex-1">
+                    <span className="font-medium">{title}</span>
+                    <span className="text-ink/70"> — {FIELD_LABEL[change.field]}</span>
+                    {change.old ? (
+                      <p className="text-ink/60">
+                        “{change.old}” → “{change.new}”
+                      </p>
+                    ) : (
+                      <p className="text-ink/60">add “{change.new}”</p>
+                    )}
+                  </span>
+                </label>
+              )
+            })}
+          </div>
+          <div className="mt-3 flex gap-3">
+            <button
+              type="button"
+              data-testid="changes-cancel"
+              onClick={() => void cancelChanges()}
+              className="min-h-11 flex-1 rounded-2xl text-sm font-medium ring-1 ring-ink/15 transition-colors active:bg-ink/5"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              data-testid="changes-confirm"
+              disabled={busy}
+              onClick={() => void confirmChanges()}
+              className="min-h-11 flex-1 rounded-2xl bg-accent text-sm font-semibold text-white shadow-card transition-transform active:scale-[0.98]"
+            >
+              Confirm
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* A confirmed change can be put back, but only until the next one. */}
+      {undoInfo && (
+        <div className="rounded-2xl bg-surface p-4 ring-1 ring-ink/10" data-testid="scout-undo">
+          <p className="text-sm">
+            Applied {undoInfo.applied.length} change{undoInfo.applied.length === 1 ? '' : 's'}. You can undo them.
+          </p>
+          <button
+            type="button"
+            data-testid="scout-undo-button"
+            onClick={() => void undo()}
+            className="mt-3 min-h-11 w-full rounded-2xl bg-accent text-sm font-semibold text-white shadow-card transition-transform active:scale-[0.98]"
+          >
+            Undo
+          </button>
         </div>
       )}
 
