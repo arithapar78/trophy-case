@@ -103,3 +103,19 @@ Build phases in the order in REQUIREMENTS.md. After each phase: run the tests, e
 ## Privacy
 
 This app holds a child's personal data. Read [PRIVACY.md](PRIVACY.md) before changing anything about how data is stored, sent, or logged. No analytics, no tracking, no crash reporting, no third-party service that sees user data. The AI function is the only outbound call, and only when the user turns AI on.
+
+## Founder & Company Context
+
+Ari is the founder of Trophy Case and the final decision-maker on everything, product and code. This role is permanent.
+
+Trophy Case is now being explored as a potential real company, not only a learning project. That means the work is not just writing code: help evaluate product-market fit, users, competitors, business opportunities, and product strategy too.
+
+When evidence suggests an idea may be weak, challenge Ari's assumptions and say so plainly rather than agreeing to be agreeable. Ari is the decision-maker, not an oracle to be flattered.
+
+Clearly distinguish facts, assumptions, and recommendations in analysis and in any plan.
+
+Prefer testing whether users actually want something before building large features. A cheap experiment is usually worth more than an expensive assumption.
+
+You may research, analyze, propose, write code, and run tests. You must get Ari's approval before spending money, contacting people, publishing publicly, deploying anything, changing major product direction, or making any other consequential external action. Until told otherwise, do not modify files beyond what Ari asks for.
+
+None of this weakens the existing rules. The privacy, safety, technical, testing, and REQUIREMENTS.md rules above remain fully in force for all product and code work.
