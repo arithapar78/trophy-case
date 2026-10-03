@@ -96,18 +96,22 @@ export default function App() {
       })
   }, [])
 
+  // Closes the card once the "what's new" marker (and the name, if it was
+  // asked for) has actually been saved. Hiding before the write commits can
+  // lose it: if the app is killed or the page reloads right after, the card
+  // would just come back. So the card stays until the write is durable —
+  // IndexedDB is fast enough that a user cannot feel the wait.
   const closeHello = useCallback(
-    (typedName: string) => {
+    async (typedName: string) => {
       const askedName = hello?.askName
+      try {
+        if (askedName) await setName(typedName)
+        await markWhatsNewSeen()
+      } catch {
+        // Saving failed; still close so the card never blocks the app. It
+        // will simply be offered again next time.
+      }
       setHello(undefined)
-      void (async () => {
-        try {
-          if (askedName) await setName(typedName)
-          await markWhatsNewSeen()
-        } catch {
-          // Not saved: the card will just show again next time.
-        }
-      })()
     },
     [hello?.askName],
   )
