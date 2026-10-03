@@ -1,6 +1,6 @@
 # Trophy Case: handoff for the next Claude chat
 
-Read this first, then [CLAUDE.md](CLAUDE.md) (the rules), then [REQUIREMENTS.md](REQUIREMENTS.md) (the contract). This file says where the project stands, how it is built and deployed, what is half-done, and exactly what comes next. Last updated 2026-09-23 (Phase 12).
+Read this first, then [CLAUDE.md](CLAUDE.md) (the rules), then [REQUIREMENTS.md](REQUIREMENTS.md) (the contract). This file says where the project stands, how it is built and deployed, what is half-done, and exactly what comes next. Last updated 2026-10-03 (Phase 11 built).
 
 ## What it is, in one paragraph
 
@@ -54,8 +54,8 @@ Trophy Case is a phone-first web app. A student (13 to 18) or a parent photograp
 | 8. Privacy policy page, 13+ age check | Pushed, Google sign-in being published, **not phone-checked** | `83ef870` |
 | 9. Categories: broad starter list plus your own | Pushed, **not phone-checked** | `95ed9c0` |
 | 10. The Me tab: AI summary, profile card, save as image, everything on one page | Built and tested, **not pushed, not phone-checked** | see Phase 10 below |
-| 11. Scout suggests edits, confirm before anything changes, Undo | Requirements agreed, **not built yet** (Phase 12 went first) | |
-| 12. Hello card: welcome with optional name, what's new after an update, reopen from Settings | Built and tested, **not pushed, not phone-checked** | see git log |
+| 11. Scout suggests edits, confirm before anything changes, Undo | Built and tested, **committed locally, not pushed, not phone-checked** | `3ad166c` |
+| 12. Hello card: welcome with optional name, what's new after an update, reopen from Settings | Built and tested, **not pushed, not phone-checked** | `d93245f`, `4d19195` |
 | Later. Store wrappers: Amazon Appstore, Apple App Store | Planned | |
 
 Every phase gets a numbered section in REQUIREMENTS.md before the code (Phases 0 to 5 are there). Checkboxes are for Ari to tick on the phone.
@@ -234,10 +234,17 @@ Version 2.9.0. Requirements are Feature 21 (21.8 and 21.9 added when Vishal chos
 - Not in backups: the summary. It can be rewritten with one tap; say if it should travel.
 - 182 unit, 63 e2e. The first push failed on Vercel's 12-function limit (gotcha 10); fixed in the follow-up commit.
 
-## Phase 11 (agreed 2026-09-23)
+## Phase 11 (agreed 2026-09-23, built 2026-10-03 in `3ad166c`)
 
-- **11 Scout edits:** a `<changes>` block of proposed field changes referring to achievements by prompt number (not id; see the ranking fix), a confirm card with per-change ticks, Undo, max 50, validation, skip if edited since.
-- **Later:** store wrappers (Apple needs Capacitor, a new library to ask about). Drafting help (résumé bullet, Common App line) was in the old plan; not asked for this time.
+- **11 Scout edits:** a `<changes>` block of proposed field changes referring to achievements by prompt number (not id; see the ranking fix), a confirm card with per-change ticks, Undo, max 50, validation, skip if edited since. Now built and green: **209 unit tests and 67 e2e tests pass** (the count includes the separate welcome-card race-fix commit `4d19195`, which turned 2 hello.spec.ts tests green), and `npm run build` is clean.
+- Scout answers a change request with a list of proposed changes (which achievement, which field, the old value, the new one). They show as a card and each one can be unticked — nothing reaches the timeline until Confirm is tapped, and Cancel leaves everything as it was. After confirming, Undo puts back exactly what changed, until the next confirmed change.
+- Scout can change the text fields and the category. It cannot delete an achievement, touch photos, or add more than 50 changes at once. Every new value goes through the same validation as the form; a change that would fail it is dropped and the card says so. If an achievement was edited between the suggestion and Confirm, that change is skipped rather than overwriting the newer text, and the card says so. MOCK mode proposes a sample change, so the flow works without a key.
+
+### Left to do for Phase 11
+
+1. **Ari**: `npm test` and `npm run test:e2e` to see them pass locally, then `git push Trophy-Case main` (the sandbox has no GitHub credentials).
+2. **Phone check** on the live site: in Scout, ask it to "add Middlesex Magic to all my basketball achievements". Scout proposes the changes on a card; Confirm and confirm only the listed fields changed; tap Undo and confirm the old values come back. Tick requirements 22.1 to 22.7 in REQUIREMENTS.md.
+3. **Later:** store wrappers (Apple needs Capacitor, a new library to ask about). Drafting help (résumé bullet, Common App line) was in the old plan; not asked for this time.
 
 ## Open questions still unanswered by Ari
 
@@ -245,7 +252,7 @@ Backup file-only (assumed yes); one goal at a time (assumed yes); extra categori
 
 ## Phase 12 notes
 
-- Built before Phase 11 at Vishal's request. Phase 11 is still next.
+- Built before Phase 11 at Vishal's request (commits `d93245f`, and the welcome-card race fix `4d19195`). Phase 11 is now built too; what is left for both is Ari's work — push to Vercel and the phone checks — not code.
 - To announce a future update: edit `WHATS_NEW` in `src/lib/welcome.ts` and **give it a new id**. The new id is what makes the card appear again on every device. Same id means nobody sees the change.
 - The e2e helper `openFreshApp` closes the card by default; pass `{ keepHello: true }` to test it.
 - Ideas raised and parked (see "Later" in REQUIREMENTS.md): public portfolios and an Explore page. Not agreed; privacy and legal questions first.
