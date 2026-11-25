@@ -15,6 +15,7 @@ import { deleteAchievement, listAchievementsWithPhotos } from './lib/achievement
 import { categoriesInUse, getCategories } from './lib/categories'
 import { getGoal } from './lib/goal'
 import { askForPersistentStorage } from './lib/storage'
+import { currentChild, listChildren } from './lib/family'
 import { getName, loadHello, markWhatsNewSeen, setName, type HelloKind } from './lib/welcome'
 import { STARTER_CATEGORIES, type AchievementWithPhotos } from './lib/types'
 
@@ -36,6 +37,15 @@ export default function App() {
   const [categories, setCategories] = useState<string[]>([])
   const [usedCategories, setUsedCategories] = useState<string[]>([])
   const [hello, setHello] = useState<{ kind: HelloKind; name: string; askName: boolean }>()
+  // Phase 15: whose case is open, shown only once there is more than one.
+  const [caseLabel, setCaseLabel] = useState<string>()
+
+  useEffect(() => {
+    if (listChildren().length === 0) return
+    const child = currentChild()
+    if (child) setCaseLabel(`${child.name}'s case`)
+    else void getName().then((n) => setCaseLabel(n ? `${n}'s case` : 'My case'), () => setCaseLabel('My case'))
+  }, [])
 
   const reload = useCallback(async () => {
     try {
@@ -148,7 +158,19 @@ export default function App() {
               <path d="M12 14v4M9 21h6" />
             </svg>
           </span>
-          <h1 className="text-2xl font-bold tracking-tight">Trophy Case</h1>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Trophy Case</h1>
+            {caseLabel && (
+              <button
+                type="button"
+                data-testid="case-label"
+                onClick={() => setSettingsOpen(true)}
+                className="-mt-0.5 block text-sm font-semibold text-accent-ink"
+              >
+                {caseLabel} ▾
+              </button>
+            )}
+          </div>
         </div>
         <button
           type="button"

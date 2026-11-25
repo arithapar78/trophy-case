@@ -8,6 +8,7 @@ import { CREDIT_COST, outOfCreditsMessage, type AiAction } from '../src/lib/cred
 import { authenticate } from './auth.js'
 import { readJsonBody, sendJson } from './http.js'
 import { getStore } from './storeInstance.js'
+import { checkChildConsent } from './consent.js'
 import { canAfford, getCreditsFor, spendCredits } from './credits.js'
 import { getUsageFor, useOne } from './usage.js'
 import type { Store } from './store.js'
@@ -41,6 +42,12 @@ export async function runAiRoute<T extends AiResult>(
   const user = await authenticate(store, req)
   if (!user) {
     sendJson(res, 401, { ok: false, code: 'signin', message: 'Sign in to use AI.' })
+    return
+  }
+
+  const consent = await checkChildConsent(store, user, req)
+  if (!consent.ok) {
+    sendJson(res, consent.status, { ok: false, code: consent.code, message: consent.message })
     return
   }
 

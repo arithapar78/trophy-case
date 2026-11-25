@@ -20,6 +20,8 @@ export interface AccountState {
   usage?: UsageStatus
   // Phase 14: this month's AI credits, as the server last told us.
   credits?: CreditStatus
+  // Phase 15: child profile ids a parent has given AI permission for.
+  consents?: string[]
   // Set just after coming back from Stripe, so Settings can say how it went.
   billingReturn?: BillingReturn
   // True while we are waiting for Stripe's message about a payment to land.
@@ -124,8 +126,8 @@ export async function refreshAccount(): Promise<void> {
     return
   }
   try {
-    const me = await call<{ user: AccountUser; usage: UsageStatus; credits?: CreditStatus }>('/api/me')
-    emit({ user: me.user, usage: me.usage, credits: me.credits })
+    const me = await call<{ user: AccountUser; usage: UsageStatus; credits?: CreditStatus; consents?: string[] }>('/api/me')
+    emit({ user: me.user, usage: me.usage, credits: me.credits, consents: me.consents ?? [] })
   } catch (err) {
     // Signed out by the server: handled in call(). Anything else (no
     // signal) keeps the last known state so the app still opens offline.
@@ -247,4 +249,16 @@ export async function confirmUpgrade(sleep = (ms: number) => new Promise((r) => 
   } finally {
     emit({ ...state, confirmingUpgrade: false })
   }
+}
+
+// Phase 15: a parent gives or withdraws permission to use AI for one child
+// profile. Only the random profile id goes to the server.
+export async function setChildConsent(profileId: string, give: { isParentAndAdult: boolean; agrees: boolean } | false): Promise<void> {
+  const body = give ? { action: 'consent', profileId, ...give } : { action: 'withdraw', profileId }
+  const result = await call<{ consents: string[] }>('/api/me', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  emit({ ...state, consents: result.consents })
 }

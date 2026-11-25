@@ -22,6 +22,11 @@ export interface User {
   subscriptionStatus?: string
 }
 
+export interface Consent {
+  at: number
+  version: string
+}
+
 export const SESSION_TTL_SECONDS = 90 * 24 * 60 * 60 // 90 days
 const USAGE_TTL_SECONDS = 5 * 60 * 60
 // A month's credit count only matters until the month ends; 40 days covers it.
@@ -43,6 +48,12 @@ export interface Store {
   // Phase 14: AI credits used in one month ("2026-11"). addCredits returns the new total.
   readCredits(userId: string, month: string): Promise<number>
   addCredits(userId: string, month: string, amount: number): Promise<number>
+  // Phase 15: a parent's permission to use AI for one child profile. Only
+  // the random profile id, when, and which wording; never a name.
+  getConsent(userId: string, profileId: string): Promise<Consent | undefined>
+  putConsent(userId: string, profileId: string, consent: Consent): Promise<void>
+  deleteConsent(userId: string, profileId: string): Promise<void>
+  listConsents(userId: string): Promise<string[]>
   getUserByStripeCustomer(customerId: string): Promise<User | undefined>
   // Stripe can deliver the same message twice. markEventSeen returns false
   // if we have handled this id before, so the handler can stop.
@@ -58,6 +69,7 @@ export function memoryStore(): Store {
   const sessions = new Map<string, string>()
   const usage = new Map<string, number[]>()
   const credits = new Map<string, number>()
+  const consents = new Map<string, Consent>()
   const seenEvents = new Set<string>()
   return {
     async getUser(id) {
@@ -74,6 +86,7 @@ export function memoryStore(): Store {
       users.delete(id)
       usage.delete(id)
       for (const key of credits.keys()) if (key.startsWith(`${id}:`)) credits.delete(key)
+      for (const key of consents.keys()) if (key.startsWith(`${id}:`)) consents.delete(key)
       for (const [token, userId] of sessions) if (userId === id) sessions.delete(token)
     },
     async createSession(userId, token) {
@@ -99,6 +112,18 @@ export function memoryStore(): Store {
       credits.set(`${userId}:${month}`, total)
       return total
     },
+    async getConsent(userId, profileId) {
+      return consents.get(`${userId}:${profileId}`)
+    },
+    async putConsent(userId, profileId, consent) {
+      consents.set(`${userId}:${profileId}`, consent)
+    },
+    async deleteConsent(userId, profileId) {
+      consents.delete(`${userId}:${profileId}`)
+    },
+    async listConsents(userId) {
+      return [...consents.keys()].filter((k) => k.startsWith(`${userId}:`)).map((k) => k.slice(userId.length + 1))
+    },
     async getUserByStripeCustomer(customerId) {
       for (const u of users.values()) if (u.stripeCustomerId === customerId) return u
       return undefined
@@ -114,6 +139,7 @@ export function memoryStore(): Store {
 // Keys: user:<id>, email:<email> -> id, session:<token> -> id (expires),
 // sessions:<id> = set of tokens, usage:<id> = JSON list of timestamps
 // (expires), credits:<id>:<YYYY-MM> = AI credits used that month (expires),
+// consent:<id>:<profile id> = a parent's permission for one child profile,
 // customer:<stripe id> -> id, event:<stripe id> (expires).
 export function redisStore(redis: Redis): Store {
   return {
@@ -133,7 +159,8 @@ export function redisStore(redis: Redis): Store {
       const user = await this.getUser(id)
       const tokens = await redis.smembers(`sessions:${id}`)
       const creditKeys = await redis.keys(`credits:${id}:*`)
-      const keys = [`user:${id}`, `sessions:${id}`, `usage:${id}`, ...creditKeys, ...tokens.map((t) => `session:${t}`)]
+      const consentKeys = await redis.keys(`consent:${id}:*`)
+      const keys = [`user:${id}`, `sessions:${id}`, `usage:${id}`, ...creditKeys, ...consentKeys, ...tokens.map((t) => `session:${t}`)]
       if (user) keys.push(`email:${user.email}`)
       if (user?.stripeCustomerId) keys.push(`customer:${user.stripeCustomerId}`)
       await redis.del(...keys)
@@ -165,6 +192,19 @@ export function redisStore(redis: Redis): Store {
       const total = await redis.incrby(key, amount)
       await redis.expire(key, CREDITS_TTL_SECONDS)
       return total
+    },
+    async getConsent(userId, profileId) {
+      return (await redis.get<Consent>(`consent:${userId}:${profileId}`)) ?? undefined
+    },
+    async putConsent(userId, profileId, consent) {
+      await redis.set(`consent:${userId}:${profileId}`, consent)
+    },
+    async deleteConsent(userId, profileId) {
+      await redis.del(`consent:${userId}:${profileId}`)
+    },
+    async listConsents(userId) {
+      const prefix = `consent:${userId}:`
+      return (await redis.keys(`${prefix}*`)).map((k) => k.slice(prefix.length))
     },
     async getUserByStripeCustomer(customerId) {
       const id = await redis.get<string>(`customer:${customerId}`)

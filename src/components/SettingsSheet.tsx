@@ -12,6 +12,8 @@ import { shareOrDownload } from '../lib/share'
 import { formatBytes, getStorageUsage, type StorageUsage } from '../lib/storage'
 import PrivacyLink from './PrivacyLink'
 import CategoriesSection from './CategoriesSection'
+import FamilySection from './FamilySection'
+import { listChildren } from '../lib/family'
 
 interface Props {
   achievementCount: number
@@ -130,6 +132,8 @@ export default function SettingsSheet({ achievementCount, goal: savedGoal, custo
 
         <AccountSection />
 
+        <FamilySection />
+
         <section className="mt-5">
           <button type="button" className={button} onClick={onOpenHello} data-testid="open-hello">
             <span className="font-medium">What's new and how it works</span>
@@ -147,6 +151,11 @@ export default function SettingsSheet({ achievementCount, goal: savedGoal, custo
           <p className="mt-1 text-sm opacity-70">
             Everything stays on this phone. A backup is the only copy anywhere else, so make one now and then.
           </p>
+          {listChildren().length > 0 && (
+            <p className="mt-1 text-sm font-medium text-accent-ink" data-testid="open-case-note">
+              Backup, restore, export and Delete everything only touch the case that is open now.
+            </p>
+          )}
         </section>
 
         <section className="mt-5">

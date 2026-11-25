@@ -7,6 +7,7 @@ import type { PhotoDraft, ReadPhotoRequest, ReadPhotoResponse } from './aiTypes'
 import type { UsageStatus } from './aiUsage'
 import type { CreditStatus } from './credits'
 import { todayISO } from './dates'
+import { profileHeaders } from './family'
 import { prepareForStorage } from './photos'
 import { getCategories } from './categories'
 
@@ -35,7 +36,7 @@ export async function postAi<T extends { ok: boolean }>(path: string, body: unkn
   try {
     response = await fetch(path, {
       method: 'POST',
-      headers: { 'content-type': 'application/json', ...authHeaders() },
+      headers: { 'content-type': 'application/json', ...authHeaders(), ...profileHeaders() },
       body: JSON.stringify(body),
     })
   } catch {

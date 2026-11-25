@@ -571,3 +571,43 @@ Agreed with Vishal on 2026-11-25 (first step of the v3 build plan). Reverses par
 - [ ] T14.2 Unit: counted per user and per month; charged only on success; refused before the AI runs when short; Pro gets 500; deletion clears it.
 - [ ] T14.3 E2E: Settings shows 50 of 50, a Scout message takes it to 49, no low note while plenty is left.
 - [ ] T14.4 E2E: after spending 48, a summary is refused with the refill date and the low note shows 2 left.
+
+---
+
+## Phase 15: Family profiles, with a parent's permission for kids under 13
+
+Agreed with Vishal on 2026-11-25: parent-run accounts for children under 13 (kids never sign in themselves), opt-in cloud sync for paid plans later (Phase 16). Second step of the v3 plan.
+
+### Feature 27: More than one trophy case on a phone
+
+> **As a parent, I want** a separate trophy case for each of my kids on my phone **so that** I can start recording their wins from elementary school.
+
+- [ ] 27.1 Settings has a **Family** section listing every profile on this phone. The original one is the first and can't be removed.
+- [ ] 27.2 "Add a child" asks for a first name (up to 30 characters) and birth month and year. Nothing else.
+- [ ] 27.3 Each profile has its own achievements, photos, goal, rankings, Scout chat, summary and categories. Switching shows only that profile's things. The categories start from the starter list.
+- [ ] 27.4 When there is more than one profile, the header shows whose case is open; tapping it opens Settings.
+- [ ] 27.5 Removing a child's profile asks first, says how many achievements go with it, and deletes all of that profile's data from the phone.
+- [ ] 27.6 Backup, restore, export and "Delete everything" act on the profile that is open, and say so.
+- [ ] 27.7 Child profiles never show the welcome card; the child's name is used for the greeting and the export.
+- [ ] 27.8 Everything above works signed out and offline. Profiles live on the phone only. The child's name and birth date are never sent to the server or the AI.
+
+### Feature 28: A parent's permission before AI is used for a child under 13
+
+> **As a parent, I want** to give permission before any of my young child's achievements are sent to AI **so that** I stay in control, and the app follows the children's privacy law (COPPA).
+
+- [ ] 28.1 A profile is "under 13" from its birth month and year, with the same month rule as the sign-in age check.
+- [ ] 28.2 For an under-13 profile, every AI feature is refused by the server until a parent has given permission for that profile. The refusal says what to do and calls no AI.
+- [ ] 28.3 Permission is given in Settings, Family, by a signed-in account holder who ticks that they are the child's parent or legal guardian and 18 or older, and agrees to a plain-words description of what is sent (the achievement words, and photos they choose) and where (Anthropic's AI, which stores nothing).
+- [ ] 28.4 The server keeps only: the account, a random profile id, when permission was given, and which wording version. No name, no birth date.
+- [ ] 28.5 Permission can be withdrawn any time with one tap; AI stops at once for that profile. Deleting the account removes every permission record.
+- [ ] 28.6 Profiles 13 and over work as before.
+- [ ] 28.7 The privacy policy (privacy.html and PRIVACY.md) describes child profiles and the permission record.
+
+**Not in this phase, and needed before marketing to parents of young kids:** a lawyer's review of the permission flow against the amended COPPA rule (compliance date April 22, 2026), in particular which verifiable-parental-consent method applies. A ticked box from a signed-in account may not be enough on its own; the Phase 17 card payment is one of the FTC's accepted methods.
+
+### Phase 15 tests
+
+- [ ] T15.1 Unit: profiles are added, validated, listed and removed; each gets its own database; under-13 maths; the original can't be removed.
+- [ ] T15.2 Unit: the route refuses an under-13 profile without permission and runs nothing; permission lets it through; withdrawing stops it; deleting the account clears permissions; a 13+ profile needs none; a bad profile id is refused.
+- [ ] T15.3 E2E: add a child, switch, the child's case is empty and separate; switch back and the original's achievements are there; removing the child deletes its achievements.
+- [ ] T15.4 E2E: in an under-13 profile, Scout is refused with the permission message; giving permission in Settings lets a MOCK answer through; withdrawing refuses again.

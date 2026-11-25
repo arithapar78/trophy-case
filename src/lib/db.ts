@@ -6,6 +6,7 @@
 import Dexie, { type EntityTable } from 'dexie'
 import { STARTER_CATEGORIES, type Achievement, type Photo, type Ranking, type ScoutMessage, type Setting } from './types'
 import { cleanCustomCategories } from './validation'
+import { currentProfileId, databaseNameFor } from './family'
 
 export class TrophyCaseDB extends Dexie {
   achievements!: EntityTable<Achievement, 'id'>
@@ -63,4 +64,12 @@ export class TrophyCaseDB extends Dexie {
   }
 }
 
-export const db = new TrophyCaseDB()
+// Phase 15: the open profile's database. Switching profile reloads the app,
+// so this is decided once per page load and every screen reads the right one.
+export const db = new TrophyCaseDB(databaseNameFor(currentProfileId()))
+
+// Another profile's database, for setting a new one up or removing one.
+// Closed again by the caller; the app itself only ever reads `db`.
+export function openProfileDatabase(profileId: string): TrophyCaseDB {
+  return new TrophyCaseDB(databaseNameFor(profileId))
+}

@@ -91,6 +91,16 @@ The categories a user makes (Debate, Robotics) are stored on the device with eve
 
 The welcome asks, optionally, what to call the user. The name is kept on the device only (settings table, `name`), is used for the greeting and nothing else, is **never sent to the AI or the server**, and is not put in backups. Which "what's new" list was last seen is kept the same way (`whatsNewSeen`). "Delete everything" removes both. The card makes no network request.
 
+### AI credits (Phase 14)
+
+The server also keeps how many AI credits an account has used this month (Redis `credits:<id>:<YYYY-MM>`, a number, expires after 40 days). Deleting the account deletes it.
+
+### Family profiles and a parent's permission (Phase 15)
+
+A phone can hold a trophy case per child. Each profile is its own database on the phone; the list of profiles (random id, first name, birth month and year) is in the phone's localStorage. **None of that is sent anywhere.** With an AI request the phone sends only the open profile's random id and whether that child is under 13. For an under-13 profile the server refuses the AI unless the signed-in account has a permission record for that id: `consent:<user id>:<profile id>` = when, and the wording version. Withdrawing deletes the record; deleting the account deletes all of them. privacy.html says the same in plain words.
+
+**Before marketing to parents of young kids:** have a lawyer confirm the permission flow meets the amended COPPA rule's verifiable parental consent requirement. A ticked box from a signed-in account may not be enough by itself.
+
 ### The law, still
 
 Storing an email address for a user under 13 is collecting a child's personal information, which is what COPPA (the US law), the UK Age Appropriate Design Code and GDPR-K are about. The app is meant for ages 13 and up and this is a family project, not a public service. **Before it is opened to strangers or charged for, read those rules properly and get real legal advice.** Charging money raises this further: the payer would be a parent, the user a minor, and terms and a privacy policy would have to be published and accurate. Adding sync, which would put achievements themselves on a server, is a much bigger step again and has not been agreed.

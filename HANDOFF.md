@@ -268,3 +268,11 @@ Backup file-only (assumed yes); one goal at a time (assumed yes); extra categori
 - UI: Settings line in `AccountSection`; `CreditsNote` under the AI buttons only at 20% or less.
 - Still on Vishal: a monthly spending cap in the Anthropic console.
 - Next in the v3 plan: Phase 15 parent accounts (needs the COPPA decisions first).
+
+## Phase 15: family profiles and a parent's permission (built 2026-11-25)
+
+- One Dexie database per profile: the original keeps `trophy-case`, each child gets `trophy-case-<id>`. `db` in `src/lib/db.ts` opens the current profile's database once per page load; switching profile reloads the page. No other code knows profiles exist.
+- Profile list (random id, first name, birth month and year) in localStorage, `src/lib/family.ts`. Actions that touch databases in `src/lib/household.ts`. UI: `FamilySection.tsx` in Settings, "<name>'s case" label in the header once there is a child.
+- AI requests carry `x-profile-id` and `x-profile-under-13` (`profileHeaders()`). `server/consent.ts` refuses an under-13 profile with 403 `code: 'consent'` unless the account has `consent:<user>:<profile>`. Given or withdrawn through POST `/api/me`; `/api/me` lists them. Still 11 functions.
+- privacy.html and PRIVACY.md updated (also for the Phase 14 credit count, which had been missed).
+- **Open:** a lawyer's review of the consent flow before any marketing to parents of young kids. Next: Phase 16, opt-in cloud sync for paid plans.
