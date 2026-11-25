@@ -15,8 +15,10 @@ import {
   type SavedSummary,
 } from '../lib/profile'
 import { drawProfileCard, profileCardFileName } from '../lib/profileCard'
+import { makeProfileExport, profileExportFileName } from '../lib/profileExport'
 import { shareOrDownload } from '../lib/share'
 import type { AchievementWithPhotos } from '../lib/types'
+import { getName } from '../lib/welcome'
 
 interface Props {
   rows: AchievementWithPhotos[]
@@ -58,6 +60,18 @@ export default function MeView({ rows, categories, goal, onOpenSettings, onOpen 
       else setError(err instanceof AiUnavailableError ? err.message : "The AI didn't work this time. Try again in a minute.")
     } finally {
       setBusy(false)
+    }
+  }
+
+  // Phase 13: the whole profile as one file, photos at the bottom as proof.
+  async function exportProfile() {
+    setImageNote(undefined)
+    try {
+      const blob = await makeProfileExport({ name: await getName(), goal, summary: saved, rows, categories, now: new Date() })
+      const how = await shareOrDownload(blob, profileExportFileName())
+      setImageNote(how === 'downloaded' ? 'Profile saved to your downloads.' : undefined)
+    } catch {
+      setImageNote("Couldn't make the profile file on this device.")
     }
   }
 
@@ -206,6 +220,14 @@ export default function MeView({ rows, categories, goal, onOpenSettings, onOpen 
               Save as image
             </button>
           </div>
+          <button
+            type="button"
+            data-testid="export-profile"
+            onClick={() => void exportProfile()}
+            className="mt-2 min-h-11 w-full rounded-2xl px-4 text-sm font-semibold text-accent-ink ring-1 ring-accent/50 active:bg-accent/15"
+          >
+            Export my profile (with proof)
+          </button>
           {error && (
             <p className="mt-2 text-sm text-red-600" role="alert">
               {error}

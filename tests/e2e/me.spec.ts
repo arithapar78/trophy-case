@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { expect, test, type Page } from '@playwright/test'
 import { signInForTest } from './helpers/account'
-import { openFreshApp } from './helpers/app'
+import { openFreshApp, photoFile } from './helpers/app'
 
 async function addQuick(page: Page, title: string, category: string, result = '') {
   await page.getByRole('button', { name: 'Add without a photo' }).click()
@@ -115,5 +115,34 @@ test('T10.5 "Save as image" makes a PNG of the card, with or without a summary, 
   await page.getByTestId('save-image').click()
   file = await download
   expect(pngSize(readFileSync((await file.path())!))).toEqual({ width: 1080, height: 1350 })
+  expect(sent).toEqual([])
+})
+
+test('T13.2 "Export my profile" makes one file: persona, list, then photos as proof, and sends nothing', async ({ page }) => {
+  await page.getByTestId('camera-input').setInputFiles(photoFile())
+  const sheet = page.getByRole('dialog', { name: 'New achievement' })
+  await sheet.getByLabel('Title').fill('Science fair, 1st place')
+  await sheet.getByRole('button', { name: 'School', exact: true }).click()
+  await sheet.getByRole('button', { name: 'Save' }).click()
+  await expect(sheet).toBeHidden()
+  await addQuick(page, 'Swim meet', 'Sports')
+  await page.getByRole('tab', { name: 'Me', exact: true }).click()
+
+  const sent: string[] = []
+  page.on('request', (r) => {
+    if (r.url().includes('/api/')) sent.push(r.url())
+  })
+  const download = page.waitForEvent('download')
+  await page.getByTestId('export-profile').click()
+  const file = await download
+  expect(file.suggestedFilename()).toMatch(/^trophy-case-profile-\d{4}-\d{2}-\d{2}\.html$/)
+  const html = readFileSync((await file.path())!, 'utf8')
+  const list = html.indexOf('data-section="achievements"')
+  const proof = html.indexOf('data-section="proof"')
+  expect(list).toBeGreaterThan(html.indexOf('data-section="persona"'))
+  expect(proof).toBeGreaterThan(list)
+  expect(html).toContain('Swim meet')
+  expect(html.indexOf('data:image/jpeg;base64,')).toBeGreaterThan(proof)
+  expect(html).toContain('Proof 1 · Science fair, 1st place')
   expect(sent).toEqual([])
 })

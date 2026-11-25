@@ -520,3 +520,25 @@ Built before Phase 11, at Vishal's request.
 - [ ] T12.2 Unit: the name is trimmed, extra spaces are squeezed, it is cut to 30 characters, and an empty name means "Hi there".
 - [ ] T12.3 E2E: a fresh device shows the welcome; typing a name and tapping Let's go closes it; after a reload it does not come back; Settings reopens it greeting by name; no network request is made.
 - [ ] T12.4 E2E: a device that saw an older list shows what's new, greeted by name, and the X closes it for good.
+
+---
+
+## Phase 13: Export your profile with proof
+
+Asked for by Vishal on 2026-11-24.
+
+### Feature 24: One file that shows who you are, and proves it
+
+> **As a student or parent, I want to** export my profile as one file with every achievement and the photos at the bottom as proof, **so that** I can hand it to a counselor, a coach or a reviewer.
+
+- [ ] 24.1 The Me tab has "Export my profile (with proof)".
+- [ ] 24.2 The file has, in this order: the persona (name from the welcome card, goal, totals, and the AI summary and strengths if one was written), every achievement grouped by category, and a Proof section at the bottom with each achievement's photos.
+- [ ] 24.3 Each achievement with photos says "See proof N", which jumps to "Proof N" at the bottom. Achievements with no photo are still listed.
+- [ ] 24.4 It is one HTML file with the photos inside it, in the app's amber look. It opens in any browser or in Files on an iPhone, and prints to PDF from there.
+- [ ] 24.5 Made on the phone. No AI use, no network request. Works signed out and offline. Opens the share sheet, or downloads on a computer.
+- [ ] 24.6 Everything the user typed is escaped, so a title can never become code in the file.
+
+### Phase 13 tests
+
+- [ ] T13.1 Unit: section order, proof numbering and links, summary only when written, escaping, empty profile, file name.
+- [ ] T13.2 E2E: exporting with one photo and one without gives a file in the right order with the photo in the Proof section, and sends nothing.

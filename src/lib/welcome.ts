@@ -8,8 +8,9 @@ import { cleanName } from './validation'
 // Change `id` whenever `items` changes. A new id is what makes the card
 // show again on every device that saw the old one.
 export const WHATS_NEW = {
-  id: '2026-09-welcome',
+  id: '2026-11-export',
   items: [
+    { title: 'Export your profile', text: 'On the Me tab: one file with who you are, every achievement, and your photos at the bottom as proof. Open it and print to PDF.' },
     { title: 'The Me tab', text: 'Everything you have done on one page, a short read on your strengths, and a card you can save as a picture.' },
     { title: 'Your own categories', text: 'Make categories that fit you, like Robotics or Debate. Settings, then Categories.' },
     { title: 'Scout', text: 'A chat that knows your goal and your achievements. Ask it what to do next.' },
