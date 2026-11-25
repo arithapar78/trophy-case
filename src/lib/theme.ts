@@ -41,3 +41,10 @@ export function setTheme(choice: ThemeChoice): void {
   }
   applyTheme(choice)
 }
+
+// What is on screen right now: the stored choice, or the phone's own setting
+// when nothing has been chosen.
+export function shownTheme(choice: ThemeChoice = getTheme()): 'light' | 'dark' {
+  if (choice !== 'system') return choice
+  return typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}

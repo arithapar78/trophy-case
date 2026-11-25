@@ -16,6 +16,7 @@ import { categoriesInUse, getCategories } from './lib/categories'
 import { getGoal } from './lib/goal'
 import { askForPersistentStorage } from './lib/storage'
 import { currentChild, listChildren } from './lib/family'
+import ThemeToggle from './components/ThemeToggle'
 import { getName, loadHello, markWhatsNewSeen, setName, type HelloKind } from './lib/welcome'
 import { STARTER_CATEGORIES, type AchievementWithPhotos } from './lib/types'
 
@@ -172,6 +173,8 @@ export default function App() {
             )}
           </div>
         </div>
+        <div className="flex items-center gap-2">
+        <ThemeToggle />
         <button
           type="button"
           onClick={() => setSettingsOpen(true)}
@@ -183,6 +186,7 @@ export default function App() {
             <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
           </svg>
         </button>
+        </div>
       </header>
 
       <div className="mb-4 flex rounded-2xl bg-ink/5 p-1" role="tablist" aria-label="View">

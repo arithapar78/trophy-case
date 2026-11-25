@@ -279,4 +279,4 @@ Backup file-only (assumed yes); one goal at a time (assumed yes); extra categori
 
 ## Phase 16a: appearance (built 2026-11-25)
 
-- `src/lib/theme.ts` + `AppearanceSection.tsx`. Choice in localStorage `trophy-case.theme`; `data-theme` on `<html>`; dark variables in `index.css` apply under the phone's dark mode unless `data-theme="light"`, and always under `data-theme="dark"`. A small inline script in `index.html` and `privacy.html` applies it before first paint (keep it in step with theme.ts).
+- `src/lib/theme.ts` + `ThemeToggle.tsx` (sun/moon button next to Settings; Vishal asked for a toggle, not a Settings section). Choice in localStorage `trophy-case.theme`; `data-theme` on `<html>`; dark variables in `index.css` apply under the phone's dark mode unless `data-theme="light"`, and always under `data-theme="dark"`. A small inline script in `index.html` and `privacy.html` applies it before first paint (keep it in step with theme.ts).

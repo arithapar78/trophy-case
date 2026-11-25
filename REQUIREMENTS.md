@@ -614,16 +614,17 @@ Agreed with Vishal on 2026-11-25: parent-run accounts for children under 13 (kid
 
 ---
 
-## Phase 16a: Light, dark, or match the phone
+## Phase 16a: Light or dark, from a toggle next to Settings
 
-Asked for by Vishal on 2026-11-25.
+Asked for by Vishal on 2026-11-25; on the same day he asked for it to be a toggle next to the Settings button rather than a section in Settings.
 
-- [ ] 29.1 Settings has **Appearance**: Match phone (the default, as before), Light, Dark.
-- [ ] 29.2 The choice applies at once, to every profile on the phone, and survives closing the app.
-- [ ] 29.3 It is applied before the first paint, so the app never flashes the wrong colour on opening. The status bar colour follows it. The privacy page follows it too.
-- [ ] 29.4 Light or Dark wins over the phone's own setting; Match phone follows the phone again.
+- [ ] 29.1 A sun/moon button sits next to the Settings button. Moon on a light screen (tap for dark), sun on a dark one (tap for light).
+- [ ] 29.2 Until it is tapped, the app follows the phone's own light or dark setting, as before.
+- [ ] 29.3 A tap switches at once, is remembered, applies to every profile on the phone, and wins over the phone's setting from then on.
+- [ ] 29.4 It is applied before the first paint, so the app never flashes the wrong colour on opening. The status bar colour and the privacy page follow it.
 
 ### Phase 16a tests
 
-- [ ] T16a.1 Unit: default, each choice sets the page attribute, both status-bar colours and the stored value; Match phone clears them; rubbish stored is ignored.
-- [ ] T16a.2 E2E: on a light phone Dark turns the page dark at once and after a reload; on a dark phone Light turns it light; Match phone follows the phone.
+- [ ] T16a.1 Unit: default, each choice sets the page attribute, both status-bar colours and the stored value; clearing restores them; rubbish stored is ignored.
+- [ ] T16a.2 E2E: on a light phone the toggle turns the page dark at once and after a reload; on a dark phone it turns it light and that sticks; Settings has no Appearance section.
+- [ ] T16a.3 E2E: on a dark phone the toggle starts in dark and offers light.
