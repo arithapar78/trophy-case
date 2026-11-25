@@ -19,6 +19,7 @@ import { makeProfileExport, profileExportFileName } from '../lib/profileExport'
 import { shareOrDownload } from '../lib/share'
 import type { AchievementWithPhotos } from '../lib/types'
 import { getName } from '../lib/welcome'
+import CreditsNote from './CreditsNote'
 
 interface Props {
   rows: AchievementWithPhotos[]
@@ -234,6 +235,7 @@ export default function MeView({ rows, categories, goal, onOpenSettings, onOpen 
             </p>
           )}
           {imageNote && <p className="mt-2 text-sm text-ink/60">{imageNote}</p>}
+          <CreditsNote />
         </div>
       </section>
 

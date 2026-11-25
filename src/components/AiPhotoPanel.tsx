@@ -1,5 +1,6 @@
 import { useAccount } from '../lib/account'
 import { formatWait } from '../lib/aiUsage'
+import CreditsNote from './CreditsNote'
 
 export type AiState =
   | { kind: 'idle' }
@@ -70,6 +71,7 @@ export default function AiPhotoPanel({ state, onRun, onOpenSettings }: Props) {
               ? `The AI is resting for a moment, back in ${formatWait(usage.nextFreeAt)}. You can still fill this in yourself.`
               : "Sends a small copy of this photo to Anthropic's AI, which is not stored there."}
           </p>
+          <CreditsNote />
         </>
       )}
     </div>

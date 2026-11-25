@@ -6,6 +6,7 @@ import { formatDate } from '../lib/dates'
 import { getRankings, getRecommendations, orderByRank, saveRankings, setRecommendations, type RankedRow } from '../lib/goal'
 import { rankWithAi, recommendWithAi } from '../lib/goalClient'
 import type { Achievement, RecommendationSet } from '../lib/types'
+import CreditsNote from './CreditsNote'
 
 interface Props {
   achievements: Achievement[]
@@ -103,6 +104,7 @@ export default function RankedView({ achievements, goal, onOpenSettings }: Props
               ? `The AI is resting for a moment, back in ${formatWait(usage.nextFreeAt)}.`
               : 'Only the words are sent, never photos.'}
           </p>
+          <CreditsNote />
         </>
       )}
 

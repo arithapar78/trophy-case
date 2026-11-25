@@ -7,5 +7,5 @@ import { runAiRoute } from '../server/aiRoute.js'
 import { writeSummary } from '../server/summary.js'
 
 export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  await runAiRoute(req, res, (body, apiKey) => writeSummary(body, { apiKey }))
+  await runAiRoute(req, res, 'summary', (body, apiKey) => writeSummary(body, { apiKey }))
 }

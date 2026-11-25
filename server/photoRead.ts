@@ -10,7 +10,7 @@ import { MAX_IMAGE_BASE64_LENGTH, type PhotoDraft, type ReadPhotoRequest, type R
 import { categoryListFromRequest, categoryOrFallback, fullCategoryList } from '../src/lib/validation.js'
 import { isValidISODate } from '../src/lib/dates.js'
 
-export const MODEL = 'claude-haiku-4-5'
+import { AI_MODEL as MODEL } from './model.js'
 
 // Asks the model and returns its raw text answer. Injected so tests can
 // fake it and so MOCK mode never touches the network.

@@ -24,7 +24,7 @@ import {
 import { MAX_GOAL_LENGTH } from '../src/lib/types.js'
 import { categoryListFromRequest, categoryOrFallback, fullCategoryList, LIMITS } from '../src/lib/validation.js'
 
-export const MODEL = 'claude-haiku-4-5'
+import { AI_MODEL as MODEL } from './model.js'
 export const SCOUT_NAME = 'Scout'
 
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
@@ -360,7 +360,11 @@ async function realCallChat(apiKey: string): Promise<CallChat> {
     const response = await client.messages.create({
       model: MODEL,
       max_tokens: 1200,
-      system,
+      // The system prompt (goal plus every achievement) is the same for each
+      // message in a conversation, so it is cached: repeats are billed at
+      // about a tenth of the normal price. Below the model's minimum cache
+      // size the flag is simply ignored.
+      system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
       // The block shapes above are exactly what the SDK takes; the cast is
       // only because our own ModelTurn is a narrower, simpler type.
       messages: turns as unknown as Parameters<typeof client.messages.create>[0]['messages'],

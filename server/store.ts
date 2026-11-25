@@ -24,6 +24,8 @@ export interface User {
 
 export const SESSION_TTL_SECONDS = 90 * 24 * 60 * 60 // 90 days
 const USAGE_TTL_SECONDS = 5 * 60 * 60
+// A month's credit count only matters until the month ends; 40 days covers it.
+const CREDITS_TTL_SECONDS = 40 * 24 * 60 * 60
 // Stripe retries a failed delivery for up to three days, so we only need to
 // remember which messages we have handled for a little longer than that.
 export const EVENT_TTL_SECONDS = 7 * 24 * 60 * 60
@@ -38,6 +40,9 @@ export interface Store {
   deleteSession(token: string): Promise<void>
   readUsage(userId: string): Promise<number[]>
   writeUsage(userId: string, times: number[]): Promise<void>
+  // Phase 14: AI credits used in one month ("2026-11"). addCredits returns the new total.
+  readCredits(userId: string, month: string): Promise<number>
+  addCredits(userId: string, month: string, amount: number): Promise<number>
   getUserByStripeCustomer(customerId: string): Promise<User | undefined>
   // Stripe can deliver the same message twice. markEventSeen returns false
   // if we have handled this id before, so the handler can stop.
@@ -52,6 +57,7 @@ export function memoryStore(): Store {
   const users = new Map<string, User>()
   const sessions = new Map<string, string>()
   const usage = new Map<string, number[]>()
+  const credits = new Map<string, number>()
   const seenEvents = new Set<string>()
   return {
     async getUser(id) {
@@ -67,6 +73,7 @@ export function memoryStore(): Store {
     async deleteUser(id) {
       users.delete(id)
       usage.delete(id)
+      for (const key of credits.keys()) if (key.startsWith(`${id}:`)) credits.delete(key)
       for (const [token, userId] of sessions) if (userId === id) sessions.delete(token)
     },
     async createSession(userId, token) {
@@ -84,6 +91,14 @@ export function memoryStore(): Store {
     async writeUsage(userId, times) {
       usage.set(userId, times)
     },
+    async readCredits(userId, month) {
+      return credits.get(`${userId}:${month}`) ?? 0
+    },
+    async addCredits(userId, month, amount) {
+      const total = (credits.get(`${userId}:${month}`) ?? 0) + amount
+      credits.set(`${userId}:${month}`, total)
+      return total
+    },
     async getUserByStripeCustomer(customerId) {
       for (const u of users.values()) if (u.stripeCustomerId === customerId) return u
       return undefined
@@ -98,7 +113,8 @@ export function memoryStore(): Store {
 
 // Keys: user:<id>, email:<email> -> id, session:<token> -> id (expires),
 // sessions:<id> = set of tokens, usage:<id> = JSON list of timestamps
-// (expires), customer:<stripe id> -> id, event:<stripe id> (expires).
+// (expires), credits:<id>:<YYYY-MM> = AI credits used that month (expires),
+// customer:<stripe id> -> id, event:<stripe id> (expires).
 export function redisStore(redis: Redis): Store {
   return {
     async getUser(id) {
@@ -116,7 +132,8 @@ export function redisStore(redis: Redis): Store {
     async deleteUser(id) {
       const user = await this.getUser(id)
       const tokens = await redis.smembers(`sessions:${id}`)
-      const keys = [`user:${id}`, `sessions:${id}`, `usage:${id}`, ...tokens.map((t) => `session:${t}`)]
+      const creditKeys = await redis.keys(`credits:${id}:*`)
+      const keys = [`user:${id}`, `sessions:${id}`, `usage:${id}`, ...creditKeys, ...tokens.map((t) => `session:${t}`)]
       if (user) keys.push(`email:${user.email}`)
       if (user?.stripeCustomerId) keys.push(`customer:${user.stripeCustomerId}`)
       await redis.del(...keys)
@@ -138,6 +155,16 @@ export function redisStore(redis: Redis): Store {
     },
     async writeUsage(userId, times) {
       await redis.set(`usage:${userId}`, times, { ex: USAGE_TTL_SECONDS })
+    },
+    async readCredits(userId, month) {
+      return Number((await redis.get<number>(`credits:${userId}:${month}`)) ?? 0)
+    },
+    async addCredits(userId, month, amount) {
+      // incrby is atomic, so two answers landing at once both count.
+      const key = `credits:${userId}:${month}`
+      const total = await redis.incrby(key, amount)
+      await redis.expire(key, CREDITS_TTL_SECONDS)
+      return total
     },
     async getUserByStripeCustomer(customerId) {
       const id = await redis.get<string>(`customer:${customerId}`)

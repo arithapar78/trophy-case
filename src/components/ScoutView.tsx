@@ -18,6 +18,7 @@ import { applyChangeBatch, getUndoInfo, undoLastBatch, type EditUndo } from '../
 import type { EditField } from '../lib/aiTypes'
 import type { Achievement, ScoutMessage } from '../lib/types'
 import CloseButton from './CloseButton'
+import CreditsNote from './CreditsNote'
 
 // A readable name for each editable field, used in the changes card.
 export const FIELD_LABEL: Record<EditField, string> = {
@@ -366,6 +367,8 @@ export default function ScoutView({
           {error}
         </p>
       )}
+
+      <CreditsNote />
 
       {/* The composer. The file input is the browser's own, which is what
           gives an iPhone the Photo Library / Take Photo / Browse sheet and a

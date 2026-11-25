@@ -8,6 +8,7 @@ import {
   useAccount,
   type ServerConfig,
 } from '../lib/account'
+import { formatResetDay } from '../lib/credits'
 import { readAgeCheck, type AgeCheckResult } from '../lib/ageGate'
 import AgeCheck from './AgeCheck'
 import PlanSection from './PlanSection'
@@ -56,7 +57,7 @@ function waitFor(script: HTMLScriptElement): Promise<void> {
 // many AI uses are left, and the ways in and out. Achievements are never
 // touched by anything here.
 export default function AccountSection() {
-  const { user } = useAccount()
+  const { user, credits } = useAccount()
   const [config, setConfig] = useState<ServerConfig>()
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
@@ -184,6 +185,11 @@ export default function AccountSection() {
           <p className="mt-1 text-sm" data-testid="account-email">
             Signed in as {user.email}
           </p>
+          {credits && (
+            <p className="mt-1 text-sm text-ink/65" data-testid="account-credits">
+              {credits.remaining} of {credits.limit} AI credits left this month. They refill on {formatResetDay(credits.resetsAt)}.
+            </p>
+          )}
           <PlanSection billing={config?.billing} />
 
           <div className="mt-3 flex flex-col gap-3">

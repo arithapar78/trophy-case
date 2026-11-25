@@ -13,7 +13,7 @@ import {
 } from '../src/lib/aiTypes.js'
 import { MAX_GOAL_LENGTH } from '../src/lib/types.js'
 
-export const MODEL = 'claude-haiku-4-5'
+import { AI_MODEL as MODEL } from './model.js'
 
 // Asks the model a text question and returns its text answer. Injected so
 // tests can fake it and MOCK mode never touches the network.

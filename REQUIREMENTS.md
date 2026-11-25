@@ -542,3 +542,32 @@ Asked for by Vishal on 2026-11-24.
 
 - [ ] T13.1 Unit: section order, proof numbering and links, summary only when written, escaping, empty profile, file name.
 - [ ] T13.2 E2E: exporting with one photo and one without gives a file in the right order with the photo in the Proof section, and sends nothing.
+
+---
+
+## Phase 14: AI credits, and a cheaper model
+
+Agreed with Vishal on 2026-11-25 (first step of the v3 build plan). Reverses part of Phase 7: there is a visible count again, but it stays out of the way until it matters.
+
+### Feature 25: Spend less on every AI answer
+
+- [ ] 25.1 Every AI feature uses `claude-haiku-5-5`, set in one place (`server/model.ts`). About a tenth of the price of Haiku 4.5.
+- [ ] 25.2 Scout's system prompt (goal plus achievements) is marked for prompt caching, so repeat messages in one conversation are billed at the cache price.
+
+### Feature 26: Monthly AI credits
+
+> **As the person paying the AI bill, I want** each account to have a monthly allowance **so that** a few heavy users cannot run up the bill, and the cost per family is predictable.
+
+- [ ] 26.1 Free gets 50 credits a month, Pro 500. They reset at midnight UTC on the 1st.
+- [ ] 26.2 A photo read, a Scout message, a ranking and a recommendation cost 1; a summary costs 3.
+- [ ] 26.3 Credits are counted on the server and charged only when the AI actually answered. A failed call costs nothing.
+- [ ] 26.4 Without enough credits the AI is not called, and the message says when they refill. It never mentions paying.
+- [ ] 26.5 Settings shows "N of M AI credits left this month". Elsewhere a quiet note appears under the AI buttons only when 20% or less is left.
+- [ ] 26.6 The 5-hour ceiling stays as the circuit breaker against scripts. Deleting the account deletes its credit count.
+
+### Phase 14 tests
+
+- [ ] T14.1 Unit: month and reset maths in UTC, plan allowances, costs, "low" at 20%, the refusal wording, the model name.
+- [ ] T14.2 Unit: counted per user and per month; charged only on success; refused before the AI runs when short; Pro gets 500; deletion clears it.
+- [ ] T14.3 E2E: Settings shows 50 of 50, a Scout message takes it to 49, no low note while plenty is left.
+- [ ] T14.4 E2E: after spending 48, a summary is refused with the refill date and the low note shows 2 left.

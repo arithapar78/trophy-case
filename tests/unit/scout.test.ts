@@ -10,7 +10,6 @@ import {
   buildSystemPrompt,
   buildTurns,
   checkScoutRequest,
-  MODEL,
   parseScoutChanges,
   parseScoutReply,
   SCOUT_NAME,
@@ -24,6 +23,7 @@ import {
   type ScoutRequest,
 } from '../../src/lib/aiTypes'
 import { checkAttachmentFile, toHistory } from '../../src/lib/scout'
+import { AI_MODEL as MODEL } from '../../server/model'
 import type { ScoutMessage } from '../../src/lib/types'
 
 const TODAY = '2026-09-22'
@@ -89,8 +89,8 @@ describe('T7.2 the Pro switch', () => {
 })
 
 describe('T7.3 what Scout is told', () => {
-  it('uses Claude Haiku and nothing else', () => {
-    expect(MODEL).toBe('claude-haiku-4-5')
+  it('uses Claude Haiku and nothing else (Haiku 5.5 since Phase 14)', () => {
+    expect(MODEL).toBe('claude-haiku-5-5')
   })
 
   it('puts the goal and every achievement in the prompt', () => {

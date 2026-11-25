@@ -7,5 +7,5 @@ import { runAiRoute } from '../server/aiRoute.js'
 import { recommendNext } from '../server/goalAdvice.js'
 
 export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  await runAiRoute(req, res, (body, apiKey) => recommendNext(body, { apiKey }))
+  await runAiRoute(req, res, 'recommend', (body, apiKey) => recommendNext(body, { apiKey }))
 }

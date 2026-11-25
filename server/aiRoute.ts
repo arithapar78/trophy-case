@@ -4,9 +4,11 @@
 
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { UsageStatus } from '../src/lib/aiUsage.js'
+import { CREDIT_COST, outOfCreditsMessage, type AiAction } from '../src/lib/credits.js'
 import { authenticate } from './auth.js'
 import { readJsonBody, sendJson } from './http.js'
 import { getStore } from './storeInstance.js'
+import { canAfford, getCreditsFor, spendCredits } from './credits.js'
 import { getUsageFor, useOne } from './usage.js'
 import type { Store } from './store.js'
 
@@ -18,11 +20,13 @@ export interface AiRouteOptions {
   now?: () => number
 }
 
-// Runs `work` for a signed-in user with a use to spare. The answer sent back
-// always carries `usage` so the app can show what is left.
+// Runs `work` for a signed-in user with credits and a use to spare. The
+// answer sent back always carries `usage` and `credits` so the app can show
+// what is left. Credits are charged only when the AI actually answered.
 export async function runAiRoute<T extends AiResult>(
   req: IncomingMessage,
   res: ServerResponse,
+  action: AiAction,
   work: (body: unknown, apiKey: string | undefined) => Promise<T>,
   options: AiRouteOptions = {},
 ): Promise<void> {
@@ -41,6 +45,13 @@ export async function runAiRoute<T extends AiResult>(
   }
 
   const body = await readJsonBody(req)
+  const cost = CREDIT_COST[action]
+  const before = await getCreditsFor(store, user, now())
+  if (!canAfford(before, cost)) {
+    sendJson(res, 429, { ok: false, code: 'credits', message: outOfCreditsMessage(before, cost), credits: before })
+    return
+  }
+
   const check = await useOne(store, user, now())
   if (!check.ok) {
     sendJson(res, 429, { ok: false, code: 'limit', message: limitMessage(check.usage, now()), usage: check.usage })
@@ -48,7 +59,8 @@ export async function runAiRoute<T extends AiResult>(
   }
 
   const result = await work(body, apiKey)
-  sendJson(res, result.ok ? 200 : 400, { ...result, usage: result.ok ? check.usage : await getUsageFor(store, user, now()) })
+  const credits = result.ok ? await spendCredits(store, user, cost, now()) : before
+  sendJson(res, result.ok ? 200 : 400, { ...result, usage: result.ok ? check.usage : await getUsageFor(store, user, now()), credits })
 }
 
 function limitMessage(usage: UsageStatus, now: number): string {

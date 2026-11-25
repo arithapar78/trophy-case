@@ -1,6 +1,6 @@
 # Trophy Case: handoff for the next Claude chat
 
-Read this first, then [CLAUDE.md](CLAUDE.md) (the rules), then [REQUIREMENTS.md](REQUIREMENTS.md) (the contract). This file says where the project stands, how it is built and deployed, what is half-done, and exactly what comes next. Last updated 2026-10-03 (Phase 11 built).
+Read this first, then [CLAUDE.md](CLAUDE.md) (the rules), then [REQUIREMENTS.md](REQUIREMENTS.md) (the contract). This file says where the project stands, how it is built and deployed, what is half-done, and exactly what comes next. Last updated 2026-11-25 (Phases 13 and 14 built).
 
 ## What it is, in one paragraph
 
@@ -256,3 +256,15 @@ Backup file-only (assumed yes); one goal at a time (assumed yes); extra categori
 - To announce a future update: edit `WHATS_NEW` in `src/lib/welcome.ts` and **give it a new id**. The new id is what makes the card appear again on every device. Same id means nobody sees the change.
 - The e2e helper `openFreshApp` closes the card by default; pass `{ keepHello: true }` to test it.
 - Ideas raised and parked (see "Later" in REQUIREMENTS.md): public portfolios and an Explore page. Not agreed; privacy and legal questions first.
+
+## Phase 13: export your profile with proof (built 2026-11-24)
+
+- `src/lib/profileExport.ts`: one self-contained HTML file (persona, every achievement by category, photos at the bottom as numbered proof). Pure `buildProfileHtml`, everything the user typed is escaped. Button on the Me tab. No AI, no network.
+
+## Phase 14: AI credits and a cheaper model (built 2026-11-25)
+
+- Model is set once in `server/model.ts`: `claude-haiku-5-5`. Scout's system prompt is sent with `cache_control`.
+- Credits: numbers and wording in `src/lib/credits.ts` (shared), counting in `server/credits.ts`, store gains `readCredits` / `addCredits` (Redis `credits:<id>:<YYYY-MM>`, `incrby`, 40-day expiry). `runAiRoute(req, res, action, work)` now takes the action name; it refuses with 429 `code: 'credits'` before the AI runs and charges only on success. `/api/me` and every AI answer carry `credits`.
+- UI: Settings line in `AccountSection`; `CreditsNote` under the AI buttons only at 20% or less.
+- Still on Vishal: a monthly spending cap in the Anthropic console.
+- Next in the v3 plan: Phase 15 parent accounts (needs the COPPA decisions first).

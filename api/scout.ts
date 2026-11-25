@@ -8,5 +8,5 @@ import { runAiRoute } from '../server/aiRoute.js'
 import { askScout } from '../server/scout.js'
 
 export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  await runAiRoute(req, res, (body, apiKey) => askScout(body, { apiKey }))
+  await runAiRoute(req, res, 'scout', (body, apiKey) => askScout(body, { apiKey }))
 }

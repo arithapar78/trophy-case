@@ -10,6 +10,7 @@ import { cleanName } from './validation'
 export const WHATS_NEW = {
   id: '2026-11-export',
   items: [
+    { title: 'AI credits', text: 'Each account gets a monthly allowance of AI credits. See how many are left in Settings. They refill on the 1st.' },
     { title: 'Export your profile', text: 'On the Me tab: one file with who you are, every achievement, and your photos at the bottom as proof. Open it and print to PDF.' },
     { title: 'The Me tab', text: 'Everything you have done on one page, a short read on your strengths, and a card you can save as a picture.' },
     { title: 'Your own categories', text: 'Make categories that fit you, like Robotics or Debate. Settings, then Categories.' },

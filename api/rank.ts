@@ -7,5 +7,5 @@ import { runAiRoute } from '../server/aiRoute.js'
 import { rankAchievements } from '../server/goalAdvice.js'
 
 export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  await runAiRoute(req, res, (body, apiKey) => rankAchievements(body, { apiKey }))
+  await runAiRoute(req, res, 'rank', (body, apiKey) => rankAchievements(body, { apiKey }))
 }

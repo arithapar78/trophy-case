@@ -4,6 +4,7 @@
 
 import { useSyncExternalStore } from 'react'
 import type { UsageStatus } from './aiUsage'
+import type { CreditStatus } from './credits'
 
 export interface AccountUser {
   email: string
@@ -17,6 +18,8 @@ export interface AccountState {
   // undefined = not checked yet, null = signed out
   user: AccountUser | null | undefined
   usage?: UsageStatus
+  // Phase 14: this month's AI credits, as the server last told us.
+  credits?: CreditStatus
   // Set just after coming back from Stripe, so Settings can say how it went.
   billingReturn?: BillingReturn
   // True while we are waiting for Stripe's message about a payment to land.
@@ -82,8 +85,8 @@ export function useAccount(): AccountState {
 }
 
 // Called whenever an AI answer carries fresh usage numbers.
-export function rememberUsage(usage: UsageStatus | undefined) {
-  if (usage) emit({ ...state, usage })
+export function rememberUsage(usage: UsageStatus | undefined, credits?: CreditStatus) {
+  if (usage || credits) emit({ ...state, ...(usage && { usage }), ...(credits && { credits }) })
 }
 
 export class AccountError extends Error {}
@@ -121,8 +124,8 @@ export async function refreshAccount(): Promise<void> {
     return
   }
   try {
-    const me = await call<{ user: AccountUser; usage: UsageStatus }>('/api/me')
-    emit({ user: me.user, usage: me.usage })
+    const me = await call<{ user: AccountUser; usage: UsageStatus; credits?: CreditStatus }>('/api/me')
+    emit({ user: me.user, usage: me.usage, credits: me.credits })
   } catch (err) {
     // Signed out by the server: handled in call(). Anything else (no
     // signal) keeps the last known state so the app still opens offline.

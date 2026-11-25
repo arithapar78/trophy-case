@@ -5,6 +5,7 @@
 import { authHeaders, rememberUsage } from './account'
 import type { PhotoDraft, ReadPhotoRequest, ReadPhotoResponse } from './aiTypes'
 import type { UsageStatus } from './aiUsage'
+import type { CreditStatus } from './credits'
 import { todayISO } from './dates'
 import { prepareForStorage } from './photos'
 import { getCategories } from './categories'
@@ -24,7 +25,7 @@ async function toBase64(blob: Blob): Promise<string> {
 export class AiUnavailableError extends Error {}
 export class AiSignInRequiredError extends Error {}
 
-type WithUsage = { usage?: UsageStatus; code?: string }
+type WithUsage = { usage?: UsageStatus; credits?: CreditStatus; code?: string }
 
 // Sends one AI request and handles the answers every AI function shares:
 // not signed in, at the limit, or a plain failure. Fresh usage numbers are
@@ -46,7 +47,7 @@ export async function postAi<T extends { ok: boolean }>(path: string, body: unkn
   } catch {
     throw new AiUnavailableError("The AI didn't answer properly. Try again in a minute.")
   }
-  rememberUsage(result.usage)
+  rememberUsage(result.usage, result.credits)
   if (response.status === 401 || result.code === 'signin') throw new AiSignInRequiredError('Sign in to use AI.')
   if (!result.ok) throw new AiUnavailableError(result.message ?? 'The AI did not work this time.')
   return result

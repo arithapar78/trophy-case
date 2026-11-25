@@ -12,5 +12,5 @@ import { runAiRoute } from '../server/aiRoute.js'
 import { readPhoto } from '../server/photoRead.js'
 
 export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  await runAiRoute(req, res, (body, apiKey) => readPhoto(body, { apiKey }))
+  await runAiRoute(req, res, 'photo', (body, apiKey) => readPhoto(body, { apiKey }))
 }

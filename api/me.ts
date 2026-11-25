@@ -7,6 +7,7 @@ import { authenticate } from '../server/auth.js'
 import { mockBillingAllowed } from '../server/billing.js'
 import { sendJson } from '../server/http.js'
 import { getStore } from '../server/storeInstance.js'
+import { getCreditsFor } from '../server/credits.js'
 import { getUsageFor } from '../server/usage.js'
 
 export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
@@ -31,5 +32,6 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       canManage: Boolean(user.stripeCustomerId) || mockBillingAllowed(),
     },
     usage: await getUsageFor(store, user),
+    credits: await getCreditsFor(store, user),
   })
 }

@@ -134,7 +134,7 @@ describe('T5.3 the AI route guard', () => {
   it('refuses a request with no token and never runs the work', async () => {
     let ran = false
     const res = fakeResponse()
-    await runAiRoute(fakeRequest(), res, async () => {
+    await runAiRoute(fakeRequest(), res, 'scout', async () => {
       ran = true
       return { ok: true as const, mock: true }
     }, { store })
@@ -146,7 +146,7 @@ describe('T5.3 the AI route guard', () => {
   it('counts one use on success and attaches the numbers left', async () => {
     const { token } = await signIn(store, 'ari@example.com')
     const res = fakeResponse()
-    await runAiRoute(fakeRequest(token), res, work, { store })
+    await runAiRoute(fakeRequest(token), res, 'scout', work, { store })
     expect(res.sent.status).toBe(200)
     expect(res.sent.body.usage).toMatchObject({ used: 1, limit: USES_PER_WINDOW.free, remaining: USES_PER_WINDOW.free - 1 })
   })
@@ -158,7 +158,7 @@ describe('T5.3 the AI route guard', () => {
 
     let ran = false
     const res = fakeResponse()
-    await runAiRoute(fakeRequest(token), res, async () => {
+    await runAiRoute(fakeRequest(token), res, 'scout', async () => {
       ran = true
       return { ok: true as const, mock: true }
     }, { store, now: () => now })
@@ -175,7 +175,7 @@ describe('T5.3 the AI route guard', () => {
     const req = fakeRequest()
     req.method = 'GET'
     const res = fakeResponse()
-    await runAiRoute(req, res, work, { store })
+    await runAiRoute(req, res, 'scout', work, { store })
     expect(res.sent.status).toBe(405)
   })
 })
