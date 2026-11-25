@@ -8,8 +8,9 @@ import { cleanName } from './validation'
 // Change `id` whenever `items` changes. A new id is what makes the card
 // show again on every device that saw the old one.
 export const WHATS_NEW = {
-  id: '2026-11-export',
+  id: '2026-11-appearance',
   items: [
+    { title: 'Light or dark', text: 'Pick Light, Dark or Match phone in Settings, under Appearance.' },
     { title: 'Family', text: 'Keep a separate trophy case for each of your kids. Settings, then Family. For a child under 13, AI stays off until you give permission.' },
     { title: 'AI credits', text: 'Each account gets a monthly allowance of AI credits. See how many are left in Settings. They refill on the 1st.' },
     { title: 'Export your profile', text: 'On the Me tab: one file with who you are, every achievement, and your photos at the bottom as proof. Open it and print to PDF.' },

@@ -611,3 +611,19 @@ Agreed with Vishal on 2026-11-25: parent-run accounts for children under 13 (kid
 - [ ] T15.2 Unit: the route refuses an under-13 profile without permission and runs nothing; permission lets it through; withdrawing stops it; deleting the account clears permissions; a 13+ profile needs none; a bad profile id is refused.
 - [ ] T15.3 E2E: add a child, switch, the child's case is empty and separate; switch back and the original's achievements are there; removing the child deletes its achievements.
 - [ ] T15.4 E2E: in an under-13 profile, Scout is refused with the permission message; giving permission in Settings lets a MOCK answer through; withdrawing refuses again.
+
+---
+
+## Phase 16a: Light, dark, or match the phone
+
+Asked for by Vishal on 2026-11-25.
+
+- [ ] 29.1 Settings has **Appearance**: Match phone (the default, as before), Light, Dark.
+- [ ] 29.2 The choice applies at once, to every profile on the phone, and survives closing the app.
+- [ ] 29.3 It is applied before the first paint, so the app never flashes the wrong colour on opening. The status bar colour follows it. The privacy page follows it too.
+- [ ] 29.4 Light or Dark wins over the phone's own setting; Match phone follows the phone again.
+
+### Phase 16a tests
+
+- [ ] T16a.1 Unit: default, each choice sets the page attribute, both status-bar colours and the stored value; Match phone clears them; rubbish stored is ignored.
+- [ ] T16a.2 E2E: on a light phone Dark turns the page dark at once and after a reload; on a dark phone Light turns it light; Match phone follows the phone.

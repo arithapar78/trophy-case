@@ -276,3 +276,7 @@ Backup file-only (assumed yes); one goal at a time (assumed yes); extra categori
 - AI requests carry `x-profile-id` and `x-profile-under-13` (`profileHeaders()`). `server/consent.ts` refuses an under-13 profile with 403 `code: 'consent'` unless the account has `consent:<user>:<profile>`. Given or withdrawn through POST `/api/me`; `/api/me` lists them. Still 11 functions.
 - privacy.html and PRIVACY.md updated (also for the Phase 14 credit count, which had been missed).
 - **Open:** a lawyer's review of the consent flow before any marketing to parents of young kids. Next: Phase 16, opt-in cloud sync for paid plans.
+
+## Phase 16a: appearance (built 2026-11-25)
+
+- `src/lib/theme.ts` + `AppearanceSection.tsx`. Choice in localStorage `trophy-case.theme`; `data-theme` on `<html>`; dark variables in `index.css` apply under the phone's dark mode unless `data-theme="light"`, and always under `data-theme="dark"`. A small inline script in `index.html` and `privacy.html` applies it before first paint (keep it in step with theme.ts).

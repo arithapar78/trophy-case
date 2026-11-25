@@ -12,6 +12,7 @@ import { shareOrDownload } from '../lib/share'
 import { formatBytes, getStorageUsage, type StorageUsage } from '../lib/storage'
 import PrivacyLink from './PrivacyLink'
 import CategoriesSection from './CategoriesSection'
+import AppearanceSection from './AppearanceSection'
 import FamilySection from './FamilySection'
 import { listChildren } from '../lib/family'
 
@@ -140,6 +141,8 @@ export default function SettingsSheet({ achievementCount, goal: savedGoal, custo
             <span className="block text-sm opacity-70">The hello card, and where you can change your name</span>
           </button>
         </section>
+
+        <AppearanceSection />
 
         <section className="mt-5">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-ink/45">Your data</h3>

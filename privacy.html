@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#f4f5f7" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0a0f1c" media="(prefers-color-scheme: dark)" />
+    <!-- Light or dark from Settings, applied before the first paint so the
+         screen never flashes the wrong colour. Same logic as src/lib/theme.ts. -->
+    <script>
+      try {
+        var t = localStorage.getItem('trophy-case.theme')
+        if (t === 'light' || t === 'dark') {
+          document.documentElement.setAttribute('data-theme', t)
+          var c = t === 'dark' ? '#0a0f1c' : '#f4f5f7'
+          document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) { m.content = c })
+        }
+      } catch (e) {}
+    </script>
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <!-- The app's own stylesheet, so this page looks like the app. The page
          itself is plain HTML: it reads fine with no JavaScript at all, which

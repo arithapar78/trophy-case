@@ -26,15 +26,33 @@
   --shadow-float: 0 8px 24px -6px rgb(15 23 42 / 0.25);
 }
 
+/* Dark colours. Used when the phone is in dark mode, unless Settings says
+   Light, and always when Settings says Dark (data-theme on <html>, set by
+   src/lib/theme.ts and the small script in index.html). */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --color-page: #0a0f1c;
     --color-surface: #161f33;
     --color-ink: #f1f5f9;
     --color-accent-ink: #fbbf24;
     --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px -4px rgb(0 0 0 / 0.5);
     --shadow-float: 0 8px 24px -6px rgb(0 0 0 / 0.6);
+    color-scheme: dark;
   }
+}
+
+:root[data-theme="dark"] {
+    --color-page: #0a0f1c;
+    --color-surface: #161f33;
+    --color-ink: #f1f5f9;
+    --color-accent-ink: #fbbf24;
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px -4px rgb(0 0 0 / 0.5);
+    --shadow-float: 0 8px 24px -6px rgb(0 0 0 / 0.6);
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
 }
 
 html, body, #root {
